@@ -1,13 +1,11 @@
 package com.manhua.dto.response;
 
-import lombok.Data;
-
+import org.springframework.data.domain.Page;
 import java.util.List;
 
 /**
  * 分页响应
  */
-@Data
 public class PageResponse<T> {
 
     /**
@@ -77,9 +75,89 @@ public class PageResponse<T> {
     }
 
     /**
+     * 从Spring Data Page创建分页响应
+     */
+    public static <T> PageResponse<T> of(Page<T> page) {
+        return new PageResponse<>(page.getContent(), page.getNumber(), page.getSize(), page.getTotalElements());
+    }
+
+    /**
      * 创建空分页响应
      */
     public static <T> PageResponse<T> empty(Integer page, Integer size) {
         return new PageResponse<>(List.of(), page, size, 0L);
+    }
+
+    // Getters and Setters
+    public List<T> getContent() {
+        return content;
+    }
+
+    public void setContent(List<T> content) {
+        this.content = content;
+    }
+
+    public Integer getPage() {
+        return page;
+    }
+
+    public void setPage(Integer page) {
+        this.page = page;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public Long getTotalElements() {
+        return totalElements;
+    }
+
+    public void setTotalElements(Long totalElements) {
+        this.totalElements = totalElements;
+    }
+
+    public Integer getTotalPages() {
+        return totalPages;
+    }
+
+    public void setTotalPages(Integer totalPages) {
+        this.totalPages = totalPages;
+    }
+
+    public Boolean getFirst() {
+        return first;
+    }
+
+    public void setFirst(Boolean first) {
+        this.first = first;
+    }
+
+    public Boolean getLast() {
+        return last;
+    }
+
+    public void setLast(Boolean last) {
+        this.last = last;
+    }
+
+    public Boolean getHasNext() {
+        return hasNext;
+    }
+
+    public void setHasNext(Boolean hasNext) {
+        this.hasNext = hasNext;
+    }
+
+    public Boolean getHasPrevious() {
+        return hasPrevious;
+    }
+
+    public void setHasPrevious(Boolean hasPrevious) {
+        this.hasPrevious = hasPrevious;
     }
 }

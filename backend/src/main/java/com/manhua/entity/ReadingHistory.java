@@ -1,8 +1,6 @@
 package com.manhua.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -10,10 +8,8 @@ import java.time.LocalDateTime;
 /**
  * 阅读历史实体类
  */
-@Data
 @Entity
 @Table(name = "reading_histories")
-@EqualsAndHashCode(callSuper = false)
 public class ReadingHistory {
 
     @Id
@@ -56,4 +52,61 @@ public class ReadingHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comic_id", nullable = false)
     private Comic comic;
+
+    // Getter and Setter methods
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getPageNumber() {
+        return pageNumber;
+    }
+
+    public void setPageNumber(Integer pageNumber) {
+        this.pageNumber = pageNumber;
+    }
+
+    public Integer getReadingDuration() {
+        return readingDuration;
+    }
+
+    public void setReadingDuration(Integer readingDuration) {
+        this.readingDuration = readingDuration;
+    }
+
+    public String getDeviceInfo() {
+        return deviceInfo;
+    }
+
+    public void setDeviceInfo(String deviceInfo) {
+        this.deviceInfo = deviceInfo;
+    }
+
+    public String getReadingMode() {
+        return readingMode;
+    }
+
+    public void setReadingMode(String readingMode) {
+        this.readingMode = readingMode;
+    }
+
+    public LocalDateTime getReadTime() {
+        return readTime;
+    }
+
+    public void setReadTime(LocalDateTime readTime) {
+        this.readTime = readTime;
+    }
+
+    public Comic getComic() {
+        return comic;
+    }
+
+    public void setComic(Comic comic) {
+        this.comic = comic;
+    }
 }

@@ -41,13 +41,13 @@ public interface CacheEntryRepository extends JpaRepository<CacheEntry, Long> {
     /**
      * 查找已过期的缓存条目
      */
-    @Query("SELECT ce FROM CacheEntry ce WHERE ce.expiryTime < :currentTime")
-    List<CacheEntry> findExpiredEntries(@Param("currentTime") LocalDateTime currentTime);
+    @Query("SELECT ce FROM CacheEntry ce WHERE ce.expireTime < :currentTime")
+    List<CacheEntry> findByExpireTimeBefore(@Param("currentTime") LocalDateTime currentTime);
 
     /**
      * 查找未过期的缓存条目
      */
-    @Query("SELECT ce FROM CacheEntry ce WHERE ce.expiryTime > :currentTime OR ce.expiryTime IS NULL")
+    @Query("SELECT ce FROM CacheEntry ce WHERE ce.expireTime > :currentTime OR ce.expireTime IS NULL")
     List<CacheEntry> findValidEntries(@Param("currentTime") LocalDateTime currentTime);
 
     /**
@@ -103,7 +103,7 @@ public interface CacheEntryRepository extends JpaRepository<CacheEntry, Long> {
      */
     @Modifying
     @Transactional
-    @Query("DELETE FROM CacheEntry ce WHERE ce.expiryTime < :currentTime")
+    @Query("DELETE FROM CacheEntry ce WHERE ce.expireTime < :currentTime")
     int deleteExpiredEntries(@Param("currentTime") LocalDateTime currentTime);
 
     /**
@@ -123,6 +123,13 @@ public interface CacheEntryRepository extends JpaRepository<CacheEntry, Long> {
     int deleteByComicId(@Param("comicId") Long comicId);
 
     /**
+     * 根据缓存键删除缓存条目
+     */
+    @Modifying
+    @Transactional
+    void deleteByCacheKey(String cacheKey);
+
+    /**
      * 更新访问信息
      */
     @Modifying
@@ -135,4 +142,9 @@ public interface CacheEntryRepository extends JpaRepository<CacheEntry, Long> {
      */
     @Query("SELECT ce FROM CacheEntry ce ORDER BY ce.lastAccessTime ASC")
     List<CacheEntry> findForCleanup();
+
+    /**
+     * 根据访问次数范围查找缓存条目
+     */
+    List<CacheEntry> findByAccessCountBetween(Integer minCount, Integer maxCount);
 }

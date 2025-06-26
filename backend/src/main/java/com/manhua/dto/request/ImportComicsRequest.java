@@ -1,14 +1,12 @@
 package com.manhua.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
 import java.util.List;
 
 /**
  * 导入漫画请求
  */
-@Data
 public class ImportComicsRequest {
 
     @NotNull(message = "库ID不能为空")
@@ -54,4 +52,76 @@ public class ImportComicsRequest {
      * 是否覆盖已存在的漫画
      */
     private Boolean overwriteExisting = false;
+
+    public Long getLibraryId() {
+        return libraryId;
+    }
+
+    public void setLibraryId(Long libraryId) {
+        this.libraryId = libraryId;
+    }
+
+    public String getImportType() {
+        return importType;
+    }
+
+    public void setImportType(String importType) {
+        this.importType = importType;
+    }
+
+    public List<String> getFilePaths() {
+        return filePaths;
+    }
+
+    public void setFilePaths(List<String> filePaths) {
+        this.filePaths = filePaths;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
+    }
+
+    public Boolean getIncludeSubfolders() {
+        return includeSubfolders;
+    }
+
+    public void setIncludeSubfolders(Boolean includeSubfolders) {
+        this.includeSubfolders = includeSubfolders;
+    }
+
+    public List<String> getUrls() {
+        return urls;
+    }
+
+    public void setUrls(List<String> urls) {
+        this.urls = urls;
+    }
+
+    public Boolean getExtractMetadata() {
+        return extractMetadata;
+    }
+
+    public void setExtractMetadata(Boolean extractMetadata) {
+        this.extractMetadata = extractMetadata;
+    }
+
+    public Boolean getGenerateThumbnails() {
+        return generateThumbnails;
+    }
+
+    public void setGenerateThumbnails(Boolean generateThumbnails) {
+        this.generateThumbnails = generateThumbnails;
+    }
+
+    public Boolean getOverwriteExisting() {
+        return overwriteExisting;
+    }
+
+    public void setOverwriteExisting(Boolean overwriteExisting) {
+        this.overwriteExisting = overwriteExisting;
+    }
 }

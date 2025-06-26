@@ -4,8 +4,9 @@ import com.manhua.dto.LibraryDTO;
 import com.manhua.dto.request.CreateLibraryRequest;
 import com.manhua.entity.Library;
 import com.manhua.repository.LibraryRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,12 +20,13 @@ import java.util.stream.Collectors;
 /**
  * 漫画库服务层
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class LibraryService {
 
-    private final LibraryRepository libraryRepository;
+    private static final Logger log = LoggerFactory.getLogger(LibraryService.class);
+
+    @Autowired
+    private LibraryRepository libraryRepository;
 
     /**
      * 创建漫画库
@@ -122,7 +124,7 @@ public class LibraryService {
      */
     public List<LibraryDTO> searchLibraries(String keyword) {
         log.debug("Searching libraries with keyword: {}", keyword);
-        return libraryRepository.searchLibraries(keyword).stream()
+        return libraryRepository.findByNameContaining(keyword).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -197,7 +199,7 @@ public class LibraryService {
      */
     public List<LibraryDTO> getLibrariesNeedingScanning() {
         log.debug("Getting libraries needing scanning");
-        return libraryRepository.findLibrariesNeedingScanning().stream()
+        return libraryRepository.findLibrariesNeedingScan().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -206,15 +208,9 @@ public class LibraryService {
      * 统计漫画库数量
      */
     public Long countLibraries() {
-        return libraryRepository.countAllLibraries();
+        return libraryRepository.countActiveLibraries();
     }
 
-    /**
-     * 统计各类型漫画库数量
-     */
-    public List<Object[]> countLibrariesByType() {
-        return libraryRepository.countByType();
-    }
 
     /**
      * 转换为DTO

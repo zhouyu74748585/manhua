@@ -1,13 +1,10 @@
 package com.manhua.dto.response;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
 /**
  * 统一API响应格式
  */
-@Data
 public class ApiResponse<T> {
 
     /**
@@ -111,5 +108,60 @@ public class ApiResponse<T> {
      */
     public static <T> ApiResponse<T> notFound(String message) {
         return new ApiResponse<>(404, message);
+    }
+
+    /**
+     * 验证错误响应
+     */
+    public static <T> ApiResponse<T> validationError(String message) {
+        return new ApiResponse<>(400, message);
+    }
+
+    /**
+     * 验证错误响应（带数据）
+     */
+    public static <T> ApiResponse<T> validationError(String message, T data) {
+        return new ApiResponse<>(400, message, data);
+    }
+
+    // Getter and Setter methods
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 }
