@@ -1,0 +1,66 @@
+{
+  "name": "manhua-reader",
+  "version": "1.0.0",
+  "description": "现代化漫画阅读软件",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder"
+  },
+  "keywords": [
+    "漫画",
+    "阅读器",
+    "electron",
+    "vue"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "element-plus": "^2.4.0",
+    "vue": "^3.3.0",
+    "vue-router": "^4.2.0",
+    "pinia": "^2.1.0",
+    "sqlite3": "^5.1.0",
+    "smb2-client": "^1.0.0",
+    "basic-ftp": "^5.0.0",
+    "webdav-client": "^1.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.0",
+    "vite": "^4.5.0"
+  },
+  "build": {
+    "appId": "com.manhua.reader",
+    "productName": "漫画阅读器",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "public/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "public/icon.png"
+    }
+  }
+}

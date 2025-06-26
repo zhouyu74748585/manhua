@@ -1,0 +1,100 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: manhua-reader-backend
+  
+  datasource:
+    url: jdbc:sqlite:./data/manhua.db
+    driver-class-name: org.sqlite.JDBC
+    username: 
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.community.dialect.SQLiteDialect
+        format_sql: true
+    defer-datasource-initialization: true
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  
+  security:
+    user:
+      name: admin
+      password: admin123
+      roles: ADMIN
+
+# 应用配置
+manhua:
+  # 数据存储路径
+  data-path: ./data
+  # 缓存路径
+  cache-path: ./cache
+  # 缩略图路径
+  thumbnail-path: ./thumbnails
+  # 支持的图片格式
+  supported-image-formats:
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - bmp
+    - webp
+  # 支持的压缩格式
+  supported-archive-formats:
+    - zip
+    - rar
+    - 7z
+    - cbz
+    - cbr
+    - cb7
+  # 缩略图配置
+  thumbnail:
+    width: 300
+    height: 400
+    quality: 0.8
+  # 缓存配置
+  cache:
+    max-size: 1GB
+    expire-days: 30
+  # 扫描配置
+  scan:
+    batch-size: 100
+    thread-pool-size: 4
+
+# 日志配置
+logging:
+  level:
+    com.manhua: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ./logs/manhua-reader.log
+    max-size: 10MB
+    max-history: 30
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
