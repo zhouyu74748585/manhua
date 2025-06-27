@@ -1,3 +1,68 @@
+# 应用配置
+spring:
+  application:
+    name: manhua-reader-backend
+
+  # 数据库配置
+  datasource:
+    url: jdbc:sqlite:./data/manhua.db
+    driver-class-name: org.sqlite.JDBC
+    username:
+    password:
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  # Web配置
+  web:
+    resources:
+      static-locations: classpath:/static/
+      cache:
+        period: 3600
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+      enabled: true
+
+  # 缓存配置
+  cache:
+    type: simple
+    cache-names:
+      - manga-covers
+      - manga-pages
+      - library-scan
+      - file-info
+
+  # 安全配置
+  security:
+    user:
+      name: admin
+      password: admin123
+      roles: ADMIN
+
+  # 执行器配置
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,env
+    endpoint:
+      health:
+        show-details: when-authorized
+
+# 服务器配置
 server:
   port: 8080
   servlet:
@@ -8,162 +73,113 @@ server:
       force: true
   compression:
     enabled: true
-    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 1024
-  error:
-    include-message: always
-    include-binding-errors: always
 
-spring:
-  application:
-    name: manhua-reader
+# 日志配置
+logging:
+  level:
+    com.manhua: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ./logs/manhua-reader.log
+    max-size: 10MB
+    max-history: 30
 
-  datasource:
-    url: jdbc:h2:file:${app.data-path}/database/manhua;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+# 应用自定义配置
+manhua:
+  # 数据目录
+  data-dir: ./data
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
-        use_sql_comments: false
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-    open-in-view: false
+  # 缓存目录
+  cache-dir: ./cache
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: false
+  # 临时目录
+  temp-dir: ./temp
 
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
-
-  web:
-    resources:
-      static-locations: classpath:/static/,file:${app.data-path}/cache/,file:${app.data-path}/thumbnails/,file:${app.data-path}/covers/
-      cache:
-        period: 3600
-
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: Asia/Shanghai
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
-
-# 应用程序自定义配置
-app:
-  # 数据存储路径
-  data-path: ${user.home}/.manhua-reader
-
-  # 缓存配置
-  cache:
-    # 缓存大小限制（MB）
-    max-size: 1024
-    # 缓存过期时间（小时）
-    expire-hours: 24
-    # 缩略图缓存过期时间（小时）
-    thumbnail-expire-hours: 168
-    # 封面缓存过期时间（小时）
-    cover-expire-hours: 168
+  # 日志目录
+  log-dir: ./logs
 
   # 扫描配置
   scan:
-    # 支持的漫画文件格式
-    supported-formats:
-      - cbz
-      - cbr
-      - zip
-      - rar
-      - 7z
-      - pdf
+    # 并发线程数
+    thread-pool-size: 4
+    # 扫描间隔（秒）
+    interval: 300
     # 支持的图片格式
-    supported-images:
+    supported-image-formats:
       - jpg
       - jpeg
       - png
       - gif
       - bmp
       - webp
-    # 扫描线程数
-    thread-count: 4
-    # 批处理大小
-    batch-size: 100
+    # 支持的压缩格式
+    supported-archive-formats:
+      - zip
+      - rar
+      - 7z
+      - cbz
+      - cbr
 
-  # 阅读配置
-  reading:
-    # 默认阅读模式
-    default-mode: single
+  # 图片处理配置
+  image:
+    # 缩略图大小
+    thumbnail-size: 300
+    # 封面大小
+    cover-size: 600
+    # 图片质量（0.0-1.0）
+    quality: 0.85
+    # 是否启用WebP格式
+    enable-webp: true
+
+  # 缓存配置
+  cache:
+    # 最大缓存大小（MB）
+    max-size: 1024
+    # 缓存过期时间（小时）
+    expire-hours: 24
     # 预加载页数
     preload-pages: 3
-    # 自动保存阅读进度间隔（秒）
-    auto-save-interval: 30
+
+  # 网络文件系统配置
+  network:
+    # 连接超时（秒）
+    connect-timeout: 30
+    # 读取超时（秒）
+    read-timeout: 60
+    # 重试次数
+    retry-count: 3
 
   # 安全配置
   security:
-    # 允许的CORS源
-    allowed-origins:
-      - "http://localhost:3000"
-      - "http://127.0.0.1:3000"
-      - "file://"
-    # JWT密钥（如果需要认证）
-    jwt-secret: "manhua-reader-secret-key-change-in-production"
+    # 是否启用认证
+    enable-auth: false
+    # JWT密钥
+    jwt-secret: manhua-reader-secret-key-2024
     # JWT过期时间（小时）
     jwt-expiration: 24
+    # 是否启用CORS
+    enable-cors: true
+    # 允许的源
+    allowed-origins:
+      - "http://localhost:3000"
+      - "http://localhost:5173"
+      - "http://127.0.0.1:3000"
+      - "http://127.0.0.1:5173"
 
-# 日志配置
-logging:
-  level:
-    com.manhua: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: ${app.data-path}/logs/manhua-reader.log
-    max-size: 10MB
-    max-history: 30
-
-# 管理端点配置
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: when-authorized
-  info:
-    env:
-      enabled: true
-
-# 应用信息
-info:
-  app:
-    name: 漫画阅读器
-    description: 一个现代化的漫画阅读应用程序
-    version: 1.0.0
-    author: Manhua Reader Team
+  # 性能配置
+  performance:
+    # 是否启用异步处理
+    enable-async: true
+    # 异步线程池大小
+    async-pool-size: 8
+    # 是否启用压缩
+    enable-compression: true
+    # 是否启用缓存
+    enable-cache: true
