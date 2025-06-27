@@ -2,18 +2,22 @@ package com.manhua;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * 漫画阅读器后端应用主类
- * 
+ *
  * @author Manhua Reader Team
  * @version 1.0.0
  */
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
+@EnableJpaAuditing
+@EnableTransactionManagement
 public class ManhuaReaderApplication {
 
     public static void main(String[] args) {

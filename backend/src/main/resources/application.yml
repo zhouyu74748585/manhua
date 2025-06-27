@@ -17,19 +17,19 @@ server:
 spring:
   application:
     name: manhua-reader
-  
+
   datasource:
-    url: jdbc:h2:file:${app.data-path}/database/manhua;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:${app.data-path}/database/manhua;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
-    password: 
+    password:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -44,25 +44,25 @@ spring:
         order_inserts: true
         order_updates: true
     open-in-view: false
-  
+
   h2:
     console:
       enabled: true
       path: /h2-console
       settings:
         web-allow-others: false
-  
+
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-  
+
   web:
     resources:
       static-locations: classpath:/static/,file:${app.data-path}/cache/,file:${app.data-path}/thumbnails/,file:${app.data-path}/covers/
       cache:
         period: 3600
-  
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
@@ -75,7 +75,7 @@ spring:
 app:
   # 数据存储路径
   data-path: ${user.home}/.manhua-reader
-  
+
   # 缓存配置
   cache:
     # 缓存大小限制（MB）
@@ -86,7 +86,7 @@ app:
     thumbnail-expire-hours: 168
     # 封面缓存过期时间（小时）
     cover-expire-hours: 168
-  
+
   # 扫描配置
   scan:
     # 支持的漫画文件格式
@@ -109,7 +109,7 @@ app:
     thread-count: 4
     # 批处理大小
     batch-size: 100
-  
+
   # 阅读配置
   reading:
     # 默认阅读模式
@@ -118,7 +118,7 @@ app:
     preload-pages: 3
     # 自动保存阅读进度间隔（秒）
     auto-save-interval: 30
-  
+
   # 安全配置
   security:
     # 允许的CORS源

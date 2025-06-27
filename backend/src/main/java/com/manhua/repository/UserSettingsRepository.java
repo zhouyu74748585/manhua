@@ -26,18 +26,6 @@ public interface UserSettingsRepository extends JpaRepository<UserSettings, Long
     List<UserSettings> findByCategory(String category);
 
     /**
-     * 查找系统设置
-     */
-    @Query("SELECT us FROM UserSettings us WHERE us.isSystemSetting = true")
-    List<UserSettings> findSystemSettings();
-
-    /**
-     * 查找用户设置
-     */
-    @Query("SELECT us FROM UserSettings us WHERE us.isSystemSetting = false")
-    List<UserSettings> findUserSettings();
-
-    /**
      * 根据设置键模糊查询
      */
     @Query("SELECT us FROM UserSettings us WHERE us.settingKey LIKE %:key%")
@@ -61,8 +49,4 @@ public interface UserSettingsRepository extends JpaRepository<UserSettings, Long
     @Query("SELECT us.category, COUNT(us) FROM UserSettings us GROUP BY us.category")
     List<Object[]> countByCategory();
 
-    /**
-     * 根据分类和系统设置标志查找
-     */
-    List<UserSettings> findByCategoryAndIsSystemSetting(String category, Boolean isSystemSetting);
 }

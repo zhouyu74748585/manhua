@@ -18,7 +18,6 @@ import java.nio.file.Paths;
  */
 @Configuration
 @EnableJpaRepositories(basePackages = "com.manhua.repository")
-@EnableJpaAuditing
 @EnableTransactionManagement
 public class DatabaseConfig {
 
@@ -35,7 +34,7 @@ public class DatabaseConfig {
             if (!Files.exists(dataDir)) {
                 Files.createDirectories(dataDir);
             }
-            
+
             // 创建子目录
             String[] subDirs = {
                 "database",
@@ -45,14 +44,14 @@ public class DatabaseConfig {
                 "temp",
                 "logs"
             };
-            
+
             for (String subDir : subDirs) {
                 Path subDirPath = dataDir.resolve(subDir);
                 if (!Files.exists(subDirPath)) {
                     Files.createDirectories(subDirPath);
                 }
             }
-            
+
             return dataPath;
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize data directory: " + dataPath, e);
