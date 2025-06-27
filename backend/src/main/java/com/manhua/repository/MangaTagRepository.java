@@ -1,7 +1,7 @@
 package com.manhua.repository;
 
-import com.manhua.entity.MangaTag;
 import com.manhua.entity.Manga;
+import com.manhua.entity.MangaTag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

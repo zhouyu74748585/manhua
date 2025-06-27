@@ -1,5 +1,6 @@
 package com.manhua.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,6 +36,7 @@ public class MangaTag {
     private LocalDateTime createdAt;
 
     // 关联关系
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manga_id", nullable = false)
     private Manga manga;

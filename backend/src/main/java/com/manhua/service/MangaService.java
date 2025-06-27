@@ -3,8 +3,8 @@ package com.manhua.service;
 import com.manhua.entity.Manga;
 import com.manhua.entity.MangaLibrary;
 import com.manhua.entity.ReadingProgress;
-import com.manhua.repository.MangaRepository;
 import com.manhua.repository.MangaLibraryRepository;
+import com.manhua.repository.MangaRepository;
 import com.manhua.repository.ReadingProgressRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -437,7 +437,7 @@ public class MangaService {
 
             ReadingProgress progress = new ReadingProgress();
             progress.setManga(manga);
-            progress.setCurrentPage(0);
+            progress.setCurrentPage(1);
             progress.setTotalPages(manga.getTotalPages() != null ? manga.getTotalPages() : 0);
             progress.setReadingTime(0L);
             progress.setReadingSpeed(0.0);

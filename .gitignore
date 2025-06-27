@@ -138,3 +138,4 @@ site/
 # 扫描结果
 scan-results/
 metadata-cache/
+/backend/target/

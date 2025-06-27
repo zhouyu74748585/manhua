@@ -65,7 +65,7 @@
               <div class="library-stats">
                 <div class="stat-item">
                   <span class="stat-label">漫画数量:</span>
-                  <span class="stat-value">{{ getMangaCount(library.id) }}</span>
+                  <span class="stat-value">{{ library.mangaCount }}</span>
                 </div>
                 <div class="stat-item">
                   <span class="stat-label">创建时间:</span>
@@ -233,10 +233,7 @@ const libraries = computed(() => libraryStore.libraries)
 const currentLibraryId = computed(() => libraryStore.currentLibraryId)
 const loading = computed(() => libraryStore.loading)
 
-// 获取漫画数量
-const getMangaCount = (libraryId: string) => {
-  return libraryStore.mangas.filter(manga => manga.libraryId === libraryId).length
-}
+
 
 // 获取库类型颜色
 const getLibraryTypeColor = (type: string) => {

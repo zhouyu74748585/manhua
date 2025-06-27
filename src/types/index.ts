@@ -3,6 +3,7 @@ export interface MangaLibrary {
   id: string
   name: string
   path: string
+  mangaCount: number
   type: 'LOCAL' | 'SMB' | 'FTP' | 'WEBDAV' | 'NFS'
   description?: string
   isPrivate: boolean

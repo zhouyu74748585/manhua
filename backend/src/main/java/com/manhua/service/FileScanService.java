@@ -3,8 +3,8 @@ package com.manhua.service;
 import com.manhua.entity.Manga;
 import com.manhua.entity.MangaLibrary;
 import com.manhua.entity.ReadingProgress;
-import com.manhua.repository.MangaRepository;
 import com.manhua.repository.MangaLibraryRepository;
+import com.manhua.repository.MangaRepository;
 import com.manhua.repository.ReadingProgressRepository;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
@@ -16,13 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -148,6 +146,30 @@ public class FileScanService {
         try {
             Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
                 @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (skipHiddenFiles && dir.getFileName().toString().startsWith(".")) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+
+                    // 检查目录是否包含图片文件
+                    if (!dir.equals(directory) && containsImageFiles(dir)) {
+                        String dirPath = dir.toAbsolutePath().toString();
+                        scannedPaths.add(dirPath);
+
+                        try {
+                            handleMangaDirectory(dir, library, result);
+                        } catch (Exception e) {
+                            logger.warn("处理漫画目录失败: {} - {}", dirPath, e.getMessage());
+                        }
+                        
+                        // 跳过子目录，因为我们已经将整个目录作为一个漫画处理
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (skipHiddenFiles && file.getFileName().toString().startsWith(".")) {
                         return FileVisitResult.CONTINUE;
@@ -156,6 +178,7 @@ public class FileScanService {
                     String fileName = file.getFileName().toString().toLowerCase();
                     String extension = getFileExtension(fileName);
 
+                    // 处理支持的压缩文件格式
                     if (SUPPORTED_EXTENSIONS.contains(extension)) {
                         String filePath = file.toAbsolutePath().toString();
                         scannedPaths.add(filePath);
@@ -217,7 +240,7 @@ public class FileScanService {
                 // 创建初始阅读进度
                 ReadingProgress progress = new ReadingProgress();
                 progress.setManga(manga);
-                progress.setCurrentPage(0);
+                progress.setCurrentPage(1);
                 progress.setTotalPages(manga.getTotalPages());
                 progressRepository.save(progress);
 
@@ -381,7 +404,7 @@ public class FileScanService {
 
     private String getFileExtension(String fileName) {
         int lastDot = fileName.lastIndexOf('.');
-        return lastDot >= 0 ? fileName.substring(lastDot + 1) : "";
+        return lastDot >= 0 ? fileName.substring(lastDot) : "";
     }
 
     /**
@@ -588,11 +611,19 @@ public class FileScanService {
         try (ZipFile zipFile = new ZipFile(file.toFile())) {
             Optional<? extends ZipEntry> firstImage = zipFile.stream()
                     .filter(entry -> !entry.isDirectory())
-                    .filter(entry -> isImageFile(entry.getName())).min(Comparator.comparing(ZipEntry::getName));
+                    .filter(entry -> isImageFile(entry.getName()))
+                    .sorted((a, b) -> compareNatural(a.getName(), b.getName()))
+                    .findFirst();
+                    
             if (firstImage.isPresent()) {
-                // TODO: 提取并处理封面图片
-                manga.setCoverImage("covers/" + manga.getId() + ".jpg");
-                logger.debug("生成ZIP封面: {}", file);
+                // 生成封面缓存路径
+                String coverPath = "covers/zip_" + Math.abs(file.toString().hashCode()) + ".jpg";
+                manga.setCoverImage(coverPath);
+                
+                // TODO: 实际提取并保存封面图片到缓存目录
+                // 可以使用 zipFile.getInputStream(firstImage.get()) 获取图片流
+                // 然后保存到缓存目录中
+                logger.debug("生成ZIP封面: {} -> {}", firstImage.get().getName(), coverPath);
             }
         }
     }
@@ -631,6 +662,241 @@ public class FileScanService {
     private boolean isImageFile(String fileName) {
         String extension = getFileExtension(fileName.toLowerCase());
         return IMAGE_EXTENSIONS.contains(extension);
+    }
+
+    /**
+     * 检查目录是否包含图片文件
+     */
+    private boolean containsImageFiles(Path directory) {
+        try {
+            return Files.list(directory)
+                    .filter(Files::isRegularFile)
+                    .anyMatch(file -> isImageFile(file.getFileName().toString()));
+        } catch (IOException e) {
+            logger.warn("检查目录图片文件失败: {}", directory, e);
+            return false;
+        }
+    }
+
+    /**
+     * 处理漫画目录（包含图片的文件夹）
+     */
+    private void handleMangaDirectory(Path directory, MangaLibrary library, ScanResult result) {
+        String dirPath = directory.toAbsolutePath().toString();
+
+        // 检查目录是否已存在
+        Optional<Manga> existingManga = mangaRepository.findByFilePath(dirPath);
+
+        if (existingManga.isPresent()) {
+            // 检查目录是否有更新
+            Manga manga = existingManga.get();
+            try {
+                long lastModified = Files.getLastModifiedTime(directory).toMillis();
+                
+                if (manga.getFileModifiedAt() == null ||
+                    manga.getFileModifiedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() != lastModified) {
+                    
+                    updateMangaDirectory(manga, directory);
+                    result.updatedCount++;
+                }
+            } catch (IOException e) {
+                logger.warn("检查目录更新失败: {}", dirPath, e);
+            }
+        } else {
+            // 新目录，创建漫画记录
+            try {
+                Manga manga = createMangaFromDirectory(directory, library);
+                mangaRepository.save(manga);
+
+                // 创建初始阅读进度
+                ReadingProgress progress = new ReadingProgress();
+                progress.setManga(manga);
+                progress.setCurrentPage(1);
+                progress.setTotalPages(manga.getTotalPages());
+                progressRepository.save(progress);
+
+                result.addedCount++;
+                logger.debug("添加新漫画目录: {}", manga.getTitle());
+            } catch (Exception e) {
+                logger.warn("创建漫画目录记录失败: {}", dirPath, e);
+            }
+        }
+    }
+
+    /**
+     * 从目录创建漫画对象
+     */
+    private Manga createMangaFromDirectory(Path directory, MangaLibrary library) throws IOException {
+        Manga manga = new Manga();
+
+        // 基本信息
+        String dirName = directory.getFileName().toString();
+        manga.setTitle(extractTitleFromFileName(dirName));
+        manga.setFilePath(directory.toAbsolutePath().toString());
+        manga.setLibrary(library);
+        manga.setFileSize(calculateDirectorySize(directory));
+        manga.setFileModifiedAt(Instant.ofEpochMilli(Files.getLastModifiedTime(directory).toMillis())
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime());
+
+        // 设置文件类型为目录
+        manga.setFileType("directory");
+
+        // 获取页数（图片文件数量）
+        manga.setTotalPages(getDirectoryImageCount(directory));
+
+        // 生成封面
+        if (deepScan) {
+            generateDirectoryCover(manga, directory);
+        }
+
+        return manga;
+    }
+
+    /**
+     * 更新漫画目录信息
+     */
+    private void updateMangaDirectory(Manga manga, Path directory) throws IOException {
+        manga.setFileSize(calculateDirectorySize(directory));
+        manga.setFileModifiedAt(Instant.ofEpochMilli(Files.getLastModifiedTime(directory).toMillis())
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime());
+
+        // 重新获取页数
+        int newTotalPages = getDirectoryImageCount(directory);
+        if (manga.getTotalPages() != newTotalPages) {
+            manga.setTotalPages(newTotalPages);
+
+            // 更新阅读进度的总页数
+            ReadingProgress progress = progressRepository.findByMangaId(manga.getId())
+                    .orElse(null);
+            if (progress != null) {
+                progress.setTotalPages(newTotalPages);
+                progressRepository.save(progress);
+            }
+        }
+
+        // 重新生成封面
+        if (deepScan) {
+            generateDirectoryCover(manga, directory);
+        }
+
+        mangaRepository.save(manga);
+        logger.debug("更新漫画目录: {}", manga.getTitle());
+    }
+
+    /**
+     * 计算目录大小
+     */
+    private long calculateDirectorySize(Path directory) {
+        try {
+            return Files.walk(directory)
+                    .filter(Files::isRegularFile)
+                    .filter(file -> isImageFile(file.getFileName().toString()))
+                    .mapToLong(file -> {
+                        try {
+                            return Files.size(file);
+                        } catch (IOException e) {
+                            return 0L;
+                        }
+                    })
+                    .sum();
+        } catch (IOException e) {
+            logger.warn("计算目录大小失败: {}", directory, e);
+            return 0L;
+        }
+    }
+
+    /**
+     * 获取目录中图片文件数量
+     */
+    private int getDirectoryImageCount(Path directory) {
+        try {
+            return (int) Files.list(directory)
+                    .filter(Files::isRegularFile)
+                    .filter(file -> isImageFile(file.getFileName().toString()))
+                    .count();
+        } catch (IOException e) {
+            logger.warn("获取目录图片数量失败: {}", directory, e);
+            return 0;
+        }
+    }
+
+    /**
+     * 生成目录封面
+     */
+    private void generateDirectoryCover(Manga manga, Path directory) {
+        try {
+            // 获取目录中按文件名自然排序的第一张图片
+            Optional<Path> firstImage = Files.list(directory)
+                    .filter(Files::isRegularFile)
+                    .filter(file -> isImageFile(file.getFileName().toString()))
+                    .sorted(this::naturalSort)
+                    .findFirst();
+
+            if (firstImage.isPresent()) {
+                // 生成封面缓存路径
+                String coverPath = "covers/dir_" + Math.abs(directory.toString().hashCode()) + ".jpg";
+                manga.setCoverImage(coverPath);
+                
+                // TODO: 实际复制或处理封面图片到缓存目录
+                logger.debug("生成目录封面: {} -> {}", firstImage.get(), coverPath);
+            }
+        } catch (IOException e) {
+            logger.warn("生成目录封面失败: {}", directory, e);
+        }
+    }
+
+    /**
+     * 自然排序比较器
+     */
+    private int naturalSort(Path a, Path b) {
+        return compareNatural(a.getFileName().toString(), b.getFileName().toString());
+    }
+
+    /**
+     * 自然排序字符串比较
+     */
+    private int compareNatural(String a, String b) {
+        int aIndex = 0, bIndex = 0;
+        
+        while (aIndex < a.length() && bIndex < b.length()) {
+            char aChar = a.charAt(aIndex);
+            char bChar = b.charAt(bIndex);
+            
+            if (Character.isDigit(aChar) && Character.isDigit(bChar)) {
+                // 比较数字部分
+                StringBuilder aNum = new StringBuilder();
+                StringBuilder bNum = new StringBuilder();
+                
+                while (aIndex < a.length() && Character.isDigit(a.charAt(aIndex))) {
+                    aNum.append(a.charAt(aIndex++));
+                }
+                
+                while (bIndex < b.length() && Character.isDigit(b.charAt(bIndex))) {
+                    bNum.append(b.charAt(bIndex++));
+                }
+                
+                int numCompare = Integer.compare(
+                    Integer.parseInt(aNum.toString()),
+                    Integer.parseInt(bNum.toString())
+                );
+                
+                if (numCompare != 0) {
+                    return numCompare;
+                }
+            } else {
+                // 比较字符部分
+                int charCompare = Character.compare(Character.toLowerCase(aChar), Character.toLowerCase(bChar));
+                if (charCompare != 0) {
+                    return charCompare;
+                }
+                aIndex++;
+                bIndex++;
+            }
+        }
+        
+        return Integer.compare(a.length(), b.length());
     }
 
     /**
@@ -717,7 +983,7 @@ public class FileScanService {
             // 创建初始阅读进度
             ReadingProgress progress = new ReadingProgress();
             progress.setManga(manga);
-            progress.setCurrentPage(0);
+            progress.setCurrentPage(1);
             progress.setTotalPages(manga.getTotalPages());
             progressRepository.save(progress);
 

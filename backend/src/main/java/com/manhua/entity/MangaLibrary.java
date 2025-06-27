@@ -1,5 +1,6 @@
 package com.manhua.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -101,6 +102,7 @@ public class MangaLibrary {
     private LocalDateTime updatedAt;
 
     // 关联关系
+    @JsonIgnore
     @OneToMany(mappedBy = "library", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Manga> mangas = new ArrayList<>();
 

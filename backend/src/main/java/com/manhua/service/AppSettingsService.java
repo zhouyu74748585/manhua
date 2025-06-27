@@ -1,8 +1,8 @@
 package com.manhua.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manhua.entity.AppSettings;
 import com.manhua.repository.AppSettingsRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

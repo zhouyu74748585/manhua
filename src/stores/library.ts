@@ -121,11 +121,14 @@ export const useLibraryStore = defineStore('library', () => {
       if (response.success && response.data) {
         if (libraryId) {
           // 只更新指定库的漫画
-          mangas.value = mangas.value.filter(manga => manga.libraryId !== libraryId)
-          mangas.value.push(...response.data.mangas)
+          //增加判断value不为undefined
+          if (mangas.value) {
+            mangas.value = mangas.value.filter(manga => manga.libraryId !== libraryId)
+            mangas.value.push(...response.data)
+          }
         } else {
           // 加载所有漫画
-          mangas.value = response.data.mangas
+          mangas.value = response.data
         }
       } else {
         throw new Error(response.message || '加载漫画列表失败')

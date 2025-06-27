@@ -1,9 +1,9 @@
 package com.manhua.service;
 
-import com.manhua.entity.ReadingProgress;
 import com.manhua.entity.Manga;
-import com.manhua.repository.ReadingProgressRepository;
+import com.manhua.entity.ReadingProgress;
 import com.manhua.repository.MangaRepository;
+import com.manhua.repository.ReadingProgressRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

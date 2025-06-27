@@ -47,7 +47,12 @@ class ApiClient {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        const errorData = await response.json()
+        if (errorData && errorData.error === null) {
+          return { success: true, data: errorData, message: 'Success' }
+        } else {
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
+        }
       }
 
       const data = await response.json()
@@ -187,9 +192,9 @@ export const mangaApi = {
     genre?: string
     status?: string
     sort?: string
-  }): Promise<ApiResponse<{ mangas: Manga[]; total: number }>> {
+  }): Promise<ApiResponse<Manga[]>> {
     const queryParams = { libraryId, ...params }
-    return apiClient.get<{ mangas: Manga[]; total: number }>('/mangas', queryParams)
+    return apiClient.get<Manga[]>('/mangas', queryParams)
   },
 
   /**
