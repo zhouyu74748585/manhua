@@ -21,7 +21,7 @@ import java.util.List;
 public class Manga {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotBlank(message = "漫画标题不能为空")

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * 漫画标签实体类
- * 
+ *
  * @author ManhuaReader
  * @version 1.0.0
  */
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class MangaTag {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotBlank(message = "标签名称不能为空")

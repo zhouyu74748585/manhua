@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class ReadingProgress {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotNull(message = "当前页数不能为空")

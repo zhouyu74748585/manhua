@@ -3,22 +3,30 @@ spring:
   application:
     name: manhua-reader-backend
 
-  # 数据库配置
+  # 数据库配置 - H2混合模式
   datasource:
-    url: jdbc:sqlite:./data/manhua.db
-    driver-class-name: org.sqlite.JDBC
-    username:
+    url: jdbc:h2:file:./data/manhua;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;
+    driver-class-name: org.h2.Driver
+    username: sa
     password:
+
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
 
   # JPA配置
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         jdbc:
           time_zone: UTC
 

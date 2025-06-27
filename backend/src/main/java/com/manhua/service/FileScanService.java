@@ -88,11 +88,6 @@ public class FileScanService {
         MangaLibrary library = libraryRepository.findById(libraryId)
                 .orElseThrow(() -> new IllegalArgumentException("漫画库不存在: " + libraryId));
 
-        if (!library.getIsActive()) {
-            logger.warn("漫画库未激活，跳过扫描: {}", libraryId);
-            return CompletableFuture.completedFuture(new ScanResult(0, 0, 0, "漫画库未激活"));
-        }
-
         // 更新扫描状态
         library.setCurrentStatus("扫描中");
         libraryRepository.save(library);

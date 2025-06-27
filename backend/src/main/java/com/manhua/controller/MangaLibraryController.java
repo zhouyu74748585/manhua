@@ -246,14 +246,11 @@ public class MangaLibraryController {
      * 扫描漫画库
      */
     @PostMapping("/{id}/scan")
-    public ResponseEntity<Map<String, Object>> scanLibrary(@PathVariable Long id) {
+    public ResponseEntity<Object> scanLibrary(@PathVariable Long id) {
         try {
             CompletableFuture<FileScanService.ScanResult> future = scanService.scanLibrary(id);
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "扫描已开始",
-                    "libraryId", id
-            ));
+            FileScanService.ScanResult result=future.get();
+            return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             logger.warn("扫描漫画库参数错误: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

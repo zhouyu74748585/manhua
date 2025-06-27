@@ -274,12 +274,18 @@ const selectFolder = async () => {
     if (window.electronAPI && window.electronAPI.selectFolder) {
       const result = await window.electronAPI.selectFolder()
       if (!result.canceled && result.filePaths.length > 0) {
+        // Electron环境下直接获取绝对路径
         form.value.path = result.filePaths[0]
+        ElMessage.success('已选择文件夹: ' + form.value.path)
       }
     } else {
-      // Web环境中的替代方案
-      ElMessage.info('请手动输入文件夹路径，或使用文件输入框选择文件夹')
-      // 创建一个隐藏的文件输入框来选择文件夹
+      // Web环境中无法获取绝对路径，提示用户手动输入
+      ElMessage.warning({
+        message: 'Web环境下无法自动获取绝对路径，请在路径输入框中手动输入完整的文件夹绝对路径',
+        duration: 5000
+      })
+      
+      // 仍然提供文件夹选择功能作为参考，但提醒用户需要手动输入绝对路径
       const input = document.createElement('input')
       input.type = 'file'
       input.webkitdirectory = true
@@ -289,12 +295,16 @@ const selectFolder = async () => {
       input.onchange = (event: any) => {
         const files = event.target.files
         if (files && files.length > 0) {
-          // 获取第一个文件的路径，去掉文件名部分
           const firstFile = files[0]
-          const path = firstFile.webkitRelativePath
-          const folderPath = path.substring(0, path.indexOf('/'))
-          form.value.path = folderPath || firstFile.name
-          ElMessage.success('已选择文件夹: ' + form.value.path)
+          const relativePath = firstFile.webkitRelativePath
+          const folderName = relativePath.substring(0, relativePath.indexOf('/')) || firstFile.name
+          
+          // 清空路径输入框，提示用户输入绝对路径
+          form.value.path = ''
+          ElMessage.info({
+            message: `检测到文件夹名称: ${folderName}，请在路径输入框中输入该文件夹的完整绝对路径`,
+            duration: 8000
+          })
         }
         document.body.removeChild(input)
       }
@@ -304,7 +314,7 @@ const selectFolder = async () => {
     }
   } catch (error) {
     console.error('选择文件夹失败:', error)
-    ElMessage.error('选择文件夹失败，请手动输入路径')
+    ElMessage.error('选择文件夹失败，请手动输入绝对路径')
   }
 }
 
