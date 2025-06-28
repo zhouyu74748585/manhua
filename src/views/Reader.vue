@@ -1,7 +1,13 @@
 <template>
   <div class="reader-container" :class="{ 'fullscreen': isFullscreen }">
+    <!-- 数据加载中 -->
+    <div v-if="!isDataLoaded" class="reader-loading">
+      <el-icon class="is-loading"><Loading /></el-icon>
+      <p>正在加载漫画数据...</p>
+    </div>
+    
     <!-- 阅读器工具栏 -->
-    <div class="reader-toolbar" :class="{ 'hidden': isToolbarHidden }">
+    <div v-else class="reader-toolbar" :class="{ 'hidden': isToolbarHidden }">
       <div class="toolbar-left">
         <el-button :icon="ArrowLeft" @click="goBack" circle />
         <span class="manga-title">{{ manga?.title }}</span>
@@ -9,17 +15,19 @@
       
       <div class="toolbar-center">
         <div class="page-info">
-          <span>{{ currentPage }} / {{ totalPages }}</span>
+          <span v-if="totalPages > 0">{{ currentPage }} / {{ totalPages }}</span>
+          <span v-else>加载中...</span>
         </div>
         
         <div class="page-controls">
           <el-button
             :icon="ArrowLeftBold"
             @click="previousPage"
-            :disabled="currentPage <= 1"
+            :disabled="currentPage <= 1 || totalPages <= 0"
             size="small"
           />
           <el-input-number
+            v-if="totalPages > 0"
             v-model="currentPage"
             :min="1"
             :max="totalPages"
@@ -27,10 +35,11 @@
             controls-position="right"
             @change="goToPage"
           />
+          <span v-else class="page-loading-text">加载中...</span>
           <el-button
             :icon="ArrowRightBold"
             @click="nextPage"
-            :disabled="currentPage >= totalPages"
+            :disabled="currentPage >= totalPages || totalPages <= 0"
             size="small"
           />
         </div>
@@ -93,6 +102,7 @@
 
     <!-- 阅读器内容区 -->
     <div 
+      v-if="isDataLoaded"
       class="reader-content"
       :style="{ backgroundColor: readerSettings.backgroundColor }"
       @click="toggleToolbar"
@@ -176,7 +186,7 @@
     </div>
 
     <!-- 页面导航区域 -->
-    <div class="page-navigation">
+    <div class="page-navigation" v-if="isDataLoaded && totalPages > 0">
       <div 
         class="nav-area nav-prev"
         @click="previousPage"
@@ -190,7 +200,7 @@
     </div>
 
     <!-- 进度条 -->
-    <div class="reading-progress">
+    <div class="reading-progress" v-if="isDataLoaded">
       <el-progress
         :percentage="progressPercentage"
         :show-text="false"
@@ -203,8 +213,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useLibraryStore } from '../stores/library'
+import { ElMessage } from 'element-plus'
 import type { Manga, ReaderSettings } from '../types'
+import { mangaApi } from '../services/api'
 import {
   ArrowLeft,
   ArrowLeftBold,
@@ -221,12 +232,11 @@ import {
 
 const route = useRoute()
 const router = useRouter()
-const libraryStore = useLibraryStore()
-
 // 响应式数据
-const manga = ref<Manga | null>(null)
+const manga = ref<Manga>()
 const currentPage = ref(1)
 const totalPages = ref(0)
+const isDataLoaded = ref(false)
 const isToolbarHidden = ref(false)
 const isFullscreen = ref(false)
 const isZoomed = ref(false)
@@ -487,14 +497,35 @@ const loadPage = async (pageNumber: number) => {
     return
   }
   
+  if (!manga.value) {
+    console.error('漫画数据未加载')
+    return
+  }
+  
   loadingPages.value.add(pageNumber)
   
   try {
-    // 这里应该调用实际的页面加载API
-    // const imageSrc = await loadMangaPage(manga.value!.id, pageNumber)
-    const imageSrc = `/api/manga/${manga.value!.id}/page/${pageNumber}` // 模拟
+    let imageSrc: string
     
-    pageImages.value.set(pageNumber, imageSrc)
+    // 检查是否在Electron环境中
+    if (window.electronAPI) {
+      // 使用Electron API直接访问本地文件
+      imageSrc = await window.electronAPI.getMangaPage(manga.value.filePath, pageNumber)
+    } else {
+      // 回退到后端API（用于Web版本）
+      imageSrc = `/api/manga/${manga.value.id}/page/${pageNumber}`
+    }
+    
+    // 预加载图片以检查是否可用
+    const img = new Image()
+    img.onload = () => {
+      pageImages.value.set(pageNumber, imageSrc)
+    }
+    img.onerror = () => {
+      console.error(`第${pageNumber}页图片加载失败`)
+    }
+    img.src = imageSrc
+    
   } catch (error) {
     console.error(`加载第${pageNumber}页失败:`, error)
   } finally {
@@ -521,11 +552,11 @@ const saveProgress = () => {
     
     // 更新阅读状态
     if (currentPage.value === 1) {
-      manga.value.status = 'reading'
+      manga.value.status = 'READING'
     } else if (currentPage.value === totalPages.value) {
-      manga.value.status = 'completed'
+      manga.value.status = 'COMPLETED'
     } else {
-      manga.value.status = 'reading'
+      manga.value.status = 'READING'
     }
     
     // 数据已自动同步到后端
@@ -567,18 +598,43 @@ watch(currentPage, () => {
 onMounted(async () => {
   const mangaId = route.params.id as string
   
-  // 加载漫画数据
-  await libraryStore.initializeData()
-  manga.value = libraryStore.mangas.find(m => m.id === mangaId) || null
+   const response = await mangaApi.getManga(mangaId)
+   manga.value = response.data
   
   if (!manga.value) {
+    console.error('未找到漫画:', mangaId)
     router.push('/bookshelf')
     return
   }
   
   // 初始化页面信息
   currentPage.value = manga.value.currentPage || 1
-  totalPages.value = manga.value.totalPages
+  
+  // 在Electron环境中，直接从文件系统获取总页数
+  if (window.electronAPI) {
+    try {
+      totalPages.value = await window.electronAPI.getMangaPageCount(manga.value.path)
+      console.log('从文件系统获取总页数:', totalPages.value)
+    } catch (error) {
+      console.error('获取文件系统页数失败:', error)
+      totalPages.value = manga.value.totalPages
+    }
+  } else {
+    totalPages.value = manga.value.totalPages
+  }
+  
+  console.log('漫画信息:', manga.value)
+  
+  // 检查总页数是否有效
+  if (totalPages.value <= 0) {
+    console.error('漫画总页数无效:', totalPages.value)
+    ElMessage.error('漫画数据异常，总页数为0')
+    router.push('/bookshelf')
+    return
+  }
+  
+  // 标记数据已加载
+  isDataLoaded.value = true
   
   // 加载设置
   loadReaderSettings()
@@ -623,6 +679,26 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   z-index: 9999;
+}
+
+.reader-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: white;
+  background: #000;
+}
+
+.reader-loading .el-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.reader-loading p {
+  font-size: 16px;
+  margin: 0;
 }
 
 .reader-toolbar {
@@ -675,6 +751,12 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.page-loading-text {
+  color: white;
+  font-size: 14px;
+  padding: 0 8px;
 }
 
 .toolbar-right {

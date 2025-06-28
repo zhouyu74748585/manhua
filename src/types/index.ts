@@ -61,7 +61,7 @@ export interface Manga {
   title: string
   author?: string
   libraryId: string
-  path: string
+  filePath: string
   coverImage?: string
   totalPages: number
   currentPage: number
@@ -200,6 +200,10 @@ declare global {
         canceled: boolean
         filePaths: string[]
       }>
+      readDirectory: (dirPath: string) => Promise<FileInfo[]>
+      getAppVersion: () => Promise<string>
+      getMangaPage: (mangaPath: string, pageNumber: number) => Promise<string>
+      getMangaPageCount: (mangaPath: string) => Promise<number>
     }
   }
 }

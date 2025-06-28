@@ -5,6 +5,8 @@ interface ElectronAPI {
   selectFolder: () => Promise<Electron.OpenDialogReturnValue>
   readDirectory: (dirPath: string) => Promise<FileInfo[]>
   getAppVersion: () => Promise<string>
+  getMangaPage: (mangaPath: string, pageNumber: number) => Promise<string>
+  getMangaPageCount: (mangaPath: string) => Promise<number>
 }
 
 interface FileInfo {
@@ -19,7 +21,9 @@ interface FileInfo {
 const electronAPI: ElectronAPI = {
   selectFolder: () => ipcRenderer.invoke('select-folder'),
   readDirectory: (dirPath: string) => ipcRenderer.invoke('read-directory', dirPath),
-  getAppVersion: () => ipcRenderer.invoke('get-app-version')
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getMangaPage: (mangaPath: string, pageNumber: number) => ipcRenderer.invoke('get-manga-page', mangaPath, pageNumber),
+  getMangaPageCount: (mangaPath: string) => ipcRenderer.invoke('get-manga-page-count', mangaPath)
 }
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)
