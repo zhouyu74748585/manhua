@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/routes/app_router.dart';
+import '../../../core/utils/platform_utils.dart';
+import '../../widgets/common/responsive_grid.dart';
+import '../../widgets/manga/manga_card.dart';
+import '../../widgets/common/section_header.dart';
+import '../../widgets/common/loading_widget.dart';
+import '../../widgets/common/error_widget.dart';
+
+class HomePage extends ConsumerWidget {
+  const HomePage({super.key});
+  
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('漫画阅读器'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.go(AppRoutes.search),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              // TODO: 刷新数据
+            },
+          ),
+        ],
+      ),
+      body: const _HomeContent(),
+    );
+  }
+}
+
+class _HomeContent extends ConsumerWidget {
+  const _HomeContent();
+  
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        // TODO: 实现下拉刷新
+      },
+      child: CustomScrollView(
+        slivers: [
+          // 最近阅读
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              title: '最近阅读',
+              showMore: true,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 220,
+              child: _buildRecentlyRead(context, ref),
+            ),
+          ),
+          
+          // 最新更新
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              title: '最新更新',
+              showMore: true,
+            ),
+          ),
+          _buildLatestUpdates(context, ref),
+          
+          // 推荐漫画
+          const SliverToBoxAdapter(
+            child: SectionHeader(
+              title: '推荐漫画',
+              showMore: true,
+            ),
+          ),
+          _buildRecommended(context, ref),
+          
+          // 底部间距
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 80),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildRecentlyRead(BuildContext context, WidgetRef ref) {
+    // TODO: 从Provider获取最近阅读数据
+    final recentlyRead = <Map<String, dynamic>>[
+      {
+        'id': '1',
+        'title': '示例漫画 1',
+        'coverUrl': '',
+        'progress': 0.6,
+        'lastReadChapter': '第 12 话',
+      },
+      {
+        'id': '2',
+        'title': '示例漫画 2',
+        'coverUrl': '',
+        'progress': 0.3,
+        'lastReadChapter': '第 5 话',
+      },
+    ];
+    
+    if (recentlyRead.isEmpty) {
+      return const Center(
+        child: Text(
+          '暂无最近阅读记录',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+    
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: recentlyRead.length,
+      itemBuilder: (context, index) {
+        final manga = recentlyRead[index];
+        return Container(
+          width: 140,
+          margin: const EdgeInsets.only(right: 12),
+          child: MangaCard(
+            title: manga['title'],
+            coverUrl: manga['coverUrl'],
+            progress: manga['progress'],
+            subtitle: manga['lastReadChapter'],
+            onTap: () {
+              context.go('/manga/${manga['id']}');
+            },
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildLatestUpdates(BuildContext context, WidgetRef ref) {
+    // TODO: 从Provider获取最新更新数据
+    final latestUpdates = <Map<String, dynamic>>[
+      {
+        'id': '3',
+        'title': '最新漫画 1',
+        'coverUrl': '',
+        'updateTime': '2小时前',
+        'newChapter': '第 25 话',
+      },
+      {
+        'id': '4',
+        'title': '最新漫画 2',
+        'coverUrl': '',
+        'updateTime': '5小时前',
+        'newChapter': '第 18 话',
+      },
+    ];
+    
+    if (latestUpdates.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Text(
+              '暂无最新更新',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return ResponsiveGrid(
+      items: latestUpdates,
+      itemBuilder: (context, manga) {
+        return MangaCard(
+          title: manga['title'],
+          coverUrl: manga['coverUrl'],
+          subtitle: '${manga['newChapter']} • ${manga['updateTime']}',
+          onTap: () {
+            context.go('/manga/${manga['id']}');
+          },
+        );
+      },
+    );
+  }
+  
+  Widget _buildRecommended(BuildContext context, WidgetRef ref) {
+    // TODO: 从Provider获取推荐数据
+    final recommended = <Map<String, dynamic>>[
+      {
+        'id': '5',
+        'title': '推荐漫画 1',
+        'coverUrl': '',
+        'rating': 4.5,
+        'tags': ['冒险', '热血'],
+      },
+      {
+        'id': '6',
+        'title': '推荐漫画 2',
+        'coverUrl': '',
+        'rating': 4.2,
+        'tags': ['恋爱', '校园'],
+      },
+    ];
+    
+    if (recommended.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Text(
+              '暂无推荐漫画',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return ResponsiveGrid(
+      items: recommended,
+      itemBuilder: (context, manga) {
+        return MangaCard(
+          title: manga['title'],
+          coverUrl: manga['coverUrl'],
+          subtitle: '评分: ${manga['rating']} • ${manga['tags'].join(', ')}',
+          onTap: () {
+            context.go('/manga/${manga['id']}');
+          },
+        );
+      },
+    );
+  }
+}
