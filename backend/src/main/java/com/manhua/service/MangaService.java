@@ -10,14 +10,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -53,8 +57,104 @@ public class MangaService {
      * 分页获取漫画
      */
     @Transactional(readOnly = true)
-    public Page<Manga> getManga(Pageable pageable) {
+    public Page<Manga> getMangas(Pageable pageable) {
         return mangaRepository.findAll(pageable);
+    }
+
+    /**
+     * 根据查询参数获取漫画列表
+     */
+    @Transactional(readOnly = true)
+    public Page<Manga> getMangasWithFilters(
+            int page, int limit, String search, String genre, String status,
+            String sort, String order, boolean activeLibrariesOnly, Long libraryId) {
+        
+        // 创建分页对象
+        Sort.Direction direction = "desc".equalsIgnoreCase(order) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        String sortField = sort != null ? sort : "title";
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(direction, sortField));
+        
+        Page<Manga> mangaPage;
+        
+        if (activeLibrariesOnly) {
+            // 只获取激活库的漫画
+            if (libraryId != null) {
+                // 指定库ID且该库必须是激活的
+                mangaPage = mangaRepository.findByLibraryIdAndLibraryIsActiveTrue(libraryId, pageable);
+            } else {
+                // 所有激活库的漫画
+                mangaPage = mangaRepository.findByLibraryIsActiveTrue(pageable);
+            }
+        } else {
+            // 获取所有漫画
+            if (libraryId != null) {
+                mangaPage = mangaRepository.findByLibraryId(libraryId, pageable);
+            } else {
+                mangaPage = mangaRepository.findAll(pageable);
+            }
+        }
+        
+        // 如果有搜索条件，进一步过滤
+        if (search != null && !search.trim().isEmpty()) {
+            if (activeLibrariesOnly) {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndLibraryIsActiveTrueAndTitleContainingIgnoreCase(
+                        libraryId, search, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByLibraryIsActiveTrueAndTitleContainingIgnoreCase(
+                        search, pageable);
+                }
+            } else {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndTitleContainingIgnoreCase(
+                        libraryId, search, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByTitleContainingIgnoreCase(search, pageable);
+                }
+            }
+        }
+        
+        // 如果有类型过滤
+        if (genre != null && !genre.trim().isEmpty()) {
+            if (activeLibrariesOnly) {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndLibraryIsActiveTrueAndGenreContainingIgnoreCase(
+                        libraryId, genre, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByLibraryIsActiveTrueAndGenreContainingIgnoreCase(
+                        genre, pageable);
+                }
+            } else {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndGenreContainingIgnoreCase(
+                        libraryId, genre, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByGenreContainingIgnoreCase(genre, pageable);
+                }
+            }
+        }
+        
+        // 如果有状态过滤
+        if (status != null && !status.trim().isEmpty()) {
+            if (activeLibrariesOnly) {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndLibraryIsActiveTrueAndStatus(
+                        libraryId, status, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByLibraryIsActiveTrueAndStatus(
+                        status, pageable);
+                }
+            } else {
+                if (libraryId != null) {
+                    mangaPage = mangaRepository.findByLibraryIdAndStatus(
+                        libraryId, status, pageable);
+                } else {
+                    mangaPage = mangaRepository.findByStatus(status, pageable);
+                }
+            }
+        }
+
+        return mangaPage;
     }
 
     /**

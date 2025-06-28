@@ -150,6 +150,13 @@ public class MangaLibraryService {
      * 更新漫画库
      */
     public MangaLibrary updateLibrary(Long id, MangaLibrary updatedLibrary) {
+        return updateLibrary(id, updatedLibrary, null);
+    }
+
+    /**
+     * 更新漫画库（支持密码验证）
+     */
+    public MangaLibrary updateLibrary(Long id, MangaLibrary updatedLibrary, String oldPassword) {
         MangaLibrary existingLibrary = libraryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("漫画库不存在: " + id));
 
@@ -171,12 +178,47 @@ public class MangaLibraryService {
             validateLocalPath(updatedLibrary.getPath());
         }
 
+        // 处理隐私模式变更的密码验证逻辑
+        Boolean oldIsPrivate = existingLibrary.getIsPrivate();
+        Boolean newIsPrivate = updatedLibrary.getIsPrivate();
+        
+        if (oldIsPrivate != null && oldIsPrivate && (newIsPrivate == null || !newIsPrivate)) {
+            // 从隐私模式改为非隐私模式，需要验证旧密码
+            if (oldPassword == null || oldPassword.trim().isEmpty()) {
+                throw new IllegalArgumentException("将隐私模式改为非隐私模式需要验证旧密码");
+            }
+            if (!oldPassword.equals(existingLibrary.getAccessPassword())) {
+                throw new IllegalArgumentException("旧密码错误");
+            }
+            // 清除密码
+            existingLibrary.setAccessPassword(null);
+        } else if ((oldIsPrivate == null || !oldIsPrivate) && newIsPrivate != null && newIsPrivate) {
+            // 从非隐私模式改为隐私模式，设置新密码
+            if (updatedLibrary.getAccessPassword() == null || updatedLibrary.getAccessPassword().trim().isEmpty()) {
+                throw new IllegalArgumentException("设置隐私模式需要提供新密码");
+            }
+            existingLibrary.setAccessPassword(updatedLibrary.getAccessPassword());
+        } else if (oldIsPrivate != null && oldIsPrivate && newIsPrivate != null && newIsPrivate) {
+            // 隐私模式下修改密码
+            if (updatedLibrary.getAccessPassword() != null && !updatedLibrary.getAccessPassword().trim().isEmpty()) {
+                // 如果提供了新密码，需要验证旧密码
+                if (oldPassword == null || oldPassword.trim().isEmpty()) {
+                    throw new IllegalArgumentException("修改隐私库密码需要验证旧密码");
+                }
+                if (!oldPassword.equals(existingLibrary.getAccessPassword())) {
+                    throw new IllegalArgumentException("旧密码错误");
+                }
+                existingLibrary.setAccessPassword(updatedLibrary.getAccessPassword());
+            }
+        }
+
         // 更新字段
         existingLibrary.setName(updatedLibrary.getName());
         existingLibrary.setDescription(updatedLibrary.getDescription());
         existingLibrary.setType(updatedLibrary.getType());
         existingLibrary.setPath(updatedLibrary.getPath());
         existingLibrary.setIsActive(updatedLibrary.getIsActive());
+        existingLibrary.setIsPrivate(updatedLibrary.getIsPrivate());
         existingLibrary.setAutoScan(updatedLibrary.getAutoScan());
         existingLibrary.setScanInterval(updatedLibrary.getScanInterval());
 
@@ -226,17 +268,58 @@ public class MangaLibraryService {
     }
 
     /**
-     * 激活/停用漫画库
+     * 激活漫画库（隐私库需要密码）
      */
+    public void activateLibrary(Long id, String password) {
+        MangaLibrary library = libraryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("漫画库不存在: " + id));
+
+        // 如果是隐私库，需要验证密码
+        if (library.getIsPrivate() != null && library.getIsPrivate()) {
+            if (password == null || password.trim().isEmpty()) {
+                throw new IllegalArgumentException("隐私库激活需要提供密码");
+            }
+            if (!password.equals(library.getAccessPassword())) {
+                throw new IllegalArgumentException("密码错误");
+            }
+        }
+
+        library.setIsActive(true);
+        libraryRepository.save(library);
+
+        logger.info("漫画库 {} 已激活", library.getName());
+    }
+
+    /**
+     * 停用漫画库（不需要密码）
+     */
+    public void deactivateLibrary(Long id) {
+        MangaLibrary library = libraryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("漫画库不存在: " + id));
+
+        library.setIsActive(false);
+        libraryRepository.save(library);
+
+        logger.info("漫画库 {} 已停用", library.getName());
+    }
+
+    /**
+     * 激活/停用漫画库（兼容旧接口）
+     */
+    @Deprecated
     public void toggleLibraryStatus(Long id) {
         MangaLibrary library = libraryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("漫画库不存在: " + id));
 
-        library.setIsActive(!library.getIsActive());
-        libraryRepository.save(library);
-
-        logger.info("漫画库 {} 状态变更为: {}", library.getName(),
-                   library.getIsActive() ? "激活" : "停用");
+        if (library.getIsActive()) {
+            deactivateLibrary(id);
+        } else {
+            // 如果是隐私库且要激活，抛出异常要求提供密码
+            if (library.getIsPrivate() != null && library.getIsPrivate()) {
+                throw new IllegalArgumentException("隐私库激活需要提供密码");
+            }
+            activateLibrary(id, null);
+        }
     }
 
     /**

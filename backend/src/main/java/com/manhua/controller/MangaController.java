@@ -62,10 +62,34 @@ public class MangaController {
     @GetMapping("/page")
     public ResponseEntity<Page<Manga>> getMangasPage(Pageable pageable) {
         try {
-            Page<Manga> mangas = mangaService.getManga(pageable);
+            Page<Manga> mangas = mangaService.getMangas(pageable);
             return ResponseEntity.ok(mangas);
         } catch (Exception e) {
             logger.error("分页获取漫画失败", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 根据查询参数获取漫画列表
+     */
+    @GetMapping("/filter")
+    public ResponseEntity<Page<Manga>> getMangasWithFilters(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "title") String sort,
+            @RequestParam(defaultValue = "asc") String order,
+            @RequestParam(defaultValue = "true") boolean activeLibrariesOnly,
+            @RequestParam(required = false) Long libraryId) {
+        try {
+            Page<Manga> mangas = mangaService.getMangasWithFilters(
+                page, limit, search, genre, status, sort, order, activeLibrariesOnly, libraryId);
+            return ResponseEntity.ok(mangas);
+        } catch (Exception e) {
+            logger.error("获取漫画列表失败", e);
             return ResponseEntity.internalServerError().build();
         }
     }

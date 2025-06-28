@@ -253,4 +253,79 @@ public interface MangaRepository extends JpaRepository<Manga, Long> {
      */
     @Query("SELECT m FROM Manga m WHERE m.rating >= 4.0 ORDER BY m.lastReadAt DESC")
     List<Manga> findPopularManga(Pageable pageable);
+
+    // 激活库相关查询方法
+    
+    /**
+     * 查找激活库的所有漫画
+     */
+    Page<Manga> findByLibraryIsActiveTrue(Pageable pageable);
+    
+    /**
+     * 查找指定激活库的漫画
+     */
+    Page<Manga> findByLibraryIdAndLibraryIsActiveTrue(Long libraryId, Pageable pageable);
+    
+    /**
+     * 在激活库中按标题搜索漫画
+     */
+    Page<Manga> findByLibraryIsActiveTrueAndTitleContainingIgnoreCase(String title, Pageable pageable);
+    
+    /**
+     * 在指定激活库中按标题搜索漫画
+     */
+    Page<Manga> findByLibraryIdAndLibraryIsActiveTrueAndTitleContainingIgnoreCase(
+        Long libraryId, String title, Pageable pageable);
+    
+    /**
+     * 在激活库中按类型搜索漫画
+     */
+    Page<Manga> findByLibraryIsActiveTrueAndGenreContainingIgnoreCase(String genre, Pageable pageable);
+    
+    /**
+     * 在指定激活库中按类型搜索漫画
+     */
+    Page<Manga> findByLibraryIdAndLibraryIsActiveTrueAndGenreContainingIgnoreCase(
+        Long libraryId, String genre, Pageable pageable);
+    
+    /**
+     * 在激活库中按状态搜索漫画
+     */
+    Page<Manga> findByLibraryIsActiveTrueAndStatus(String status, Pageable pageable);
+    
+    /**
+     * 在指定激活库中按状态搜索漫画
+     */
+    Page<Manga> findByLibraryIdAndLibraryIsActiveTrueAndStatus(
+        Long libraryId, String status, Pageable pageable);
+    
+    /**
+     * 按标题搜索漫画（分页）
+     */
+    Page<Manga> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    
+    /**
+     * 在指定库中按标题搜索漫画（分页）
+     */
+    Page<Manga> findByLibraryIdAndTitleContainingIgnoreCase(Long libraryId, String title, Pageable pageable);
+    
+    /**
+     * 按类型搜索漫画（分页）
+     */
+    Page<Manga> findByGenreContainingIgnoreCase(String genre, Pageable pageable);
+    
+    /**
+     * 在指定库中按类型搜索漫画（分页）
+     */
+    Page<Manga> findByLibraryIdAndGenreContainingIgnoreCase(Long libraryId, String genre, Pageable pageable);
+    
+    /**
+     * 按状态搜索漫画（分页）
+     */
+    Page<Manga> findByStatus(String status, Pageable pageable);
+    
+    /**
+     * 在指定库中按状态搜索漫画（分页）
+     */
+    Page<Manga> findByLibraryIdAndStatus(Long libraryId, String status, Pageable pageable);
 }

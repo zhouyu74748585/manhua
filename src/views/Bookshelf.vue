@@ -37,7 +37,7 @@
         >
           <el-option label="全部漫画库" value="" />
           <el-option
-            v-for="library in libraries"
+            v-for="library in activeLibraries"
             :key="library.id"
             :label="library.name"
             :value="library.id"
@@ -51,9 +51,9 @@
           style="width: 150px"
         >
           <el-option label="全部状态" value="" />
-          <el-option label="未读" value="unread" />
-          <el-option label="阅读中" value="reading" />
-          <el-option label="已完成" value="completed" />
+          <el-option label="未读" value="UNREAD" />
+          <el-option label="阅读中" value="READING" />
+          <el-option label="已完成" value="COMPLETED" />
         </el-select>
         
         <el-select
@@ -158,7 +158,7 @@
                 <span class="title-text">{{ row.title }}</span>
                 <div class="title-tags">
                   <el-tag
-                    v-for="tag in row.tags.slice(0, 3)"
+                    v-for="tag in (row.tags || []).slice(0, 3)"
                     :key="tag"
                     size="small"
                     type="info"
@@ -227,6 +227,17 @@
         </el-table>
       </div>
       
+      <!-- 分页组件 -->
+      <div v-if="filteredMangas.length > 0" class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          :page-size="mangas?.size||20"
+          :total="mangas?.totalElements||0"
+          layout="total, prev, pager, next, jumper"
+          @current-change="handlePageChange"
+        />
+      </div>
+      
       <!-- 空状态 -->
       <el-empty v-if="filteredMangas.length === 0 && !loading" description="暂无漫画">
         <el-button type="primary" @click="$router.push('/library')">
@@ -240,15 +251,29 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useLibraryStore } from '../stores/library'
-import type { Manga, FilterOptions, SortOptions } from '../types'
+import type { Manga } from '../types'
+
+// 定义筛选选项类型
+interface FilterOptions {
+  libraryId: string
+  status?: string
+  searchText: string
+}
+
+// 定义排序选项类型
+interface SortOptions {
+  field: string
+  order: 'asc' | 'desc'
+}
 import {
   Grid,
   List,
   Search,
   Reading,
   SortUp,
-  SortDown
+  SortDown,
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -256,6 +281,9 @@ const libraryStore = useLibraryStore()
 
 const viewMode = ref<'grid' | 'list'>('grid')
 const loading = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalCount = ref(0)
 
 // 筛选选项
 const filters = ref<FilterOptions>({
@@ -274,27 +302,14 @@ const sortOptions = ref<SortOptions>({
 const libraries = computed(() => libraryStore.libraries)
 const mangas = computed(() => libraryStore.mangas)
 
+// 计算属性 - 只显示激活库的漫画
+const activeLibraries = computed(() => {
+  return (libraries.value || []).filter(lib => lib.isActive)
+})
+
 // 筛选和排序后的漫画列表
 const filteredMangas = computed(() => {
-  let result = [...mangas.value]
-  
-  // 应用筛选
-  if (filters.value.libraryId) {
-    result = result.filter(manga => manga.libraryId === filters.value.libraryId)
-  }
-  
-  if (filters.value.status) {
-    result = result.filter(manga => manga.status === filters.value.status)
-  }
-  
-  if (filters.value.searchText) {
-    const searchText = filters.value.searchText.toLowerCase()
-    result = result.filter(manga => 
-      manga.title.toLowerCase().includes(searchText) ||
-      manga.author?.toLowerCase().includes(searchText) ||
-      manga.tags.some(tag => tag.toLowerCase().includes(searchText))
-    )
-  }
+  let result = [...(mangas.value?.content || [])]
   
   // 应用排序
   result.sort((a, b) => {
@@ -369,13 +384,80 @@ const openReader = (manga: Manga) => {
   router.push(`/reader/${manga.id}`)
 }
 
+// 筛选和排序处理函数
+const handleFilter = async (reset: boolean = true) => {
+  try {
+    loading.value = true
+    
+    if (reset) {
+      currentPage.value = 1
+    }
+    
+    // 构建查询参数
+    const params: any = {
+      page: currentPage.value,
+      limit: pageSize.value
+    }
+    
+    if (filters.value.libraryId) {
+      params.libraryId = filters.value.libraryId
+    }
+    
+    if (filters.value.status && filters.value.status !== 'all') {
+      params.status = filters.value.status
+    }
+    
+    if (filters.value.searchText) {
+      params.search = filters.value.searchText
+    }
+    
+    if (sortOptions.value.field) {
+      params.sort = sortOptions.value.field
+      params.order = sortOptions.value.order
+    }
+    
+    // 只查询激活库的漫画
+    const activeLibraryIds = activeLibraries.value.map(lib => lib.id)
+    if (activeLibraryIds.length > 0) {
+      params.activeLibraryIds = activeLibraryIds.join(',') // 传递激活库的ID列表
+    }
+    
+    // 调用后端API进行过滤
+    const response = await libraryStore.loadMangas(undefined, params)
+    
+    // 更新总数
+    if (response && response.data) {
+      totalCount.value = response.data.totalElements || 0
+    }
+    
+    // 保存筛选状态到本地存储
+    localStorage.setItem('bookshelf-filters', JSON.stringify(filters.value))
+  } catch (error) {
+    console.error('筛选失败:', error)
+    ElMessage.error('筛选失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+
+
+// 分页变化处理
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  handleFilter(false)
+}
+
 // 监听筛选变化，保存到本地存储
 watch(filters, (newFilters) => {
+  // 只有当 filters 真正改变时才触发 handleFilter，避免 onMounted 时的重复调用
   localStorage.setItem('bookshelf-filters', JSON.stringify(newFilters))
+  handleFilter(true)
 }, { deep: true })
 
 watch(sortOptions, (newSortOptions) => {
   localStorage.setItem('bookshelf-sort', JSON.stringify(newSortOptions))
+  handleFilter(true) // 排序改变时重置到第一页
 }, { deep: true })
 
 watch(viewMode, (newViewMode) => {
@@ -383,26 +465,26 @@ watch(viewMode, (newViewMode) => {
 })
 
 // 初始化
-onMounted(async () => {
-  // 加载数据
-  await libraryStore.initializeData()
-  
-  // 恢复用户设置
-  const savedFilters = localStorage.getItem('bookshelf-filters')
-  if (savedFilters) {
-    filters.value = { ...filters.value, ...JSON.parse(savedFilters) }
-  }
-  
-  const savedSort = localStorage.getItem('bookshelf-sort')
-  if (savedSort) {
-    sortOptions.value = JSON.parse(savedSort)
-  }
-  
-  const savedViewMode = localStorage.getItem('bookshelf-view-mode')
-  if (savedViewMode) {
-    viewMode.value = savedViewMode as 'grid' | 'list'
-  }
-})
+  onMounted(async () => {
+    // 先加载库列表
+    await libraryStore.initializeData()
+    
+    const savedViewMode = localStorage.getItem('bookshelf-view-mode')
+    if (savedViewMode) {
+      viewMode.value = savedViewMode as 'grid' | 'list'
+    }
+    
+    // 加载第一页数据
+    await handleFilter(true)
+  })
+
+  // 监听路由变化，当回到书架页面时重新加载数据
+  watch(() => router.currentRoute.value.path, async (newPath) => {
+    if (newPath === '/bookshelf') {
+       await libraryStore.initializeData()
+       await handleFilter(true)
+    }
+  })
 </script>
 
 <style scoped>
@@ -595,6 +677,14 @@ onMounted(async () => {
 
 .text-muted {
   color: var(--el-text-color-placeholder);
+}
+
+/* 分页样式 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  margin-top: 20px;
 }
 
 /* 响应式设计 */

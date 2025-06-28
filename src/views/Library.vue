@@ -78,11 +78,20 @@
               
               <div class="library-actions">
                 <el-button
+                  v-if="!library.isActive"
                   size="small"
-                  @click="setCurrentLibrary(library.id)"
-                  :type="currentLibraryId === library.id ? 'primary' : 'default'"
+                  @click="activateLibrary(library)"
+                  type="primary"
                 >
-                  {{ currentLibraryId === library.id ? '当前库' : '切换到此库' }}
+                  激活此库
+                </el-button>
+                <el-button
+                  v-else
+                  size="small"
+                  @click="deactivateLibrary(library)"
+                  type="danger"
+                >
+                  停用此库
                 </el-button>
                 <el-button
                   size="small"
@@ -172,10 +181,26 @@
           />
         </el-form-item>
         
-        <el-form-item>
-          <el-checkbox v-model="form.isPrivate">
-            设为隐私库（需要密码访问）
-          </el-checkbox>
+        <el-form-item label="隐私库" prop="isPrivate">
+          <el-switch v-model="form.isPrivate" @change="onPrivateChange" />
+        </el-form-item>
+        
+        <el-form-item v-if="form.isPrivate" label="密码" prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="请输入访问密码"
+            show-password
+          />
+        </el-form-item>
+        
+        <el-form-item v-if="form.isPrivate && editingLibrary" label="旧密码" prop="oldPassword">
+          <el-input
+            v-model="form.oldPassword"
+            type="password"
+            placeholder="修改密码时需要输入旧密码"
+            show-password
+          />
         </el-form-item>
       </el-form>
       
@@ -215,7 +240,9 @@ const form = ref({
   type: 'LOCAL' as MangaLibrary['type'],
   path: '',
   description: '',
-  isPrivate: false
+  isPrivate: false,
+  password: '',
+  oldPassword: ''
 })
 
 // 表单验证规则
@@ -228,14 +255,35 @@ const rules = {
   ],
   path: [
     { required: true, message: '请输入路径', trigger: 'blur' }
+  ],
+  password: [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (form.value.isPrivate && !value && !editingLibrary.value) {
+          callback(new Error('隐私库必须设置密码'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  oldPassword: [
+    {
+      validator: (rule: any, value: string, callback: Function) => {
+        if (form.value.isPrivate && editingLibrary.value && form.value.password && !value) {
+          callback(new Error('修改密码时必须输入旧密码'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
   ]
 }
 
 // 计算属性
 const libraries = computed(() => libraryStore.libraries)
-const currentLibraryId = computed(() => libraryStore.currentLibraryId)
-const loading = computed(() => libraryStore.loading)
-
 
 
 // 获取库类型颜色
@@ -334,10 +382,56 @@ const getPathPlaceholder = (type: string) => {
   }
 }
 
-// 设置当前库
-const setCurrentLibrary = (libraryId: string) => {
-  libraryStore.setCurrentLibrary(libraryId)
-  ElMessage.success('已切换漫画库')
+// 激活库
+const activateLibrary = async (library: MangaLibrary) => {
+  if (library.isActive) {
+    ElMessage.info('该库已经是激活状态')
+    return
+  }
+  
+  try {
+    let password: string | undefined
+    
+    // 如果是隐私库，需要密码验证
+    if (library.isPrivate) {
+      const result = await ElMessageBox.prompt(
+        '该库需要密码访问，请输入密码：',
+        '密码验证',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputType: 'password',
+          inputValidator: (value) => {
+            if (!value) {
+              return '请输入密码'
+            }
+            return true
+          }
+        }
+      )
+      password = result.value
+    }
+    
+    await libraryStore.activateLibrary(library.id, password)
+    ElMessage.success('已激活漫画库')
+  } catch (error) {
+    // 用户取消输入密码
+    if (error !== 'cancel') {
+      console.error('激活失败:', error)
+      ElMessage.error('激活失败')
+    }
+  }
+}
+
+// 停用库
+const deactivateLibrary = async (library: MangaLibrary) => {
+  if (!library.isActive) {
+    ElMessage.info('该库已经是停用状态')
+    return
+  }
+    // 用户点击了确认按钮，执行停用操作
+  await libraryStore.deactivateLibrary(library.id)
+  ElMessage.success('已停用漫画库')
 }
 
 // 扫描库
@@ -380,7 +474,9 @@ const editLibrary = (library: MangaLibrary) => {
     type: library.type,
     path: library.path,
     description: library.description || '',
-    isPrivate: library.isPrivate
+    isPrivate: library.isPrivate,
+    password: '',
+    oldPassword: ''
   }
   showCreateDialog.value = true
 }
@@ -413,20 +509,39 @@ const handleSubmit = async () => {
     await formRef.value.validate()
     submitting.value = true
     
+    const libraryData = {
+      name: form.value.name,
+      path: form.value.path,
+      type: form.value.type,
+      description: form.value.description,
+      isPrivate: form.value.isPrivate,
+      accessPassword: form.value.isPrivate ? form.value.password : undefined
+    }
+    
     if (editingLibrary.value) {
-      await libraryStore.updateLibrary(editingLibrary.value.id, form.value)
+      // 编辑模式，传递旧密码用于验证
+      await libraryStore.updateLibrary(editingLibrary.value.id, libraryData, form.value.oldPassword)
       ElMessage.success('更新成功')
     } else {
-      await libraryStore.createLibrary(form.value)
+      await libraryStore.createLibrary(libraryData)
       ElMessage.success('创建成功')
     }
     
     showCreateDialog.value = false
     resetForm()
   } catch (error) {
-    ElMessage.error('操作失败')
+    console.error('提交失败:', error)
+    ElMessage.error(error instanceof Error ? error.message : '操作失败')
   } finally {
     submitting.value = false
+  }
+}
+
+// 隐私库开关变化处理
+const onPrivateChange = (value: boolean) => {
+  if (!value) {
+    form.value.password = ''
+    form.value.oldPassword = ''
   }
 }
 
@@ -438,7 +553,9 @@ const resetForm = () => {
     type: 'LOCAL',
     path: '',
     description: '',
-    isPrivate: false
+    isPrivate: false,
+    password: '',
+    oldPassword: ''
   }
   if (formRef.value) {
     formRef.value.resetFields()

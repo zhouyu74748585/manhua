@@ -145,8 +145,19 @@ export const libraryApi = {
   /**
    * 更新漫画库
    */
-  async updateLibrary(id: string, library: Partial<MangaLibrary>): Promise<ApiResponse<MangaLibrary>> {
-    return apiClient.put<MangaLibrary>(`/libraries/${id}`, library)
+  async updateLibrary(id: string, library: Partial<MangaLibrary>, oldPassword?: string): Promise<ApiResponse<MangaLibrary>> {
+    const requestData = { ...library };
+    if (oldPassword) {
+      requestData.oldPassword = oldPassword;
+    }
+    return apiClient.put<MangaLibrary>(`/libraries/${id}`, requestData)
+  },
+
+  /**
+   * 停用漫画库
+   */
+  async deactivateLibrary(id: string): Promise<ApiResponse<void>> {
+    return apiClient.post<void>(`/libraries/${id}/deactivate`)
   },
 
   /**
@@ -175,6 +186,21 @@ export const libraryApi = {
    */
   async testConnection(config: any): Promise<ApiResponse<{ success: boolean; message: string }>> {
     return apiClient.post<{ success: boolean; message: string }>('/libraries/test-connection', config)
+  },
+
+  /**
+   * 激活漫画库
+   */
+  async activateLibrary(id: string, password?: string): Promise<ApiResponse<void>> {
+    const requestData = password ? { password } : {};
+    return apiClient.post<void>(`/libraries/${id}/activate`, requestData)
+  },
+
+  /**
+   * 验证库密码
+   */
+  async validatePassword(id: string, password: string): Promise<ApiResponse<{ valid: boolean }>> {
+    return apiClient.post<{ valid: boolean }>(`/libraries/${id}/validate-password`, { password })
   }
 }
 
@@ -185,16 +211,19 @@ export const mangaApi = {
   /**
    * 获取漫画列表
    */
-  async getMangas(libraryId?: string, params?: {
+  async pageMangas(libraryId?: string, params?: {
     page?: number
     limit?: number
     search?: string
     genre?: string
     status?: string
     sort?: string
-  }): Promise<ApiResponse<Manga[]>> {
+    order?: string
+    activeLibrariesOnly?: boolean
+  }): Promise<ApiResponse<{"content":Manga[],"last":boolean,"size":number,"number":number,"totalElements":number,"totalPages":number}>> {
+
     const queryParams = { libraryId, ...params }
-    return apiClient.get<Manga[]>('/mangas', queryParams)
+    return apiClient.get<{"content":Manga[],"last":boolean,"size":number,"number":number,"totalElements":number,"totalPages":number}>('/mangas/filter', queryParams)
   },
 
   /**

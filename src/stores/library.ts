@@ -6,7 +6,7 @@ import { libraryApi, mangaApi } from '../services/api'
 export const useLibraryStore = defineStore('library', () => {
   const libraries = ref<MangaLibrary[]>([])
   const currentLibraryId = ref<string | null>(null)
-  const mangas = ref<Manga[]>([])
+  const mangas = ref<{"content":Manga[],"last":boolean,"size":number,"number":number,"totalElements":number,"totalPages":number}>()
   const loading = ref(false)
 
   // 计算属性
@@ -16,7 +16,7 @@ export const useLibraryStore = defineStore('library', () => {
 
   const mangasByLibrary = computed(() => {
     if (!currentLibraryId.value) return mangas.value
-    return mangas.value.filter(manga => manga.libraryId === currentLibraryId.value)
+    return mangas.value?.content.filter(manga => manga.libraryId === currentLibraryId.value)
   })
 
   // 创建漫画库
@@ -38,10 +38,10 @@ export const useLibraryStore = defineStore('library', () => {
   }
 
   // 更新漫画库
-  const updateLibrary = async (id: string, updates: Partial<MangaLibrary>) => {
+  const updateLibrary = async (id: string, updates: Partial<MangaLibrary>, oldPassword?: string) => {
     loading.value = true
     try {
-      const response = await libraryApi.updateLibrary(id, updates)
+      const response = await libraryApi.updateLibrary(id, updates, oldPassword)
       if (response.success && response.data) {
         const index = libraries.value.findIndex(lib => lib.id === id)
         if (index !== -1) {
@@ -63,12 +63,6 @@ export const useLibraryStore = defineStore('library', () => {
     try {
       const response = await libraryApi.deleteLibrary(id)
       if (response.success) {
-        libraries.value = libraries.value.filter(lib => lib.id !== id)
-        // 同时删除该库下的所有漫画
-        mangas.value = mangas.value.filter(manga => manga.libraryId !== id)
-        if (currentLibraryId.value === id) {
-          currentLibraryId.value = null
-        }
         // 删除后刷新库列表
         await loadLibraries()
       } else {
@@ -79,9 +73,66 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  // 设置当前漫画库
-  const setCurrentLibrary = (id: string | null) => {
-    currentLibraryId.value = id
+  // 激活漫画库
+  const activateLibrary = async (id: string, password?: string) => {
+    try {
+      const response = await libraryApi.activateLibrary(id, password)
+      if (response.success) {
+        // 更新本地状态
+        const index = libraries.value.findIndex(lib => lib.id === id)
+        if (index !== -1) {
+          libraries.value[index] = { ...libraries.value[index], isActive: true }
+        }
+        currentLibraryId.value = id
+      } else {
+        throw new Error(response.message || '激活漫画库失败')
+      }
+    } catch (error) {
+      console.error('激活漫画库失败:', error)
+      throw error
+    }
+  }
+
+  // 停用漫画库
+  const deactivateLibrary = async (id: string) => {
+    try {
+      const response = await libraryApi.deactivateLibrary(id)
+      if (response.success) {
+        // 更新本地状态
+        const index = libraries.value.findIndex(lib => lib.id === id)
+        if (index !== -1) {
+          libraries.value[index] = { ...libraries.value[index], isActive: false }
+        }
+        if (currentLibraryId.value === id) {
+          currentLibraryId.value = null
+        }
+      } else {
+        throw new Error(response.message || '停用漫画库失败')
+      }
+    } catch (error) {
+      console.error('停用漫画库失败:', error)
+      throw error
+    }
+  }
+
+  // 设置当前漫画库（激活库）- 保留兼容性
+  const setCurrentLibrary = async (id: string | null) => {
+    if (id) {
+      await activateLibrary(id)
+    } else {
+      currentLibraryId.value = null
+    }
+  }
+
+  // 验证库密码
+  const validateLibraryPassword = async (libraryId: string, password: string): Promise<boolean> => {
+    try {
+      const response = await libraryApi.validatePassword(libraryId, password)
+      return response.success && response.data?.valid === true
+    } catch (error) {
+      console.error('密码验证失败:', error)
+      return false
+    }
   }
 
   // 扫描漫画库
@@ -128,10 +179,7 @@ export const useLibraryStore = defineStore('library', () => {
         setTimeout(() => {
           pollLibraryStatus(libraryId)
         }, 2000)
-      } else if (library && library.currentStatus !== '扫描中') {
-        // 扫描完成，重新加载漫画列表
-        await loadMangas(libraryId)
-      }
+      } 
     } catch (error) {
       console.error('轮询库状态失败:', error)
     }
@@ -152,25 +200,25 @@ export const useLibraryStore = defineStore('library', () => {
     }
   }
 
-  // 加载漫画列表
-  const loadMangas = async (libraryId?: string) => {
+    // 加载漫画列表
+  const loadMangas = async (libraryId?: string, params?: {
+    page?: number
+    limit?: number
+    search?: string
+    genre?: string
+    status?: string
+    sort?: string
+    order?: string
+    activeLibrariesOnly?: boolean
+  }) => {
     loading.value = true
     try {
-      const response = await mangaApi.getMangas(libraryId)
+      const response = await mangaApi.pageMangas(libraryId,params)
       if (response.success && response.data) {
-        if (libraryId) {
-          // 只更新指定库的漫画
-          //增加判断value不为undefined
-          if (mangas.value) {
-            mangas.value = mangas.value.filter(manga => manga.libraryId !== libraryId)
-            mangas.value.push(...response.data)
-          }
-        } else {
-          // 加载所有漫画
-          mangas.value = response.data
-        }
+        mangas.value=response.data
+        return mangas // 返回响应数据
       } else {
-        throw new Error(response.message || '加载漫画列表失败')
+        throw new Error(response.message || '加载漫画失败')
       }
     } finally {
       loading.value = false
@@ -180,9 +228,12 @@ export const useLibraryStore = defineStore('library', () => {
   // 初始化数据
   const initializeData = async () => {
     await loadLibraries()
-    await loadMangas()
   }
 
+  // 初始化数据
+  const initializeBookshelfData = async () => {
+    await loadMangas()
+  }
 
 
   return {
@@ -195,11 +246,15 @@ export const useLibraryStore = defineStore('library', () => {
     createLibrary,
     updateLibrary,
     deleteLibrary,
+    activateLibrary,
+    deactivateLibrary,
     setCurrentLibrary,
+    validateLibraryPassword,
     scanLibrary,
     pollLibraryStatus,
     loadLibraries,
     loadMangas,
-    initializeData
+    initializeData,
+    initializeBookshelfData
   }
 })

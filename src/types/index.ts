@@ -7,10 +7,20 @@ export interface MangaLibrary {
   type: 'LOCAL' | 'SMB' | 'FTP' | 'WEBDAV' | 'NFS'
   description?: string
   isPrivate: boolean
+  isActive?: boolean // 是否激活
+  accessPassword?: string // 隐私库访问密码
+  password?: string // 网络文件系统密码
+  username?: string // 网络文件系统用户名
+  host?: string // 网络文件系统主机
+  port?: number // 网络文件系统端口
+  shareName?: string // SMB共享名
+  autoScan?: boolean // 自动扫描
+  scanInterval?: number // 扫描间隔
   config?: LibraryConfig
   currentStatus?: string // 当前状态：空闲、扫描中、错误等
   createdAt: Date
   updatedAt: Date
+  oldPassword?: string // 用于更新时验证的旧密码
 }
 
 // 漫画库配置

@@ -99,19 +99,45 @@ public class MangaLibraryController {
      * 更新漫画库
      */
     @PutMapping("/{id}")
-    public ResponseEntity<MangaLibrary> updateLibrary(
+    public ResponseEntity<Object> updateLibrary(
             @PathVariable Long id,
-            @Valid @RequestBody MangaLibrary library) {
+            @Valid @RequestBody Map<String, Object> request) {
         try {
+            // 从请求中提取漫画库信息和旧密码
+            MangaLibrary library = new MangaLibrary();
             library.setId(id);
-            MangaLibrary updatedLibrary = libraryService.updateLibrary(id,library);
+            library.setName((String) request.get("name"));
+            library.setDescription((String) request.get("description"));
+            library.setPath((String) request.get("path"));
+            library.setIsActive((Boolean) request.get("isActive"));
+            library.setIsPrivate((Boolean) request.get("isPrivate"));
+            library.setAccessPassword((String) request.get("accessPassword"));
+            library.setAutoScan((Boolean) request.get("autoScan"));
+            library.setScanInterval((Integer) request.get("scanInterval"));
+            
+            // 处理库类型
+            String typeStr = (String) request.get("type");
+            if (typeStr != null) {
+                library.setType(MangaLibrary.LibraryType.valueOf(typeStr));
+            }
+            
+            // 处理网络文件系统配置
+            library.setUsername((String) request.get("username"));
+            library.setPassword((String) request.get("password"));
+            library.setHost((String) request.get("host"));
+            library.setPort((Integer) request.get("port"));
+            library.setShareName((String) request.get("shareName"));
+            
+            String oldPassword = (String) request.get("oldPassword");
+            
+            MangaLibrary updatedLibrary = libraryService.updateLibrary(id, library, oldPassword);
             return ResponseEntity.ok(updatedLibrary);
         } catch (IllegalArgumentException e) {
             logger.warn("更新漫画库参数错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             logger.error("更新漫画库失败: {}", id, e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("error", "更新失败"));
         }
     }
 
@@ -136,16 +162,19 @@ public class MangaLibraryController {
      * 激活漫画库
      */
     @PostMapping("/{id}/activate")
-    public ResponseEntity<Void> activateLibrary(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> activateLibrary(
+            @PathVariable Long id,
+            @RequestBody(required = false) Map<String, String> request) {
         try {
-            libraryService.toggleLibraryStatus(id);
-            return ResponseEntity.ok().build();
+            String password = request != null ? request.get("password") : null;
+            libraryService.activateLibrary(id, password);
+            return ResponseEntity.ok(Map.of("message", "漫画库激活成功"));
         } catch (IllegalArgumentException e) {
             logger.warn("激活漫画库参数错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             logger.error("激活漫画库失败: {}", id, e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("error", "激活失败"));
         }
     }
 
@@ -153,16 +182,16 @@ public class MangaLibraryController {
      * 停用漫画库
      */
     @PostMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivateLibrary(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deactivateLibrary(@PathVariable Long id) {
         try {
-            libraryService.toggleLibraryStatus(id);
-            return ResponseEntity.ok().build();
+            libraryService.deactivateLibrary(id);
+            return ResponseEntity.ok(Map.of("message", "漫画库停用成功"));
         } catch (IllegalArgumentException e) {
             logger.warn("停用漫画库参数错误: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             logger.error("停用漫画库失败: {}", id, e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("error", "停用失败"));
         }
     }
 

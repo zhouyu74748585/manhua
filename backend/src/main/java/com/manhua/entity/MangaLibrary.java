@@ -54,6 +54,12 @@ public class MangaLibrary {
     @Column(name = "is_current")
     private Boolean isCurrent = false;
 
+    @Column(name = "is_private")
+    private Boolean isPrivate = false;
+
+    @Column(name = "access_password", length = 255)
+    private String accessPassword;
+
     @Column(name = "auto_scan")
     private Boolean autoScan = true;
 
@@ -182,6 +188,22 @@ public class MangaLibrary {
 
     public void setIsCurrent(Boolean isCurrent) {
         this.isCurrent = isCurrent;
+    }
+
+    public Boolean getIsPrivate() {
+        return isPrivate;
+    }
+
+    public void setIsPrivate(Boolean isPrivate) {
+        this.isPrivate = isPrivate;
+    }
+
+    public String getAccessPassword() {
+        return accessPassword;
+    }
+
+    public void setAccessPassword(String accessPassword) {
+        this.accessPassword = accessPassword;
     }
 
     public Boolean getAutoScan() {
