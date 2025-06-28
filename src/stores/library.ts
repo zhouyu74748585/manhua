@@ -26,6 +26,8 @@ export const useLibraryStore = defineStore('library', () => {
       const response = await libraryApi.createLibrary(libraryData)
       if (response.success) {
         libraries.value.push(response.data)
+        // 创建后刷新库列表
+        await loadLibraries()
         return response.data
       } else {
         throw new Error(response.message || '创建漫画库失败')
@@ -45,6 +47,8 @@ export const useLibraryStore = defineStore('library', () => {
         if (index !== -1) {
           libraries.value[index] = response.data
         }
+        // 更新后刷新库列表
+        await loadLibraries()
       } else {
         throw new Error(response.message || '更新漫画库失败')
       }
@@ -65,6 +69,8 @@ export const useLibraryStore = defineStore('library', () => {
         if (currentLibraryId.value === id) {
           currentLibraryId.value = null
         }
+        // 删除后刷新库列表
+        await loadLibraries()
       } else {
         throw new Error(response.message || '删除漫画库失败')
       }
@@ -83,18 +89,51 @@ export const useLibraryStore = defineStore('library', () => {
     const library = libraries.value.find(lib => lib.id === libraryId)
     if (!library) return
 
-    loading.value = true
     try {
       const response = await libraryApi.scanLibrary(libraryId)
       if (response.success) {
-        // 扫描完成后重新加载漫画列表
-        await loadMangas(libraryId)
+        // 立即更新库状态为扫描中
+        const index = libraries.value.findIndex(lib => lib.id === libraryId)
+        if (index !== -1) {
+          libraries.value[index] = { ...libraries.value[index], currentStatus: '扫描中' }
+        }
+        
+        // 延迟1秒后开始轮询状态
+        setTimeout(() => {
+          pollLibraryStatus(libraryId)
+        }, 1000)
+        
         return response.data
       } else {
         throw new Error(response.message || '扫描漫画库失败')
       }
-    } finally {
-      loading.value = false
+    } catch (error) {
+      // 扫描失败时更新状态
+      const index = libraries.value.findIndex(lib => lib.id === libraryId)
+      if (index !== -1) {
+        libraries.value[index] = { ...libraries.value[index], currentStatus: '扫描失败' }
+      }
+      throw error
+    }
+  }
+
+  // 轮询库状态
+  const pollLibraryStatus = async (libraryId: string) => {
+    try {
+      await loadLibraries() // 重新加载库列表以获取最新状态
+      const library = libraries.value.find(lib => lib.id === libraryId)
+      
+      if (library && library.currentStatus === '扫描中') {
+        // 如果仍在扫描中，继续轮询
+        setTimeout(() => {
+          pollLibraryStatus(libraryId)
+        }, 2000)
+      } else if (library && library.currentStatus !== '扫描中') {
+        // 扫描完成，重新加载漫画列表
+        await loadMangas(libraryId)
+      }
+    } catch (error) {
+      console.error('轮询库状态失败:', error)
     }
   }
 
@@ -158,6 +197,7 @@ export const useLibraryStore = defineStore('library', () => {
     deleteLibrary,
     setCurrentLibrary,
     scanLibrary,
+    pollLibraryStatus,
     loadLibraries,
     loadMangas,
     initializeData

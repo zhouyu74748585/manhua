@@ -104,8 +104,8 @@ manhua:
   # 数据目录
   data-dir: ./data
 
-  # 缓存目录
-  cache-dir: ./cache
+  # 缓存目录，因为给前端访问，所有配置到前面目录下
+  cache-dir: ../cache
 
   # 临时目录
   temp-dir: ./temp

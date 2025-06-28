@@ -24,7 +24,7 @@ public class ReadingProgress {
     private Long id;
 
     @NotNull(message = "当前页数不能为空")
-    @Min(value = 1, message = "当前页数必须大于0")
+    @Min(value = 0, message = "当前页数必须大于0")
     @Column(name = "current_page", nullable = false)
     private Integer currentPage;
 
@@ -70,7 +70,7 @@ public class ReadingProgress {
 
     // 关联关系
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manga_id", nullable = false)
     private Manga manga;
 

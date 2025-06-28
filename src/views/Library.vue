@@ -38,9 +38,12 @@
                   <el-button :icon="MoreFilled" circle size="small" />
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item :command="{ action: 'scan', library }">
+                      <el-dropdown-item 
+                        :command="{ action: 'scan', library }"
+                        :disabled="library.currentStatus === '扫描中'"
+                      >
                         <el-icon><Refresh /></el-icon>
-                        扫描
+                        {{ library.currentStatus === '扫描中' ? '扫描中' : '扫描' }}
                       </el-dropdown-item>
                       <el-dropdown-item :command="{ action: 'edit', library }">
                         <el-icon><Edit /></el-icon>
@@ -84,9 +87,10 @@
                 <el-button
                   size="small"
                   @click="scanLibrary(library.id)"
-                  :loading="loading && scanningLibraryId === library.id"
+                  :loading="library.currentStatus === '扫描中'"
+                  :disabled="library.currentStatus === '扫描中'"
                 >
-                  扫描
+                  {{ library.currentStatus === '扫描中' ? '扫描中' : '扫描' }}
                 </el-button>
               </div>
             </div>
@@ -203,7 +207,6 @@ const libraryStore = useLibraryStore()
 const showCreateDialog = ref(false)
 const editingLibrary = ref<MangaLibrary | null>(null)
 const submitting = ref(false)
-const scanningLibraryId = ref<string | null>(null)
 const formRef = ref()
 
 // 表单数据
@@ -339,14 +342,18 @@ const setCurrentLibrary = (libraryId: string) => {
 
 // 扫描库
 const scanLibrary = async (libraryId: string) => {
-  scanningLibraryId.value = libraryId
+  const library = libraries.value.find(lib => lib.id === libraryId)
+  if (library?.currentStatus === '扫描中') {
+    ElMessage.warning('该库正在扫描中，请稍后再试')
+    return
+  }
+  
   try {
     await libraryStore.scanLibrary(libraryId)
-    ElMessage.success('扫描完成')
+    ElMessage.success('扫描已开始')
   } catch (error) {
-    ElMessage.error('扫描失败')
-  } finally {
-    scanningLibraryId.value = null
+    console.error('扫描库失败:', error)
+    ElMessage.error('启动扫描失败')
   }
 }
 

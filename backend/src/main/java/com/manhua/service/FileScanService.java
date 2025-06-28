@@ -6,6 +6,10 @@ import com.manhua.entity.ReadingProgress;
 import com.manhua.repository.MangaLibraryRepository;
 import com.manhua.repository.MangaRepository;
 import com.manhua.repository.ReadingProgressRepository;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -34,7 +39,6 @@ import java.util.zip.ZipFile;
  * @version 1.0.0
  */
 @Service
-@Transactional
 public class FileScanService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileScanService.class);
@@ -73,6 +77,9 @@ public class FileScanService {
 
     @Value("${app.scan.extract-metadata:true}")
     private boolean extractMetadata;
+
+    @Value("${manhua.cache-dir}")
+    private String cacheDirectory;
 
     private final Tika tika = new Tika();
 
@@ -118,6 +125,13 @@ public class FileScanService {
                 result.deletedCount++;
             }
 
+            logger.info("漫画库扫描完成: {} - 新增: {}, 更新: {}, 删除: {}",
+                    libraryId, result.addedCount, result.updatedCount, result.deletedCount);
+
+        } catch (Exception e) {
+            logger.error("扫描漫画库失败: {}", libraryId, e);
+            result.error = e.getMessage();
+        }finally {
             // 更新库统计信息
             updateLibraryStatistics(library);
 
@@ -125,15 +139,6 @@ public class FileScanService {
             library.setCurrentStatus("空闲");
             library.setLastScanAt(LocalDateTime.now());
             libraryRepository.save(library);
-
-            logger.info("漫画库扫描完成: {} - 新增: {}, 更新: {}, 删除: {}",
-                    libraryId, result.addedCount, result.updatedCount, result.deletedCount);
-
-        } catch (Exception e) {
-            logger.error("扫描漫画库失败: {}", libraryId, e);
-            library.setCurrentStatus("错误: " + e.getMessage());
-            libraryRepository.save(library);
-            result.error = e.getMessage();
         }
 
         return CompletableFuture.completedFuture(result);
@@ -147,7 +152,7 @@ public class FileScanService {
             Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    if (skipHiddenFiles && dir.getFileName().toString().startsWith(".")) {
+                    if (dir.getFileName()==null||(skipHiddenFiles && dir.getFileName().toString().startsWith("."))) {
                         return FileVisitResult.SKIP_SUBTREE;
                     }
 
@@ -240,7 +245,7 @@ public class FileScanService {
                 // 创建初始阅读进度
                 ReadingProgress progress = new ReadingProgress();
                 progress.setManga(manga);
-                progress.setCurrentPage(1);
+                progress.setCurrentPage(0);
                 progress.setTotalPages(manga.getTotalPages());
                 progressRepository.save(progress);
 
@@ -483,16 +488,73 @@ public class FileScanService {
      * 提取PDF元数据
      */
     private void extractPdfMetadata(Manga manga, Path file) {
-        // TODO: 使用PDFBox提取PDF元数据
-        logger.debug("提取PDF元数据: {}", file);
+        try {
+            PDDocument document = PDDocument.load(file.toFile());
+            // 获取文档信息
+            PDDocumentInformation info = document.getDocumentInformation();
+
+            if (info != null) {
+                if (info.getTitle() != null && !info.getTitle().trim().isEmpty()) {
+                    manga.setTitle(info.getTitle().trim());
+                }
+                if (info.getAuthor() != null && !info.getAuthor().trim().isEmpty()) {
+                    manga.setAuthor(info.getAuthor().trim());
+                }
+                if (info.getSubject() != null && !info.getSubject().trim().isEmpty()) {
+                    manga.setDescription(info.getSubject().trim());
+                }
+            }
+
+            document.close();
+            logger.debug("提取PDF元数据完成: {}", file);
+        } catch (Exception e) {
+            logger.warn("提取PDF元数据失败: {} - {}", file, e.getMessage());
+        }
     }
 
     /**
      * 提取EPUB元数据
      */
     private void extractEpubMetadata(Manga manga, Path file) {
-        // TODO: 提取EPUB元数据
-        logger.debug("提取EPUB元数据: {}", file);
+        try (ZipFile zipFile = new ZipFile(file.toFile())) {
+            // 查找content.opf文件
+            ZipEntry opfEntry = zipFile.stream()
+                    .filter(entry -> entry.getName().toLowerCase().endsWith(".opf"))
+                    .findFirst()
+                    .orElse(null);
+                    
+            if (opfEntry != null) {
+                try (java.io.InputStream inputStream = zipFile.getInputStream(opfEntry)) {
+                    // 简单的XML解析，提取基本元数据
+                    String content = new String(inputStream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    
+                    // 提取标题
+                    java.util.regex.Pattern titlePattern = java.util.regex.Pattern.compile("<dc:title[^>]*>([^<]+)</dc:title>", java.util.regex.Pattern.CASE_INSENSITIVE);
+                    java.util.regex.Matcher titleMatcher = titlePattern.matcher(content);
+                    if (titleMatcher.find()) {
+                        manga.setTitle(titleMatcher.group(1).trim());
+                    }
+                    
+                    // 提取作者
+                    java.util.regex.Pattern authorPattern = java.util.regex.Pattern.compile("<dc:creator[^>]*>([^<]+)</dc:creator>", java.util.regex.Pattern.CASE_INSENSITIVE);
+                    java.util.regex.Matcher authorMatcher = authorPattern.matcher(content);
+                    if (authorMatcher.find()) {
+                        manga.setAuthor(authorMatcher.group(1).trim());
+                    }
+                    
+                    // 提取描述
+                    java.util.regex.Pattern descPattern = java.util.regex.Pattern.compile("<dc:description[^>]*>([^<]+)</dc:description>", java.util.regex.Pattern.CASE_INSENSITIVE);
+                    java.util.regex.Matcher descMatcher = descPattern.matcher(content);
+                    if (descMatcher.find()) {
+                        manga.setDescription(descMatcher.group(1).trim());
+                    }
+                }
+            }
+            
+            logger.debug("提取EPUB元数据完成: {}", file);
+        } catch (Exception e) {
+            logger.warn("提取EPUB元数据失败: {} - {}", file, e.getMessage());
+        }
     }
 
     /**
@@ -554,27 +616,67 @@ public class FileScanService {
      * 获取RAR文件页数
      */
     private int getRarTotalPages(Path file) {
-        // TODO: 使用junrar库获取RAR文件页数
-        logger.debug("获取RAR文件页数: {}", file);
-        return 0;
+        try {
+            com.github.junrar.Archive archive = new com.github.junrar.Archive(file.toFile());
+            
+            int imageCount = 0;
+            com.github.junrar.rarfile.FileHeader fileHeader = archive.nextFileHeader();
+            
+            while (fileHeader != null) {
+                if (!fileHeader.isDirectory() && isImageFile(fileHeader.getFileName())) {
+                    imageCount++;
+                }
+                fileHeader = archive.nextFileHeader();
+            }
+            
+            archive.close();
+            logger.debug("获取RAR文件页数: {} - {}", file, imageCount);
+            return imageCount;
+        } catch (Exception e) {
+            logger.warn("获取RAR文件页数失败: {} - {}", file, e.getMessage());
+            return 0;
+        }
     }
 
     /**
      * 获取7Z文件页数
      */
     private int get7zTotalPages(Path file) {
-        // TODO: 使用7zip库获取7Z文件页数
-        logger.debug("获取7Z文件页数: {}", file);
-        return 0;
+        try (java.io.FileInputStream fis = new java.io.FileInputStream(file.toFile());
+             org.apache.commons.compress.archivers.sevenz.SevenZFile sevenZFile = new org.apache.commons.compress.archivers.sevenz.SevenZFile(file.toFile())) {
+            
+            int imageCount = 0;
+            org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry entry;
+            
+            while ((entry = sevenZFile.getNextEntry()) != null) {
+                if (!entry.isDirectory() && isImageFile(entry.getName())) {
+                    imageCount++;
+                }
+            }
+            
+            logger.debug("获取7Z文件页数: {} - {}", file, imageCount);
+            return imageCount;
+        } catch (Exception e) {
+            logger.warn("获取7Z文件页数失败: {} - {}", file, e.getMessage());
+            return 0;
+        }
     }
 
     /**
      * 获取PDF文件页数
      */
     private int getPdfTotalPages(Path file) {
-        // TODO: 使用PDFBox获取PDF页数
-        logger.debug("获取PDF文件页数: {}", file);
-        return 0;
+        try {
+            PDDocument document = PDDocument.load(file.toFile());
+            int pageCount = document.getNumberOfPages();
+            document.close();
+            
+            logger.debug("获取PDF文件页数: {} - {}", file, pageCount);
+            return pageCount;
+        } catch (Exception e) {
+            logger.warn("获取PDF文件页数失败: {} - {}", file, e.getMessage());
+            return 0;
+        }
     }
 
     /**
@@ -592,6 +694,10 @@ public class FileScanService {
                 case ".rar":
                 case ".cbr":
                     generateRarCover(manga, file);
+                    break;
+                case ".7z":
+                case ".cb7":
+                    generate7zCover(manga, file);
                     break;
                 case ".pdf":
                     generatePdfCover(manga, file);
@@ -618,12 +724,21 @@ public class FileScanService {
             if (firstImage.isPresent()) {
                 // 生成封面缓存路径
                 String coverPath = "covers/zip_" + Math.abs(file.toString().hashCode()) + ".jpg";
-                manga.setCoverImage(coverPath);
                 
-                // TODO: 实际提取并保存封面图片到缓存目录
-                // 可以使用 zipFile.getInputStream(firstImage.get()) 获取图片流
-                // 然后保存到缓存目录中
-                logger.debug("生成ZIP封面: {} -> {}", firstImage.get().getName(), coverPath);
+                // 实际提取并保存封面图片到缓存目录
+                try (java.io.InputStream imageStream = zipFile.getInputStream(firstImage.get())) {
+                    // 创建缓存目录
+                    Path cacheDir = Paths.get(cacheDirectory.toString());
+                    Files.createDirectories(cacheDir);
+                    
+                    // 保存封面图片
+                    Path coverFile = cacheDir.resolve("zip_" + Math.abs(file.toString().hashCode()) + ".jpg");
+                    Files.copy(imageStream, coverFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    manga.setCoverImage(coverFile.toString());
+                    logger.debug("生成ZIP封面: {} -> {}", firstImage.get().getName(), coverPath);
+                } catch (Exception saveException) {
+                    logger.warn("保存ZIP封面失败: {} - {}", coverPath, saveException.getMessage());
+                }
             }
         }
     }
@@ -632,16 +747,150 @@ public class FileScanService {
      * 生成RAR文件封面
      */
     private void generateRarCover(Manga manga, Path file) {
-        // TODO: 使用junrar库生成RAR文件封面
-        logger.debug("生成RAR封面: {}", file);
+        try {
+            com.github.junrar.Archive archive = new com.github.junrar.Archive(file.toFile());
+            
+            // 收集所有图片文件并排序
+            java.util.List<com.github.junrar.rarfile.FileHeader> imageHeaders = new java.util.ArrayList<>();
+            com.github.junrar.rarfile.FileHeader fileHeader = archive.nextFileHeader();
+            
+            while (fileHeader != null) {
+                if (!fileHeader.isDirectory() && isImageFile(fileHeader.getFileName())) {
+                    imageHeaders.add(fileHeader);
+                }
+                fileHeader = archive.nextFileHeader();
+            }
+            
+            if (!imageHeaders.isEmpty()) {
+                // 按文件名自然排序
+                imageHeaders.sort((a, b) -> compareNatural(a.getFileName(), b.getFileName()));
+                
+                // 生成封面缓存路径
+                String coverPath = "covers/rar_" + Math.abs(file.toString().hashCode()) + ".jpg";
+                
+                // 实际提取并保存封面图片到缓存目录
+                try {
+                    // 重新打开archive来提取第一张图片
+                    archive.close();
+                    archive = new com.github.junrar.Archive(file.toFile());
+                    
+                    com.github.junrar.rarfile.FileHeader firstImageHeader = imageHeaders.get(0);
+                    
+                    // 创建缓存目录
+                    Path cacheDir = Paths.get(cacheDirectory.toString());
+                    Files.createDirectories(cacheDir);
+                    
+                    // 保存封面图片
+                    Path coverFile = cacheDir.resolve("rar_" + Math.abs(file.toString().hashCode()) + ".jpg");
+                    manga.setCoverImage(coverFile.toString());
+                    try (java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream()) {
+                        archive.extractFile(firstImageHeader, outputStream);
+                        Files.write(coverFile, outputStream.toByteArray());
+                        logger.debug("生成RAR封面: {} -> {}", firstImageHeader.getFileName(), coverPath);
+                    }
+                } catch (Exception saveException) {
+                    logger.warn("保存RAR封面失败: {} - {}", coverPath, saveException.getMessage());
+                }
+            }
+            
+            archive.close();
+        } catch (Exception e) {
+            logger.warn("生成RAR封面失败: {} - {}", file, e.getMessage());
+        }
+    }
+
+    /**
+     * 生成7Z文件封面
+     */
+    private void generate7zCover(Manga manga, Path file) {
+        try (org.apache.commons.compress.archivers.sevenz.SevenZFile sevenZFile = 
+                new org.apache.commons.compress.archivers.sevenz.SevenZFile(file.toFile())) {
+            
+            // 收集所有图片文件并排序
+            java.util.List<org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry> imageEntries = new java.util.ArrayList<>();
+            org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry entry;
+            
+            while ((entry = sevenZFile.getNextEntry()) != null) {
+                if (!entry.isDirectory() && isImageFile(entry.getName())) {
+                    imageEntries.add(entry);
+                }
+            }
+            
+            // 按文件名自然排序
+            imageEntries.sort((a, b) -> compareNatural(a.getName(), b.getName()));
+            
+            if (!imageEntries.isEmpty()) {
+                // 生成封面缓存路径
+                String coverPath = "covers/7z_" + Math.abs(file.toString().hashCode()) + ".jpg";
+                
+                // 提取第一张图片并保存到缓存目录
+                try (org.apache.commons.compress.archivers.sevenz.SevenZFile sevenZFile2 = 
+                        new org.apache.commons.compress.archivers.sevenz.SevenZFile(file.toFile())) {
+                    
+                    org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry firstImageEntry = imageEntries.get(0);
+                    
+                    // 创建缓存目录
+                    Path cacheDir = Paths.get(cacheDirectory.toString());
+                    Files.createDirectories(cacheDir);
+                    
+                    // 保存封面图片
+                    Path coverFile = cacheDir.resolve("7z_" + Math.abs(file.toString().hashCode()) + ".jpg");
+                    manga.setCoverImage(coverFile.toString());
+                    // 跳过到目标文件
+                    org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry currentEntry;
+                    while ((currentEntry = sevenZFile2.getNextEntry()) != null) {
+                        if (currentEntry.getName().equals(firstImageEntry.getName())) {
+                            byte[] content = new byte[(int) currentEntry.getSize()];
+                            sevenZFile2.read(content);
+                            Files.write(coverFile, content);
+                            logger.debug("生成7Z封面: {} -> {}", firstImageEntry.getName(), coverPath);
+                            break;
+                        }
+                    }
+                } catch (Exception saveException) {
+                    logger.warn("保存7Z封面失败: {} - {}", coverPath, saveException.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("生成7Z封面失败: {} - {}", file, e.getMessage());
+        }
     }
 
     /**
      * 生成PDF文件封面
      */
     private void generatePdfCover(Manga manga, Path file) {
-        // TODO: 使用PDFBox生成PDF文件封面
-        logger.debug("生成PDF封面: {}", file);
+        try {
+            PDDocument document = PDDocument.load(file.toFile());
+            
+            if (document.getNumberOfPages() > 0) {
+                // 生成封面缓存路径
+                String coverPath = "covers/pdf_" + Math.abs(file.toString().hashCode()) + ".jpg";
+
+                
+                // 实际渲染PDF第一页为图片并保存到缓存目录
+                try {
+                    PDFRenderer renderer = new PDFRenderer(document);
+                    BufferedImage image = renderer.renderImageWithDPI(0, 150, ImageType.RGB);
+                    
+                    // 创建缓存目录
+                    Path cacheDir = Paths.get(cacheDirectory.toString());
+                    Files.createDirectories(cacheDir);
+                    
+                    // 保存封面图片
+                    Path coverFile = cacheDir.resolve("pdf_" + Math.abs(file.toString().hashCode()) + ".jpg");
+                    manga.setCoverImage(coverFile.toString());
+                    javax.imageio.ImageIO.write(image, "jpg", coverFile.toFile());
+                    logger.debug("生成PDF封面: {} -> {}", file, coverPath);
+                } catch (Exception saveException) {
+                    logger.warn("保存PDF封面失败: {} - {}", coverPath, saveException.getMessage());
+                }
+            }
+            
+            document.close();
+        } catch (Exception e) {
+            logger.warn("生成PDF封面失败: {} - {}", file, e.getMessage());
+        }
     }
 
     /**
@@ -683,7 +932,6 @@ public class FileScanService {
      */
     private void handleMangaDirectory(Path directory, MangaLibrary library, ScanResult result) {
         String dirPath = directory.toAbsolutePath().toString();
-
         // 检查目录是否已存在
         Optional<Manga> existingManga = mangaRepository.findByFilePath(dirPath);
 
@@ -711,7 +959,7 @@ public class FileScanService {
                 // 创建初始阅读进度
                 ReadingProgress progress = new ReadingProgress();
                 progress.setManga(manga);
-                progress.setCurrentPage(1);
+                progress.setCurrentPage(0);
                 progress.setTotalPages(manga.getTotalPages());
                 progressRepository.save(progress);
 
@@ -837,10 +1085,22 @@ public class FileScanService {
             if (firstImage.isPresent()) {
                 // 生成封面缓存路径
                 String coverPath = "covers/dir_" + Math.abs(directory.toString().hashCode()) + ".jpg";
-                manga.setCoverImage(coverPath);
+
                 
-                // TODO: 实际复制或处理封面图片到缓存目录
-                logger.debug("生成目录封面: {} -> {}", firstImage.get(), coverPath);
+                // 实际复制封面图片到缓存目录
+                try {
+                    // 创建缓存目录
+                    Path cacheDir = Paths.get(cacheDirectory.toString());
+                    Files.createDirectories(cacheDir);
+                    
+                    // 复制封面图片
+                    Path coverFile = cacheDir.resolve("dir_" + Math.abs(directory.toString().hashCode()) + ".jpg");
+                    Files.copy(firstImage.get(), coverFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    manga.setCoverImage(coverFile.toString());
+                    logger.debug("生成目录封面: {} -> {}", firstImage.get(), coverPath);
+                } catch (Exception copyException) {
+                    logger.warn("复制目录封面失败: {} - {}", coverPath, copyException.getMessage());
+                }
             }
         } catch (IOException e) {
             logger.warn("生成目录封面失败: {}", directory, e);
@@ -983,7 +1243,7 @@ public class FileScanService {
             // 创建初始阅读进度
             ReadingProgress progress = new ReadingProgress();
             progress.setManga(manga);
-            progress.setCurrentPage(1);
+            progress.setCurrentPage(0);
             progress.setTotalPages(manga.getTotalPages());
             progressRepository.save(progress);
 

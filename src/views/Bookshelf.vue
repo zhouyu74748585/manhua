@@ -96,7 +96,7 @@
         >
           <div class="manga-cover">
             <img
-              :src="manga.coverPath || '/placeholder-cover.png'"
+              :src="manga.coverImage || '/placeholder-cover.png'"
               :alt="manga.title"
               @error="handleImageError"
             />
@@ -144,7 +144,7 @@
           <el-table-column width="80">
             <template #default="{ row }">
               <img
-                :src="row.coverPath || '/placeholder-cover.png'"
+                :src="row.coverImage || '/placeholder-cover.png'"
                 :alt="row.title"
                 class="table-cover"
                 @error="handleImageError"
@@ -331,9 +331,9 @@ const filteredMangas = computed(() => {
 // 获取状态颜色
 const getStatusColor = (status: Manga['status']) => {
   const colors = {
-    unread: 'info',
-    reading: 'warning',
-    completed: 'success'
+    UNREAD: 'info',
+    READING: 'warning',
+    COMPLETED: 'success'
   }
   return colors[status]
 }
@@ -341,9 +341,9 @@ const getStatusColor = (status: Manga['status']) => {
 // 获取状态文本
 const getStatusText = (status: Manga['status']) => {
   const texts = {
-    unread: '未读',
-    reading: '阅读中',
-    completed: '已完成'
+    UNREAD: '未读',
+    READING: '阅读中',
+    COMPLETED: '已完成'
   }
   return texts[status]
 }

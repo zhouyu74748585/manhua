@@ -85,6 +85,19 @@
             <version>2.9.1</version>
         </dependency>
 
+        <!-- PDF Processing -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.27</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-tools</artifactId>
+            <version>2.0.27</version>
+        </dependency>
+
         <!-- Image Processing -->
         <dependency>
             <groupId>org.imgscalr</groupId>

@@ -437,7 +437,7 @@ public class MangaService {
 
             ReadingProgress progress = new ReadingProgress();
             progress.setManga(manga);
-            progress.setCurrentPage(1);
+            progress.setCurrentPage(0);
             progress.setTotalPages(manga.getTotalPages() != null ? manga.getTotalPages() : 0);
             progress.setReadingTime(0L);
             progress.setReadingSpeed(0.0);

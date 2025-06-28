@@ -363,8 +363,23 @@ public class FileSystemService {
      * 从7Z文件中提取文件
      */
     private byte[] extractFrom7z(String sevenZPath, String entryName) throws IOException {
-        // TODO: 使用7zip库实现7Z文件提取
-        throw new UnsupportedOperationException("7Z文件提取功能尚未实现");
+        try (org.apache.commons.compress.archivers.sevenz.SevenZFile sevenZFile = 
+                new org.apache.commons.compress.archivers.sevenz.SevenZFile(new java.io.File(sevenZPath))) {
+            
+            org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry entry;
+            while ((entry = sevenZFile.getNextEntry()) != null) {
+                if (entry.getName().equals(entryName) && !entry.isDirectory()) {
+                    byte[] content = new byte[(int) entry.getSize()];
+                    sevenZFile.read(content);
+                    return content;
+                }
+            }
+            
+            throw new java.io.FileNotFoundException("文件未找到: " + entryName);
+        } catch (Exception e) {
+            logger.error("从7Z文件提取失败: {} - {}", sevenZPath, entryName, e);
+            throw new IOException("从7Z文件提取失败: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -408,16 +423,49 @@ public class FileSystemService {
      * 列出RAR文件中的条目
      */
     private List<String> listRarEntries(String rarPath) throws IOException {
-        // TODO: 使用junrar库实现RAR文件条目列表
-        throw new UnsupportedOperationException("RAR文件条目列表功能尚未实现");
+        List<String> entries = new ArrayList<>();
+        
+        try {
+            com.github.junrar.Archive archive = new com.github.junrar.Archive(new java.io.File(rarPath));
+            
+            com.github.junrar.rarfile.FileHeader fileHeader = archive.nextFileHeader();
+            while (fileHeader != null) {
+                if (!fileHeader.isDirectory()) {
+                    entries.add(fileHeader.getFileName());
+                }
+                fileHeader = archive.nextFileHeader();
+            }
+            
+            archive.close();
+        } catch (Exception e) {
+            logger.error("列出RAR文件条目失败: {}", rarPath, e);
+            throw new IOException("列出RAR文件条目失败: " + e.getMessage(), e);
+        }
+        
+        return entries;
     }
 
     /**
      * 列出7Z文件中的条目
      */
     private List<String> list7zEntries(String sevenZPath) throws IOException {
-        // TODO: 使用7zip库实现7Z文件条目列表
-        throw new UnsupportedOperationException("7Z文件条目列表功能尚未实现");
+        List<String> entries = new ArrayList<>();
+        
+        try (org.apache.commons.compress.archivers.sevenz.SevenZFile sevenZFile = 
+                new org.apache.commons.compress.archivers.sevenz.SevenZFile(new java.io.File(sevenZPath))) {
+            
+            org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry entry;
+            while ((entry = sevenZFile.getNextEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    entries.add(entry.getName());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("列出7Z文件条目失败: {}", sevenZPath, e);
+            throw new IOException("列出7Z文件条目失败: " + e.getMessage(), e);
+        }
+        
+        return entries;
     }
 
     /**

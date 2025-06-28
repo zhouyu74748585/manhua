@@ -1,6 +1,6 @@
 package com.manhua.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +19,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "mangas")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Manga {
 
     @Id
@@ -56,7 +57,7 @@ public class Manga {
     @Column(name = "file_size")
     private Long fileSize;
 
-    @Column(name = "file_type", length = 20)
+    @Column(name = "file_type", length = 100)
     private String fileType;
 
     @Column(name = "total_pages")
@@ -104,13 +105,12 @@ public class Manga {
     private LocalDateTime updatedAt;
 
     // 关联关系
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id", nullable = false)
     private MangaLibrary library;
 
-    @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ReadingProgress> readingProgresses = new ArrayList<>();
+    @OneToOne(mappedBy = "manga", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ReadingProgress readingProgresses;
 
     @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MangaTag> tags = new ArrayList<>();
@@ -334,11 +334,11 @@ public class Manga {
         this.library = library;
     }
 
-    public List<ReadingProgress> getReadingProgresses() {
+    public ReadingProgress getReadingProgresses() {
         return readingProgresses;
     }
 
-    public void setReadingProgresses(List<ReadingProgress> readingProgresses) {
+    public void setReadingProgresses(ReadingProgress readingProgresses) {
         this.readingProgresses = readingProgresses;
     }
 

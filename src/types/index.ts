@@ -8,6 +8,7 @@ export interface MangaLibrary {
   description?: string
   isPrivate: boolean
   config?: LibraryConfig
+  currentStatus?: string // 当前状态：空闲、扫描中、错误等
   createdAt: Date
   updatedAt: Date
 }
@@ -51,12 +52,12 @@ export interface Manga {
   author?: string
   libraryId: string
   path: string
-  coverPath?: string
+  coverImage?: string
   totalPages: number
   currentPage: number
   tags: string[]
   rating?: number
-  status: 'unread' | 'reading' | 'completed'
+  status: 'UNREAD' | 'READING' | 'COMPLETED'
   series?: string
   volume?: number
   chapter?: number
