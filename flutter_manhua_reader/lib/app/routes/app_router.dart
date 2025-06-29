@@ -151,9 +151,8 @@ extension AppRouterExtension on GoRouter {
     go('/manga/$mangaId');
   }
   
-  void goToReader(String mangaId, {int? chapter, int? page}) {
+  void goToReader(String mangaId, {int? page}) {
     final queryParams = <String, String>{};
-    if (chapter != null) queryParams['chapter'] = chapter.toString();
     if (page != null) queryParams['page'] = page.toString();
     
     final uri = Uri(path: '/reader/$mangaId', queryParameters: queryParams);
@@ -176,11 +175,9 @@ class NavigationHelper {
   static void goToReader(
     BuildContext context,
     String mangaId, {
-    int? chapter,
     int? page,
   }) {
     final queryParams = <String, String>{};
-    if (chapter != null) queryParams['chapter'] = chapter.toString();
     if (page != null) queryParams['page'] = page.toString();
     
     final uri = Uri(path: '/reader/$mangaId', queryParameters: queryParams);
