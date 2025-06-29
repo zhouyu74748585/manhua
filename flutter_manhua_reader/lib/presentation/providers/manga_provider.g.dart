@@ -227,6 +227,137 @@ class _MangaDetailProviderElement
   String get mangaId => (origin as MangaDetailProvider).mangaId;
 }
 
+String _$mangaPagesHash() => r'1ace63e0b757dee7e0f4a6e988fe45160c81f648';
+
+/// See also [mangaPages].
+@ProviderFor(mangaPages)
+const mangaPagesProvider = MangaPagesFamily();
+
+/// See also [mangaPages].
+class MangaPagesFamily extends Family<AsyncValue<List<MangaPage>>> {
+  /// See also [mangaPages].
+  const MangaPagesFamily();
+
+  /// See also [mangaPages].
+  MangaPagesProvider call(
+    String mangaId,
+  ) {
+    return MangaPagesProvider(
+      mangaId,
+    );
+  }
+
+  @override
+  MangaPagesProvider getProviderOverride(
+    covariant MangaPagesProvider provider,
+  ) {
+    return call(
+      provider.mangaId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'mangaPagesProvider';
+}
+
+/// See also [mangaPages].
+class MangaPagesProvider extends AutoDisposeFutureProvider<List<MangaPage>> {
+  /// See also [mangaPages].
+  MangaPagesProvider(
+    String mangaId,
+  ) : this._internal(
+          (ref) => mangaPages(
+            ref as MangaPagesRef,
+            mangaId,
+          ),
+          from: mangaPagesProvider,
+          name: r'mangaPagesProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$mangaPagesHash,
+          dependencies: MangaPagesFamily._dependencies,
+          allTransitiveDependencies:
+              MangaPagesFamily._allTransitiveDependencies,
+          mangaId: mangaId,
+        );
+
+  MangaPagesProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.mangaId,
+  }) : super.internal();
+
+  final String mangaId;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<MangaPage>> Function(MangaPagesRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MangaPagesProvider._internal(
+        (ref) => create(ref as MangaPagesRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        mangaId: mangaId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<MangaPage>> createElement() {
+    return _MangaPagesProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MangaPagesProvider && other.mangaId == mangaId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, mangaId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MangaPagesRef on AutoDisposeFutureProviderRef<List<MangaPage>> {
+  /// The parameter `mangaId` of this provider.
+  String get mangaId;
+}
+
+class _MangaPagesProviderElement
+    extends AutoDisposeFutureProviderElement<List<MangaPage>>
+    with MangaPagesRef {
+  _MangaPagesProviderElement(super.provider);
+
+  @override
+  String get mangaId => (origin as MangaPagesProvider).mangaId;
+}
+
 String _$searchMangaHash() => r'ee3687ab0b4efc463c5bcd280e3ce127d144bc30';
 
 /// See also [searchManga].

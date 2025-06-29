@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tuple/tuple.dart';
 
 import '../../data/models/manga.dart';
 import '../../data/models/reading_progress.dart';
@@ -45,6 +47,12 @@ Future<List<Manga>> recentlyUpdatedManga(RecentlyUpdatedMangaRef ref) async {
 Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getMangaById(mangaId);
+}
+
+@riverpod
+Future<List<MangaPage>> mangaPages(MangaDetailRef ref, String mangaId) async {
+  final repository = ref.watch(mangaRepositoryProvider);
+  return repository.getPageByMangaId(mangaId);
 }
 
 

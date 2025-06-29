@@ -147,7 +147,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   
   Widget _buildPageWidget(dynamic manga, int pageNumber) {
     // 根据漫画信息和页码构建页面路径
-    final imagePath = '${manga.localPath}/page_$pageNumber.jpg';
+    final imagePath = '${manga.path}/page_$pageNumber.jpg';
     
     return _buildImageWidget(imagePath);
   }

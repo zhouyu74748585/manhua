@@ -38,6 +38,7 @@ dependencies:
   crypto: ^3.0.3
   pdfx: ^2.9.2
   pdf_render: ^1.4.11
+  tuple: ^2.0.0
 
 dev_dependencies:
   flutter_test:
