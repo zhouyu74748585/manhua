@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/manga.dart';
+import '../data/models/chapter.dart';
+import '../data/models/reading_progress.dart';
 import '../data/repositories/manga_repository.dart';
 import '../data/services/database_service.dart';
 
@@ -117,10 +119,10 @@ class MangaNotifier extends StateNotifier<AsyncValue<void>> {
   }
 
   // 更新阅读进度
-  Future<void> updateReadingProgress(String id, int currentChapter, int currentPage) async {
+  Future<void> updateReadingProgress(String id, ReadingProgress progress) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.updateReadingProgress(id, currentChapter, currentPage);
+      await _repository.updateReadingProgress(id, progress);
       state = const AsyncValue.data(null);
       // 刷新相关提供者
       _ref.invalidate(allMangaProvider);
