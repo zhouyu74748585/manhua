@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/models/library.dart';
 import '../data/repositories/library_repository.dart';
-
+import '../data/models/manga.dart';
 part 'library_service.g.dart';
 
 @riverpod
@@ -244,35 +244,9 @@ class LibraryService {
   }
   
   Future<int> _scanLocalLibrary(MangaLibrary library) async {
-    try {
-      final directory = Directory(library.path);
-      if (!await directory.exists()) {
-        throw Exception('目录不存在: ${library.path}');
-      }
-      
-      // 支持的漫画文件格式
-      final supportedExtensions = {'.cbz', '.cbr', '.zip', '.rar', '.pdf', '.epub'};
-      
-      int mangaCount = 0;
-      
-      // 递归扫描目录
-      await for (final entity in directory.list(recursive: true, followLinks: false)) {
-        if (entity is File) {
-          final extension = entity.path.toLowerCase().split('.').last;
-          if (supportedExtensions.contains('.$extension')) {
-            // 这里可以添加更详细的漫画文件处理逻辑
-            // 比如提取元数据、生成缩略图等
-            mangaCount++;
-            
-            // 添加一些延迟以避免过度占用系统资源
-            if (mangaCount % 10 == 0) {
-              await Future.delayed(const Duration(milliseconds: 10));
-            }
-          }
-        }
-      }
-      
-      return mangaCount;
+    try{
+      List<Manga> mangas =await _repository.scanLibrary(library.id);
+      return mangas.length;
     } catch (e) {
       throw Exception('扫描本地库失败: $e');
     }

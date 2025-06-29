@@ -249,28 +249,28 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   GridConfig _getGridConfig(GridSize size) {
     switch (size) {
       case GridSize.small:
-        return GridConfig(
+        return const GridConfig(
           crossAxisCount: 4,
           childAspectRatio: 0.6,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         );
       case GridSize.medium:
-        return GridConfig(
+        return const GridConfig(
           crossAxisCount: 3,
           childAspectRatio: 0.65,
           crossAxisSpacing: 14,
           mainAxisSpacing: 14,
         );
       case GridSize.large:
-        return GridConfig(
+        return const GridConfig(
           crossAxisCount: 2,
           childAspectRatio: 0.7,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         );
       case GridSize.extraLarge:
-        return GridConfig(
+        return const GridConfig(
           crossAxisCount: 1,
           childAspectRatio: 1.2,
           crossAxisSpacing: 20,
