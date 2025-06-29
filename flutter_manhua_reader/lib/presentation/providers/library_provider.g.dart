@@ -6,7 +6,7 @@ part of 'library_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$allLibrariesHash() => r'489cdff7b7ebaa2387ecdabae1b9b310d72d8fe1';
+String _$allLibrariesHash() => r'5316348caed55ca0892bc4eab2d5b9cd9f361a95';
 
 /// See also [allLibraries].
 @ProviderFor(allLibraries)
@@ -23,7 +23,7 @@ final allLibrariesProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AllLibrariesRef = AutoDisposeFutureProviderRef<List<MangaLibrary>>;
-String _$libraryDetailHash() => r'00995c8580de4c3a229f71e4a2f250aed751be3c';
+String _$libraryDetailHash() => r'09a4812f95fe552f0a403ff6da304db4d8782654';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -175,7 +175,7 @@ class _LibraryDetailProviderElement
   String get libraryId => (origin as LibraryDetailProvider).libraryId;
 }
 
-String _$librarySettingsHash() => r'ec1d223ba469b8150d6b7caeaa7ce077e28ee772';
+String _$librarySettingsHash() => r'2ab2b1c3c002e97c3f2afc14e30d4f89e319ca92';
 
 /// See also [librarySettings].
 @ProviderFor(librarySettings)
@@ -307,7 +307,7 @@ class _LibrarySettingsProviderElement
   String get libraryId => (origin as LibrarySettingsProvider).libraryId;
 }
 
-String _$libraryStatsHash() => r'b4ca08a9fff3357e8cffa7157838dc9810984654';
+String _$libraryStatsHash() => r'57c8e5fbb8e88925633c823a8aa2215465e8937e';
 
 /// See also [libraryStats].
 @ProviderFor(libraryStats)
@@ -438,7 +438,7 @@ class _LibraryStatsProviderElement
   String get libraryId => (origin as LibraryStatsProvider).libraryId;
 }
 
-String _$totalStatsHash() => r'533c57211b9c048747ccd3a212ccb6c971a33b13';
+String _$totalStatsHash() => r'd1f9c34710b1cbe6901659656e9d2e8e8cf9e758';
 
 /// See also [totalStats].
 @ProviderFor(totalStats)
@@ -454,7 +454,7 @@ final totalStatsProvider = AutoDisposeFutureProvider<Map<String, int>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalStatsRef = AutoDisposeFutureProviderRef<Map<String, int>>;
-String _$libraryActionsHash() => r'9044ec7e9a4a0a258a7cffb09d9b8916f31731cb';
+String _$libraryActionsHash() => r'67349271568c0249922c5d1a055368f84b32208d';
 
 /// See also [LibraryActions].
 @ProviderFor(LibraryActions)

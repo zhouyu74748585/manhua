@@ -24,7 +24,7 @@ final appSettingsNotifierProvider =
 
 typedef _$AppSettingsNotifier = AutoDisposeAsyncNotifier<AppSettings>;
 String _$readerSettingsNotifierHash() =>
-    r'85253ca218ac98e4a648012f8c8ded7377510ad4';
+    r'315edefa5a47bbb28649e97de9c8dbf0c39b5209';
 
 /// See also [ReaderSettingsNotifier].
 @ProviderFor(ReaderSettingsNotifier)
@@ -41,7 +41,7 @@ final readerSettingsNotifierProvider = AutoDisposeAsyncNotifierProvider<
 
 typedef _$ReaderSettingsNotifier = AutoDisposeAsyncNotifier<ReaderSettings>;
 String _$libraryViewSettingsNotifierHash() =>
-    r'0338e25037c17b33a3440c5d7012a2763e3cefd6';
+    r'da3dbe743afaa79ece909f5d1fbd2fa758ef7fce';
 
 /// See also [LibraryViewSettingsNotifier].
 @ProviderFor(LibraryViewSettingsNotifier)

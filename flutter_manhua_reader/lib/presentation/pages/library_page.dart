@@ -18,7 +18,7 @@ class LibraryPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: scanStatus.isAnyScanning
+            onPressed: scanStatus.values.any((isScanning) => isScanning)
                 ? null
                 : () => _scanAllLibraries(ref),
             tooltip: '扫描所有库',

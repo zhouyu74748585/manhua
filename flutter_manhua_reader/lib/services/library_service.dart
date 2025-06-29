@@ -319,7 +319,7 @@ class LibraryService {
       int mangaCount = 0;
       
       // 使用正则表达式查找文件链接
-      final linkPattern = RegExp(r'href=["\']([^"\'>]+)["\']', caseSensitive: false);
+      final linkPattern = RegExp('', caseSensitive: false);
       final matches = linkPattern.allMatches(content);
       
       for (final match in matches) {

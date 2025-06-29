@@ -15,7 +15,7 @@ class LibraryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scanStatus = ref.watch(scanStatusProvider);
-    final isScanning = scanStatus.isScanning(library.id);
+    final isScanning = scanStatus[library.id] ?? false;
     
     return Card(
       margin: const EdgeInsets.all(8.0),
