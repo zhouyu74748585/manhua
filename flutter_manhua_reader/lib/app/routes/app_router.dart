@@ -93,16 +93,13 @@ GoRouter appRouter(AppRouterRef ref) {
         name: 'reader',
         builder: (context, state) {
           final mangaId = state.pathParameters['mangaId']!;
-          final chapterIndex = int.tryParse(
-            state.uri.queryParameters['chapter'] ?? '0',
-          ) ?? 0;
           final pageIndex = int.tryParse(
             state.uri.queryParameters['page'] ?? '0',
           ) ?? 0;
           
           return ReaderPage(
             mangaId: mangaId,
-            chapterId: chapterIndex.toString(),
+            initialPage: pageIndex,
           );
         },
       ),

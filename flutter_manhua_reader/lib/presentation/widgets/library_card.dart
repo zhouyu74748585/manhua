@@ -111,8 +111,26 @@ class LibraryCard extends ConsumerWidget {
     try {
       ref.read(scanStatusProvider.notifier).setScanningStatus(library.id, true);
       await ref.read(libraryNotifierProvider.notifier).scanLibrary(library.id);
+      
+      // 显示成功消息
+      if (ref.context.mounted) {
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          SnackBar(
+            content: Text('库 "${library.name}" 扫描完成'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       // 显示错误消息
+      if (ref.context.mounted) {
+        ScaffoldMessenger.of(ref.context).showSnackBar(
+          SnackBar(
+            content: Text('扫描失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       ref.read(scanStatusProvider.notifier).setScanningStatus(library.id, false);
     }

@@ -1,19 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/manga.dart';
-import '../data/models/chapter.dart';
 import '../data/models/reading_progress.dart';
 import '../data/repositories/manga_repository.dart';
 import '../data/services/database_service.dart';
 
 // 数据库服务提供者
 final databaseServiceProvider = Provider<DatabaseService>((ref) {
-  return DatabaseService();
+  // DatabaseService 是静态类，不需要实例化
+  throw UnimplementedError('DatabaseService 使用静态方法，不需要通过 Provider 访问');
 });
 
 // 漫画仓库提供者
 final mangaRepositoryProvider = Provider<MangaRepository>((ref) {
-  final databaseService = ref.watch(databaseServiceProvider);
-  return LocalMangaRepository(databaseService);
+  return LocalMangaRepository();
 });
 
 // 所有漫画列表提供者
@@ -46,11 +45,6 @@ final mangaByIdProvider = FutureProvider.family<Manga?, String>((ref, id) async 
   return await repository.getMangaById(id);
 });
 
-// 根据漫画ID获取章节列表提供者
-final chaptersByMangaIdProvider = FutureProvider.family<List<Chapter>, String>((ref, mangaId) async {
-  final repository = ref.watch(mangaRepositoryProvider);
-  return await repository.getChaptersByMangaId(mangaId);
-});
 
 // 搜索漫画提供者
 final searchMangaProvider = FutureProvider.family<List<Manga>, String>((ref, query) async {

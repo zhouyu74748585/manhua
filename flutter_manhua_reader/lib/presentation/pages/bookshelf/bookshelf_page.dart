@@ -4,7 +4,8 @@ import '../../providers/manga_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/manga/manga_card.dart';
 import '../../../data/models/manga.dart';
-import '../../../data/models/library.dart';
+import '../manga_detail/manga_detail_page.dart';
+import '../reader/reader_page.dart';
 
 enum BookshelfViewMode { grid, list }
 enum BookshelfSortMode { title, author, dateAdded, lastRead }
@@ -235,7 +236,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           title: manga.title,
           coverUrl: manga.coverUrl,
           subtitle: manga.author,
-          onTap: () => _openMangaDetail(manga),
+          totalPages: manga.totalPages,
+          currentPage: manga.readingProgress?.currentPage,
+          progress: manga.readingProgress?.progressPercentage,
+          onTap: () => _showMangaOptions(manga),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
@@ -285,7 +289,8 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           title: manga.title,
           coverUrl: manga.coverUrl,
           subtitle: manga.author,
-          onTap: () => _openMangaDetail(manga),
+          progress: manga.readingProgress?.progressPercentage,
+          onTap: () => _showMangaOptions(manga),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
@@ -355,10 +360,65 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
   
+  void _showMangaOptions(Manga manga) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              manga.title,
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('查看详情'),
+              subtitle: const Text('浏览漫画信息和页面缩略图'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openMangaDetail(manga);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.play_arrow),
+              title: const Text('开始阅读'),
+              subtitle: Text(
+                manga.readingProgress?.currentPage != null
+                    ? '从第 ${manga.readingProgress!.currentPage} 页继续'
+                    : '从第一页开始',
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                _startReading(manga);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
   void _openMangaDetail(Manga manga) {
-    // TODO: 导航到漫画详情页
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('打开漫画: ${manga.title}')),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MangaDetailPage(mangaId: manga.id),
+      ),
+    );
+  }
+  
+  void _startReading(Manga manga) {
+    final startPage = manga.readingProgress?.currentPage ?? 1;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ReaderPage(
+          mangaId: manga.id,
+          initialPage: startPage,
+        ),
+      ),
     );
   }
   

@@ -68,12 +68,6 @@ class ReaderSettingsNotifier extends _$ReaderSettingsNotifier {
     await updateSettings(newSettings);
   }
   
-  Future<void> updateImageFit(ImageFit imageFit) async {
-    final currentSettings = await future;
-    final newSettings = currentSettings.copyWith(imageFit: imageFit);
-    await updateSettings(newSettings);
-  }
-  
   Future<void> updateFullscreen(bool fullscreen) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(fullscreen: fullscreen);
@@ -111,12 +105,6 @@ class LibraryViewSettingsNotifier extends _$LibraryViewSettingsNotifier {
   Future<void> updateViewMode(ViewMode viewMode) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(viewMode: viewMode);
-    await updateSettings(newSettings);
-  }
-  
-  Future<void> updateSortBy(SortBy sortBy) async {
-    final currentSettings = await future;
-    final newSettings = currentSettings.copyWith(sortBy: sortBy);
     await updateSettings(newSettings);
   }
   

@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/manga.dart';
-import '../../data/models/chapter.dart';
-import '../../data/models/manga_page.dart';
 import '../../data/models/reading_progress.dart';
 import '../../data/repositories/manga_repository.dart';
 
@@ -49,26 +47,7 @@ Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
   return repository.getMangaById(mangaId);
 }
 
-// 漫画章节列表提供者
-@riverpod
-Future<List<Chapter>> mangaChapters(MangaChaptersRef ref, String mangaId) async {
-  final repository = ref.watch(mangaRepositoryProvider);
-  return repository.getChaptersByMangaId(mangaId);
-}
 
-// 章节详情提供者
-@riverpod
-Future<Chapter?> chapterDetail(ChapterDetailRef ref, String chapterId) async {
-  final repository = ref.watch(mangaRepositoryProvider);
-  return repository.getChapterById(chapterId);
-}
-
-// 章节页面列表提供者
-@riverpod
-Future<List<MangaPage>> chapterPages(ChapterPagesRef ref, String chapterId) async {
-  final repository = ref.watch(mangaRepositoryProvider);
-  return repository.getPagesByChapterId(chapterId);
-}
 
 // 搜索结果提供者
 @riverpod
@@ -104,17 +83,7 @@ class MangaActions extends _$MangaActions {
     ref.invalidate(mangaDetailProvider(mangaId));
   }
   
-  Future<void> markChapterAsRead(String chapterId, bool isRead) async {
-    final repository = ref.read(mangaRepositoryProvider);
-    await repository.markChapterAsRead(chapterId, isRead);
-    
-    // 获取章节信息以刷新相关提供者
-    final chapter = await repository.getChapterById(chapterId);
-    if (chapter != null) {
-      ref.invalidate(mangaChaptersProvider(chapter.mangaId));
-      ref.invalidate(chapterDetailProvider(chapterId));
-    }
-  }
+
   
   Future<void> deleteManga(String mangaId) async {
     final repository = ref.read(mangaRepositoryProvider);

@@ -3,12 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_router.dart';
-import '../../../core/utils/platform_utils.dart';
 import '../../widgets/common/responsive_grid.dart';
 import '../../widgets/manga/manga_card.dart';
 import '../../widgets/common/section_header.dart';
-import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/error_widget.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
