@@ -35,18 +35,18 @@ class ThumbnailService {
   }
 
   /// 为给定的原始路径和尺寸生成缓存文件名
-  static String _generateThumbnailFileName(String originalPath, String sizeKey) {
+  static String generateThumbnailFileName(String originalPath) {
     final hash = md5.convert(utf8.encode(originalPath)).toString();
     // 使用jpg格式以获得较好的压缩率
-    return '$hash-$sizeKey.jpg';
+    return '$hash.jpg';
   }
 
   /// 为指定的封面图片生成并缓存缩略图
   /// 返回一个从尺寸标识符到其缓存文件路径的映射
-  static Future<Map<String, String>> generateThumbnails(String originalCoverPath) async {
-    final File originalFile = File(originalCoverPath);
+  static Future<Map<String, String>> generateThumbnails(String mangaId,String originalImgPath) async {
+    final File originalFile = File(originalImgPath);
     if (!await originalFile.exists()) {
-      print('无法为缩略图生成找到原始封面: $originalCoverPath');
+      print('无法为缩略图生成找到原始封面: $originalImgPath');
       return {};
     }
 
@@ -54,7 +54,7 @@ class ThumbnailService {
     final image = img.decodeImage(imageBytes);
 
     if (image == null) {
-      print('解码图片失败: $originalCoverPath');
+      print('解码图片失败: $originalImgPath');
       return {};
     }
 
@@ -67,9 +67,13 @@ class ThumbnailService {
 
       try {
         // 调整图片尺寸
+        Directory directory= Directory(path.join(cacheDir.path,'$mangaId/$sizeKey/'));
+        if (!await directory!.exists()) {
+          await directory!.create(recursive: true);
+        }
         final thumbnail = img.copyResize(image, width: width);
-        final thumbnailFileName = _generateThumbnailFileName(originalCoverPath, sizeKey);
-        final thumbnailFile = File(path.join(cacheDir.path, thumbnailFileName));
+        final thumbnailFileName = generateThumbnailFileName(originalImgPath);
+        final thumbnailFile = File(path.join(directory.path, thumbnailFileName));
 
         // 以JPEG格式保存缩略图
         await thumbnailFile.writeAsBytes(img.encodeJpg(thumbnail, quality: 85));
@@ -80,21 +84,5 @@ class ThumbnailService {
     }
 
     return thumbnailPaths;
-  }
-
-  /// 删除与指定原始封面路径相关的所有缓存缩略图
-  static Future<void> deleteThumbnails(String originalCoverPath) async {
-    try {
-      final cacheDir = await _getCacheDirectory();
-      for (var sizeKey in thumbnailSizes.keys) {
-        final thumbnailFileName = _generateThumbnailFileName(originalCoverPath, sizeKey);
-        final thumbnailFile = File(path.join(cacheDir.path, thumbnailFileName));
-        if (await thumbnailFile.exists()) {
-          await thumbnailFile.delete();
-        }
-      }
-    } catch (e) {
-      print('删除 $originalCoverPath 的缩略图失败: $e');
-    }
   }
 }

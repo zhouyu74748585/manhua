@@ -428,9 +428,29 @@ class DatabaseService {
         'manga_id': page.mangaId,
         'page_index': page.pageNumber,
         'local_path': page.localPath,
+        'large_thumbnail': page.largeThumbnail,
+        'medium_thumbnail': page.mediumThumbnail,
+        'small_thumbnail': page.smallThumbnail,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  static Future<void> updatePage(MangaPage page) async {
+  final db = await database;
+    await db.update(
+      _pageTable,
+      {
+        'page_index': page.pageNumber,
+        'local_path': page.localPath,
+        'large_thumbnail': page.largeThumbnail,
+        'medium_thumbnail': page.mediumThumbnail,
+        'small_thumbnail': page.smallThumbnail,
+      },
+      where: 'id = ?',
+      whereArgs: [page.id],
+    );
+
   }
 
 
@@ -513,4 +533,6 @@ class DatabaseService {
       _database = null;
     }
   }
+
+  
 }

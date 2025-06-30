@@ -26,6 +26,7 @@ abstract class MangaRepository {
   Future<MangaPage?> getPageById(String id);
   Future<List<MangaPage>> getPageByMangaId(String id);
   Future<void> savePage(MangaPage page);
+  Future<void> updatePage(MangaPage manga);
   Future<void> deletePage(String id);
   
   // 批量操作
@@ -214,6 +215,11 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> savePage(MangaPage page) async {
     await DatabaseService.insertPage(page);
   }
+
+  Future<void> updatePage(MangaPage page) async{
+     await DatabaseService.updatePage(page);
+  }
+
   
   @override
   Future<void> deletePage(String id) async {

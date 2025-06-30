@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
@@ -199,7 +201,7 @@ class LocalLibraryRepository implements LibraryRepository {
       
       // 找出需要删除的漫画（在数据库中但不在扫描结果中）
       final pathsToDelete = existingMangaPaths.difference(scannedMangaPaths);
-      
+      final idToAdd = scannedMangas.item1.map((m) => m.id).toSet().difference(existingMangas.map((m) => m.id).toSet());
       // 删除不存在的漫画
       for (final pathToDelete in pathsToDelete) {
         final mangaToDelete = existingMangas.firstWhere(
@@ -220,9 +222,11 @@ class LocalLibraryRepository implements LibraryRepository {
         }
       }
       // 将扫描到的漫画保存到数据库
+      List<Manga> mangaToAdd=scannedMangas.item1.where((e)=>idToAdd.contains(e.id)).toList();
+      List<MangaPage> pageToAdd=scannedMangas.item2.where((e)=>idToAdd.contains(e.mangaId)).toList(); 
       try {
-          await _mangaRepository.saveMangaList(scannedMangas.item1);
-          await _mangaRepository.savePageList(scannedMangas.item2);
+        await _mangaRepository.saveMangaList(mangaToAdd);
+        await _mangaRepository.savePageList(pageToAdd);
       } catch (e) {
         print('保存漫画失败: $e');
       }
@@ -233,43 +237,60 @@ class LocalLibraryRepository implements LibraryRepository {
         lastScanAt: DateTime.now(),
       );
       await updateLibrary(updatedLibrary);
-      getCovers(scannedMangas.item1);
+      getCoversAndThumbnails(scannedMangas.item1);
       return scannedMangas.item1;
     } catch (e) {
       throw Exception('扫描漫画库失败: $e');
     }
   }
 
-  Future<void> getCovers(List<Manga> mangas) async{
-      for (final m in mangas) {
-        if(m.type!=MangaType.folder){
-          if(m.coverPath == null&&m.coverUrl==null){
-            if(m.type==MangaType.archive){
+  Future<void> getCoversAndThumbnails(List<Manga> mangas) async{
+    for (final m in mangas) {
+      if(m.type!=MangaType.folder){
+        if(m.coverPath == null&&m.coverUrl==null){
+          if(m.type==MangaType.archive){
               File zipFile = File(m.path);
               final result = await CoverCacheService.extractAndCacheCoverFromZip(zipFile);
               if (result != null) {
-                 final updateManga = m.copyWith(
+                  final updateManga = m.copyWith(
                     coverPath: result['cover'],
                     coverUrl: result['cover'],
                     totalPages: result['pages'] ?? 0,
                 );
-                _mangaRepository.updateManga(updateManga);
+                await _mangaRepository.updateManga(updateManga);
             }else if(m.type==MangaType.pdf){
               File pdfFile = File(m.path);
               final result = await CoverCacheService.extractAndCacheCoverFromPdf(pdfFile);
               if (result != null) {
-                 final updateManga = m.copyWith(
+                  final updateManga = m.copyWith(
                     coverPath: result['cover'],
                     coverUrl: result['cover'],
                     totalPages: result['pages'] ?? 0,
                 );
-                _mangaRepository.updateManga(updateManga);
+                await _mangaRepository.updateManga(updateManga);
               }
             }
           }
         }
+      }else{
+           List<MangaPage> pages= await _mangaRepository.getPageByMangaId(m.id);
+           for (MangaPage page in pages) {
+             String localPath=page.localPath;
+             Map<String, String> thumbnailMap=await ThumbnailService.generateThumbnails(page.mangaId ,localPath);
+             String? smallThumbnail=thumbnailMap["small"];
+             String? mediumThumbnail= thumbnailMap["medium"];
+             String? largeThumbnail=thumbnailMap["large"];
+             final updatePage = page.copyWith(
+                    smallThumbnail: smallThumbnail,
+                    mediumThumbnail: mediumThumbnail,
+                    largeThumbnail: largeThumbnail,
+                );
+              await _mangaRepository.updatePage(updatePage);
+           }
+            print("生成${m.title}的缩略图");
+
         }
-      }
+    }
   }
   
   @override
