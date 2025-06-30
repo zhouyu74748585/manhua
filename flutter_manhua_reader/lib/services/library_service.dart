@@ -214,12 +214,10 @@ class LibraryService {
       };
       
       bool isSupported = false;
-      String? serviceName;
       
       for (final entry in supportedServices.entries) {
         if (uri.host.contains(entry.key) || path.toLowerCase().contains(entry.key)) {
           isSupported = true;
-          serviceName = entry.value;
           break;
         }
       }

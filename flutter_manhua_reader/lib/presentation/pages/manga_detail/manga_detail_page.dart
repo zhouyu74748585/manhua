@@ -312,7 +312,7 @@ class MangaDetailPage extends ConsumerWidget {
       }
     }
 
-    final totalPages = manga.totalPages ?? 0;
+    final totalPages = manga.totalPages;
     
     if (totalPages == 0) {
       return const SliverToBoxAdapter(

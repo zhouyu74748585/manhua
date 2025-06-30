@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
-import 'package:manhua_reader_flutter/data/repositories/manga_repository.dart';
 import 'package:path/path.dart' as path;
 import 'package:tuple/tuple.dart';
 import '../models/manga.dart';
