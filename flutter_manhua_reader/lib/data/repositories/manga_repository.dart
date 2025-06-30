@@ -307,9 +307,11 @@ class LocalMangaRepository implements MangaRepository {
     return MangaPage(
       id: map['id'] as String,
       mangaId: map['manga_id'] as String,
-      pageNumber: map['page_number'] as int,
-      imagePath: map['image_path'] as String,
-      imageUrl: map['image_url'] as String?,
+      pageNumber: map['page_index'] as int,
+      localPath: map['local_path'] as String,
+      largeThumbnail: map['large_thumbnail'] as String?,
+      mediumThumbnail: map['medium_thumbnail'] as String?,
+      smallThumbnail: map['small_thumbnail'] as String?,
     );
   }
 }

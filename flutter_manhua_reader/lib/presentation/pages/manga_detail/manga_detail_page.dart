@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'dart:io';
 
 import '../../../data/models/manga.dart';
@@ -18,7 +19,8 @@ class MangaDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
-    
+    final pages = ref.watch(mangaPagesProvider(mangaId)).value ?? [];
+   
     return Scaffold(
       body: mangaAsync.when(
         data: (manga) {
@@ -32,7 +34,7 @@ class MangaDetailPage extends ConsumerWidget {
              slivers: [
                _buildSliverAppBar(context, ref, manga),
                _buildMangaInfo(context, manga),
-               _buildPageGrid(context, manga),
+               _buildPageGrid(context, manga, pages),
              ],
            );
         },
@@ -282,8 +284,35 @@ class MangaDetailPage extends ConsumerWidget {
     );
   }
   
-  Widget _buildPageGrid(BuildContext context, Manga manga) {
-    final totalPages = manga.totalPages;
+  Widget _buildPageGrid(BuildContext context, Manga manga, List<MangaPage> pages) {
+    // 新增 _buildPageThumbnail 方法
+    Widget buildPageThumbnail(MangaPage page) {
+      if (page.largeThumbnail != null && File(page.largeThumbnail!).existsSync()) {
+        return Image.file(
+          File(page.largeThumbnail!),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.broken_image,
+              size: 50,
+              color: Colors.grey,
+            ),
+          ),
+        );
+      }else {
+        return Container(
+          color: Colors.grey[200],
+          child: const Icon(
+            Icons.image,
+            size: 50,
+            color: Colors.grey,
+          ),
+        );
+      }
+    }
+
+    final totalPages = manga.totalPages ?? 0;
     
     if (totalPages == 0) {
       return const SliverToBoxAdapter(
@@ -351,34 +380,36 @@ class MangaDetailPage extends ConsumerWidget {
                   ),
                   child: Stack(
                     children: [
-                      // 页面缩略图占位符
-                      Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.image,
-                              color: Colors.grey[400],
-                              size: 24,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '$pageNumber',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                      // 页面缩略图
+                      pages.isNotEmpty && pages.length >= pageNumber
+                          ? buildPageThumbnail(pages[pageNumber - 1])
+                          : Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image,
+                                    color: Colors.grey[400],
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '$pageNumber',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
                       // 当前页面标识
                       if (isCurrentPage)
                         Positioned(

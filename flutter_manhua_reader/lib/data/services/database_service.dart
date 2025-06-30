@@ -93,8 +93,10 @@ class DatabaseService {
         id TEXT PRIMARY KEY,
         manga_id TEXT NOT NULL,
         page_index INTEGER NOT NULL,
-        image_url TEXT NOT NULL,
         local_path TEXT,
+        large_thumbnail TEXT,
+        medium_thumbnail TEXT,
+        small_thumbnail TEXT,
         FOREIGN KEY (manga_id) REFERENCES $_mangaTable (id) ON DELETE CASCADE
       )
     ''');
@@ -425,8 +427,7 @@ class DatabaseService {
         'id': page.id,
         'manga_id': page.mangaId,
         'page_index': page.pageNumber,
-        'image_url': page.imageUrl ?? '',
-        'local_path': page.imagePath,
+        'local_path': page.localPath,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );

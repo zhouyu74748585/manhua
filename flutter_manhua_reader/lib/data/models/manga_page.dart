@@ -7,15 +7,19 @@ class MangaPage {
   final String id;
   final String mangaId;
   final int pageNumber;
-  final String imagePath;
-  final String? imageUrl;
+  final String localPath;
+  final String? largeThumbnail;
+  final String? mediumThumbnail;
+  final String? smallThumbnail;
 
   const MangaPage({
     required this.id,
     required this.mangaId,
     required this.pageNumber,
-    required this.imagePath,
-    this.imageUrl,
+    required this.localPath,
+    this.largeThumbnail ,
+    this.mediumThumbnail ,
+    this.smallThumbnail ,
   });
 
   factory MangaPage.fromJson(Map<String, dynamic> json) => _$MangaPageFromJson(json);
@@ -27,8 +31,10 @@ class MangaPage {
       id: map['id'] as String,
       mangaId: map['manga_id'] as String,
       pageNumber: map['page_index'] as int,
-      imagePath: map['image_path'] as String,
-      imageUrl: map['image_url'] as String?,
+      localPath: map['local_path'] as String,
+      largeThumbnail: map['large_thumbnail'] as String?,
+      mediumThumbnail: map['medium_thumbnail'] as String?,
+      smallThumbnail: map['small_thumbnail'] as String?,
     );
   }
 
@@ -38,8 +44,10 @@ class MangaPage {
       'id': id,
       'manga_id': mangaId,
       'page_index': pageNumber,
-      'local_path': imagePath,
-      'image_url': imageUrl,
+      'local_path': localPath,
+      'large_thumbnail': largeThumbnail,
+      'medium_thumbnail': mediumThumbnail,
+      'small_thumbnail': smallThumbnail,
     };
   }
 
@@ -47,15 +55,19 @@ class MangaPage {
     String? id,
      String? mangaId,
     int? pageNumber,
-    String? imagePath,
-    String? imageUrl,
+    String? localPath,
+    String? largeThumbnail,
+    String? mediumThumbnail,
+    String? smallThumbnail,
   }) {
     return MangaPage(
       id: id ?? this.id,
       mangaId: mangaId ?? this.mangaId,
       pageNumber: pageNumber ?? this.pageNumber,
-      imagePath: imagePath ?? this.imagePath,
-      imageUrl: imageUrl ?? this.imageUrl,
+      localPath: localPath ?? this.localPath,
+      largeThumbnail: largeThumbnail ?? this.largeThumbnail,
+      mediumThumbnail: mediumThumbnail ?? this.mediumThumbnail,
+      smallThumbnail: smallThumbnail ?? this.smallThumbnail,
     );
   }
 
@@ -70,6 +82,6 @@ class MangaPage {
 
   @override
   String toString() {
-    return 'MangaPage(id: $id, pageNumber: $pageNumber, imagePath: $imagePath)';
+    return 'MangaPage(id: $id, pageNumber: $pageNumber, localPath: $localPath)';
   }
 }

@@ -158,8 +158,7 @@ class FileScannerService {
           id: _generateMangaId(element),
           mangaId: mangaId,
           pageNumber: pages.length,
-          imagePath: element,
-          imageUrl: element,
+          localPath: element,
         ));
       });
       mangas.add( manga);
