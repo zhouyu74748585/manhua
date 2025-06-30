@@ -32,7 +32,7 @@ logs/
 *.log.*
 
 # 数据文件
-data/
+dbdata/
 cache/
 temp/
 manga/
@@ -64,6 +64,13 @@ yarn-error.log*
 
 # 前端构建输出
 dist/
+dist-app/
+dist-electron/
+
+# 后端构建输出
+backend/target/
+
+# 前端构建输出
 build/
 .next/
 .nuxt/
