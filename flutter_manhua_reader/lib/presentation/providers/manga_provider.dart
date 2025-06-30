@@ -50,7 +50,7 @@ Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
 }
 
 @riverpod
-Future<List<MangaPage>> mangaPages(MangaDetailRef ref, String mangaId) async {
+Future<List<MangaPage>> mangaPages(MangaPagesRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getPageByMangaId(mangaId);
 }

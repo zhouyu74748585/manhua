@@ -40,6 +40,7 @@ class Manga {
   final String? coverPath; // 本地封面路径
   final String libraryId; // 所属漫画库ID
   final String path; // 文件或文件夹路径
+  final int? fileSize; // 文件大小
   final List<String> tags;
   final MangaStatus status;
   final MangaType type; // 漫画类型
@@ -63,6 +64,7 @@ class Manga {
     required this.path,
     required this.type,
     required this.totalPages,
+    this.fileSize, // 文件大小
     this.subtitle,
     this.author,
     this.description,
@@ -102,6 +104,7 @@ class Manga {
     DateTime? updatedAt,
     DateTime? createdAt,
     DateTime? lastReadAt,
+    int? fileSize,
     int? totalPages,
     int? currentPage,
     double? rating,
@@ -128,6 +131,7 @@ class Manga {
       updatedAt: updatedAt ?? this.updatedAt,
       createdAt: createdAt ?? this.createdAt,
       lastReadAt: lastReadAt ?? this.lastReadAt,
+      fileSize: fileSize ?? this.fileSize,
       totalPages: totalPages ?? this.totalPages,
       currentPage: currentPage ?? this.currentPage,
       rating: rating ?? this.rating,

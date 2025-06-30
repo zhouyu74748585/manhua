@@ -53,22 +53,24 @@ class CoverCacheService {
   static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(File zipFile) async {
     try {
 
-      final bytes = await zipFile.readAsBytes();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        List<ArchiveFile> fileList=[];
-        // 收集所有图片文件
-        for (final file in archive) {
-          if (file.isFile) {
-            final fileName = file.name.toLowerCase();
-            final fileExtension = path.extension(fileName);
-            if (supportedImageFormats.contains(fileExtension)) {
-              fileList.add(file);
-            }
-          }
-        }
-      fileList.sort((a,b)=>a.name.compareTo(b.name));
-      ArchiveFile coverFile=fileList.first;
+      final inputStream = InputFileStream(zipFile.path);
+      final archive = ZipDecoder().decodeStream(inputStream);
 
+      ArchiveFile? coverFile = null;
+
+      for (final file in archive) {
+          if (!file.isFile || file.name.startsWith('__MACOSX')) {continue;}
+          if(!supportedImageFormats.contains(path.extension(file.name).toLowerCase())) {continue;}
+          coverFile ??= file;
+          if(file.name.compareTo(coverFile.name)<0){
+            coverFile=file;
+          }
+
+      }
+      if(coverFile==null){
+        return null;
+      }
+  
       // 生成缓存文件路径
       final imageExtension = path.extension(coverFile.name.toLowerCase());
       final cacheFileName = _generateCacheFileName(coverFile.name, imageExtension);

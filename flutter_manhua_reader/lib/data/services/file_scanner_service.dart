@@ -193,6 +193,7 @@ class FileScannerService {
       int pages = 0;
 
       // 创建初始化的阅读进度
+      final fileSize=await file.length()/1024;
       final totalPages = pages;
       final readingProgress = await ReadingProgressService.createInitialProgressForSingleFile(mangaId,totalPages);
 
@@ -213,7 +214,7 @@ class FileScannerService {
         createdAt: DateTime.now(),
         updatedAt: fileStats.modified,
         readingProgress: readingProgress,
-        metadata: {"file_zie":file.length()},
+        fileSize: fileSize.toInt()
       );
     } catch (e) {
       print('扫描文件失败: ${file.path}, 错误: $e');

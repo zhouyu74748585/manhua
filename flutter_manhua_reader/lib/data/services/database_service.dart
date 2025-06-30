@@ -281,7 +281,7 @@ class DatabaseService {
         'updated_at': manga.updatedAt?.millisecondsSinceEpoch,
         'reading_progress': manga.readingProgress != null ? jsonEncode(manga.readingProgress!.toJson()) : null,
         'file_path': manga.path,
-        'file_size': 0,
+        'file_size': manga.fileSize,
         'metadata': jsonEncode(manga.metadata),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,

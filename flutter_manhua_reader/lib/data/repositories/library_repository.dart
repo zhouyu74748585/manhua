@@ -224,7 +224,7 @@ class LocalLibraryRepository implements LibraryRepository {
           await _mangaRepository.saveMangaList(scannedMangas.item1);
           await _mangaRepository.savePageList(scannedMangas.item2);
       } catch (e) {
-        print('保存漫画失败:  错误: $e');
+        print('保存漫画失败: $e');
       }
      
       // 更新库的漫画数量和最后扫描时间
@@ -233,7 +233,7 @@ class LocalLibraryRepository implements LibraryRepository {
         lastScanAt: DateTime.now(),
       );
       await updateLibrary(updatedLibrary);
-      
+      getCovers(scannedMangas.item1);
       return scannedMangas.item1;
     } catch (e) {
       throw Exception('扫描漫画库失败: $e');

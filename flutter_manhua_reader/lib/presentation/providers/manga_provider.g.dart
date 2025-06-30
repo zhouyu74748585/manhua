@@ -227,7 +227,7 @@ class _MangaDetailProviderElement
   String get mangaId => (origin as MangaDetailProvider).mangaId;
 }
 
-String _$mangaPagesHash() => r'1ace63e0b757dee7e0f4a6e988fe45160c81f648';
+String _$mangaPagesHash() => r'fb476b56087c78e341ffd8a2f3875ab87734287a';
 
 /// See also [mangaPages].
 @ProviderFor(mangaPages)
