@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+interface FileInfo {
+  name: string
+  path: string
+  isDirectory: boolean
+  size: number
+  modified: Date
+}
+
 // 定义API接口
 interface ElectronAPI {
   selectFolder: () => Promise<Electron.OpenDialogReturnValue>
@@ -7,14 +15,6 @@ interface ElectronAPI {
   getAppVersion: () => Promise<string>
   getMangaPage: (mangaPath: string, pageNumber: number) => Promise<string>
   getMangaPageCount: (mangaPath: string) => Promise<number>
-}
-
-interface FileInfo {
-  name: string
-  path: string
-  isDirectory: boolean
-  size: number
-  modified: Date
 }
 
 // 暴露安全的API给渲染进程
