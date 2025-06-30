@@ -36,7 +36,6 @@ class ReaderPage extends ConsumerStatefulWidget {
 }
 
 class _ReaderPageState extends ConsumerState<ReaderPage> {
-  bool _isFullscreen = false;
   bool _showControls = true;
   late PageController _pageController;
   int _currentPageIndex = 0;
@@ -67,14 +66,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _enterFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     setState(() {
-      _isFullscreen = true;
     });
   }
   
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     setState(() {
-      _isFullscreen = false;
     });
   }
   
@@ -95,13 +92,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.when(
       data: (manga) async {
-        if (manga != null && manga.totalPages != null) {
+        if (manga != null) {
           final progress = ReadingProgress(
             id: '${widget.mangaId}_progress',
             mangaId: widget.mangaId,
             currentPage: _currentPageIndex + 1, // 转换为1基索引
-            totalPages: manga.totalPages!,
-            progressPercentage: (_currentPageIndex + 1) / manga.totalPages!,
+            totalPages: manga.totalPages,
+            progressPercentage: (_currentPageIndex + 1) / manga.totalPages,
             lastReadAt: DateTime.now(),
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
@@ -128,7 +125,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   void _goToNextPage() {
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.whenData((manga) {
-      if (manga != null && manga.totalPages != null && _currentPageIndex < manga.totalPages! - 1) {
+      if (manga != null && _currentPageIndex < manga.totalPages - 1) {
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
@@ -153,38 +150,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
   
   Widget _buildImageWidget(String imagePath) {
-    Widget imageWidget;
-    
-    if (imagePath.startsWith('http')) {
-      // 网络图片
-      imageWidget = CachedNetworkImage(
-        imageUrl: imagePath,
-        fit: BoxFit.contain,
-        placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
-        errorWidget: (context, url, error) => const Center(
-          child: Icon(Icons.error, color: Colors.white, size: 48),
-        ),
-      );
-    } else {
-      // 本地图片
-      final file = File(imagePath);
-      if (file.existsSync()) {
-        imageWidget = Image.file(
-          file,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => const Center(
-            child: Icon(Icons.error, color: Colors.white, size: 48),
-          ),
-        );
-      } else {
-        imageWidget = const Center(
-          child: Icon(Icons.image_not_supported, color: Colors.white, size: 48),
-        );
-      }
-    }
-    
     return PhotoView(
       imageProvider: imagePath.startsWith('http')
           ? CachedNetworkImageProvider(imagePath) as ImageProvider

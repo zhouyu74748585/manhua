@@ -1,12 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
-import '../datasources/local_storage.dart';
 import '../services/file_scanner_service.dart';
 import '../services/database_service.dart';
 import '../services/cover_cache_service.dart';
@@ -18,7 +16,6 @@ part 'library_repository.g.dart';
 @riverpod
 LibraryRepository libraryRepository(LibraryRepositoryRef ref) {
   return LocalLibraryRepository(
-    ref.read(localStorageProvider),
     ref.read(mangaRepositoryProvider),
   );
 }
@@ -47,11 +44,9 @@ abstract class LibraryRepository {
 }
 
 class LocalLibraryRepository implements LibraryRepository {
-  final LocalStorage _localStorage;
   final MangaRepository _mangaRepository;
-  static const String _librariesKey = 'manga_libraries';
   
-  LocalLibraryRepository(this._localStorage, this._mangaRepository);
+  LocalLibraryRepository(this._mangaRepository);
   
   // 内存缓存，避免频繁数据库查询
   static List<MangaLibrary>? _cachedLibraries;

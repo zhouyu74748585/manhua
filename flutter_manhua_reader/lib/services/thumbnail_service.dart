@@ -68,8 +68,8 @@ class ThumbnailService {
       try {
         // 调整图片尺寸
         Directory directory= Directory(path.join(cacheDir.path,'$mangaId/$sizeKey/'));
-        if (!await directory!.exists()) {
-          await directory!.create(recursive: true);
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
         }
         final thumbnail = img.copyResize(image, width: width);
         final thumbnailFileName = generateThumbnailFileName(originalImgPath);
