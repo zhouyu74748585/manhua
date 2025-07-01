@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -116,10 +117,7 @@ class MangaDetailPage extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.library_books, color: Colors.white),
           onPressed: () {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              '/bookshelf',
-              (route) => false,
-            );
+            context.go('/bookshelf');
           },
           tooltip: '书架',
         ),

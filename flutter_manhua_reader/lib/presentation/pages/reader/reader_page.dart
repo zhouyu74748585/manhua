@@ -78,6 +78,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     setState(() {
       _showControls = !_showControls;
     });
+  }
+
+  void _toggleFullscreen() {
+    setState(() {
+      _showControls = !_showControls;
+    });
     
     // 根据控制条状态切换全屏模式
     if (_showControls) {
@@ -521,8 +527,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 IconButton(
                   icon: const Icon(Icons.library_books),
                   onPressed: () {
-                    // 刷新进度数据
-                    ref.invalidate(allMangaProgressProvider);
                     context.go('/bookshelf');
                   },
                   tooltip: '书架',
@@ -591,8 +595,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   onTap: _toggleControls,
                   onTapDown: (details) => _handleTapNavigation(details, context),
                   onSecondaryTap: () {
-              // 刷新进度数据
-              ref.invalidate(allMangaProgressProvider);
               context.go('/bookshelf');
             }, // 右键返回
                   child: _buildReaderView(pages),
@@ -612,11 +614,43 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () {
-                        // 刷新进度数据
-                        ref.invalidate(allMangaProgressProvider);
                         context.go('/bookshelf');
                       },
                         tooltip: '返回',
+                      ),
+                    ),
+                  ),
+                // 全屏模式下的取消全屏按钮
+                if (!_showControls)
+                  Positioned(
+                    top: 40,
+                    right: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.fullscreen_exit, color: Colors.white),
+                        onPressed: _toggleFullscreen,
+                        tooltip: '退出全屏',
+                      ),
+                    ),
+                  ),
+                // 非全屏模式下的全屏按钮（左下角）
+                if (_showControls)
+                  Positioned(
+                    bottom: 100,
+                    left: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.fullscreen, color: Colors.white),
+                        onPressed: _toggleFullscreen,
+                        tooltip: '全屏',
                       ),
                     ),
                   ),

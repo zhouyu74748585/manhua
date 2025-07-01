@@ -131,12 +131,38 @@ class LocalLibraryRepository implements LibraryRepository {
   @override
   Future<void> deleteLibrary(String id) async {
     try {
+      // 获取该库下的所有漫画
+      final libraryMangas = await DatabaseService.getMangaByLibraryId(id);
+      
+      // 删除每个漫画的相关数据
+      for (final manga in libraryMangas) {
+        try {
+          // 删除漫画页面信息
+          await _mangaRepository.deletePageByMangaId(manga.id);
+          // 删除阅读进度
+          await _mangaRepository.deleteProgressByMangaId(manga.id);
+          // 删除缩略图缓存
+          if (manga.metadata.containsKey('thumbnail')) {
+            await ThumbnailService.deleteDirectory(manga.metadata['thumbnail']);
+          }
+          // 删除封面缓存
+          await CoverCacheService.deleteCacheForFile(manga.path);
+          // 删除漫画记录
+          await _mangaRepository.deleteManga(manga.id);
+          log('已删除漫画及其相关数据: ${manga.title}');
+        } catch (e) {
+          log('删除漫画数据失败: ${manga.title}, 错误: $e');
+        }
+      }
+      
       // 从数据库删除漫画库
       await DatabaseService.deleteLibrary(id);
 
       // 清除缓存
       _cachedLibraries = null;
       _lastCacheTime = null;
+      
+      log('成功删除漫画库及其所有相关数据: $id');
     } catch (e) {
       log('删除漫画库失败: $id, 错误: $e');
       rethrow;
