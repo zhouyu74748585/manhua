@@ -94,7 +94,6 @@ Map<String, dynamic> _$ReaderSettingsToJson(ReaderSettings instance) =>
 const _$ReadingModeEnumMap = {
   ReadingMode.single: 'single',
   ReadingMode.double: 'double',
-  ReadingMode.continuous: 'continuous',
 };
 
 const _$ReadingDirectionEnumMap = {

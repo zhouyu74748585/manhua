@@ -67,15 +67,7 @@ class _HomeContent extends ConsumerWidget {
           ),
           _buildLatestUpdates(context, ref),
 
-          // 推荐漫画
-          const SliverToBoxAdapter(
-            child: SectionHeader(
-              title: '推荐漫画',
-              showMore: true,
-            ),
-          ),
-          _buildRecommended(context, ref),
-
+    
           // 底部间距
           const SliverToBoxAdapter(
             child: SizedBox(height: 80),
@@ -181,57 +173,6 @@ class _HomeContent extends ConsumerWidget {
           title: manga['title'],
           coverPath: manga['coverPath'],
           subtitle: '${manga['newChapter']} • ${manga['updateTime']}',
-          totalPages: manga['totalPages'],
-          onTap: () {
-            context.go('/manga/${manga['id']}');
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildRecommended(BuildContext context, WidgetRef ref) {
-    // TODO: 从Provider获取推荐数据
-    final recommended = <Map<String, dynamic>>[
-      {
-        'id': '5',
-        'title': '推荐漫画 1',
-        'coverPath': '',
-        'rating': 4.5,
-        'totalPages': 100,
-        'tags': ['冒险', '热血'],
-      },
-      {
-        'id': '6',
-        'title': '推荐漫画 2',
-        'coverPath': '',
-        'rating': 4.2,
-        'totalPages': 100,
-        'tags': ['恋爱', '校园'],
-      },
-    ];
-
-    if (recommended.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Text(
-              '暂无推荐漫画',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return ResponsiveGrid(
-      items: recommended,
-      itemBuilder: (context, manga) {
-        return MangaCard(
-          title: manga['title'],
-          coverPath: manga['coverPath'],
-          subtitle: '评分: ${manga['rating']} • ${manga['tags'].join(', ')}',
           totalPages: manga['totalPages'],
           onTap: () {
             context.go('/manga/${manga['id']}');

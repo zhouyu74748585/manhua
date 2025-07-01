@@ -49,12 +49,6 @@ class MainLayout extends ConsumerWidget {
         label: '漫画库',
       ),
       const AppNavigationDestination(
-        route: AppRoutes.search,
-        icon: Icons.search_outlined,
-        selectedIcon: Icons.search,
-        label: '搜索',
-      ),
-      const AppNavigationDestination(
         route: AppRoutes.settings,
         icon: Icons.settings_outlined,
         selectedIcon: Icons.settings,

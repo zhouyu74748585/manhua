@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -62,13 +63,38 @@ Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
 @riverpod
 Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
+  
+  // 创建一个安全的回调函数
+  void safeCallback() {
+    // 使用scheduleMicrotask确保在安全的上下文中执行
+    scheduleMicrotask(() {
+      try {
+        // 尝试刷新相关的provider
+        ref.invalidate(mangaDetailProvider(mangaId));
+        ref.invalidate(mangaPagesProvider(mangaId));
+      } catch (e) {
+        // 静默处理可能的错误（如provider已被销毁）
+        // 这是正常情况，不需要记录错误
+      }
+    });
+  }
+  
+  // 创建分批处理回调函数
+  void safeBatchCallback(List<MangaPage> batchPages) {
+    scheduleMicrotask(() {
+      try {
+        // 刷新页面相关的provider
+        ref.invalidate(mangaPagesProvider(mangaId));
+      } catch (e) {
+        // 静默处理可能的错误
+      }
+    });
+  }
+  
   return repository.getMangaByIdWithCallback(
     mangaId,
-    onThumbnailGenerated: () {
-      // 缩略图生成完成后刷新相关数据
-      ref.invalidate(mangaDetailProvider(mangaId));
-      ref.invalidate(mangaPagesProvider(mangaId));
-    },
+    onThumbnailGenerated: safeCallback,
+    onBatchProcessed: safeBatchCallback,
   );
 }
 

@@ -386,6 +386,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
 
   void _startReading(Manga manga, ReadingProgress? progress) {
     final startPage = progress?.currentPage ?? 1;
+    
+    // 触发缩略图生成（如果需要的话）
+    ref.read(mangaDetailWithCallbackProvider(manga.id));
+    
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReaderPage(

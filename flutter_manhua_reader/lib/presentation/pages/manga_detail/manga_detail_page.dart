@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
+import '../../widgets/lazy_thumbnail_grid.dart';
 import '../reader/reader_page.dart';
 
 class MangaDetailPage extends ConsumerWidget {
@@ -301,34 +301,6 @@ class MangaDetailPage extends ConsumerWidget {
 
   Widget _buildPageGrid(
       BuildContext context, Manga manga, ReadingProgress? progress, List<MangaPage> pages) {
-    // 新增 _buildPageThumbnail 方法
-    Widget buildPageThumbnail(MangaPage page) {
-      if (page.largeThumbnail != null &&
-          File(page.largeThumbnail!).existsSync()) {
-        return Image.file(
-          File(page.largeThumbnail!),
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey[300],
-            child: const Icon(
-              Icons.broken_image,
-              size: 50,
-              color: Colors.grey,
-            ),
-          ),
-        );
-      } else {
-        return Container(
-          color: Colors.grey[200],
-          child: const Icon(
-            Icons.image,
-            size: 50,
-            color: Colors.grey,
-          ),
-        );
-      }
-    }
-
     final totalPages = manga.totalPages;
 
     if (totalPages == 0) {
@@ -366,91 +338,19 @@ class MangaDetailPage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // 页面网格
-          MasonryGridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-            ),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            itemCount: totalPages,
-            itemBuilder: (context, index) {
-              final pageIndex = index + 1;
-              final isCurrentPage =
-                  progress?.currentPage == pageIndex;
-
-              return GestureDetector(
-                onTap: () {
-                  _startReading(context, manga, pageIndex);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: isCurrentPage
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey.withOpacity(0.3),
-                      width: isCurrentPage ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Stack(
-                    children: [
-                      // 页面缩略图
-                      pages.isNotEmpty && pages.length >= pageIndex
-                          ? buildPageThumbnail(pages[pageIndex - 1])
-                          : Container(
-                              width: double.infinity,
-                              height: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[200],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.image,
-                                    color: Colors.grey[400],
-                                    size: 24,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '$pageIndex',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                      // 当前页面标识
-                      if (isCurrentPage)
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              );
+          const SizedBox(height: 20), // 增加间距
+          // 懒加载页面网格
+          LazyThumbnailGrid(
+            pages: pages,
+            totalPages: totalPages,
+            currentPage: progress?.currentPage,
+            onPageTap: (index) {
+              _startReading(context, manga, index);
             },
+            crossAxisCount: 4,
+            preloadCount: 10,
+            showPageNumbers: true, // 显示页码
+            spacing: 12.0, // 增加间距
           ),
         ]),
       ),

@@ -76,8 +76,7 @@ class AppConstants {
 // 阅读模式枚举
 enum ReadingMode {
   single('单页'),
-  double('双页'),
-  continuous('连续');
+  double('双页');
 
   const ReadingMode(this.displayName);
   final String displayName;

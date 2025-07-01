@@ -14,9 +14,9 @@ class FileScannerService {
   // 支持的漫画文件格式
   static const List<String> supportedFormats = [
     '.cbz',
-    '.cbr',
+    //'.cbr',
     '.zip',
-    '.rar',
+    //'.rar',
     '.pdf',
   ];
 
@@ -277,7 +277,7 @@ class FileScannerService {
     };
   }
 
-  static Future<List<MangaPage>> extractFileToDisk(Manga manga) async {
+  static Future<List<MangaPage>> extractFileToDisk(Manga manga, {Function(List<MangaPage>)? onBatchProcessed}) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       //为当前漫画创建目录
@@ -288,40 +288,63 @@ class FileScannerService {
 
       final inputStream = InputFileStream(manga.path);
       final archive = ZipDecoder().decodeStream(inputStream);
-      List<MangaPage> pages = [];
-      for (final file in archive) {
-        if (!file.isFile || file.name.startsWith('__MACOSX')) {
-          continue;
+      
+      // 过滤出有效的图片文件
+      final validFiles = archive.where((file) {
+        return file.isFile && 
+               !file.name.startsWith('__MACOSX') &&
+               supportedImageFormats.contains(path.extension(file.name).toLowerCase());
+      }).toList();
+      
+      // 按文件名排序
+      validFiles.sort((a, b) => a.name.compareTo(b.name));
+      
+      List<MangaPage> allPages = [];
+      const int batchSize = 10;
+      
+      // 分批处理文件
+      for (int i = 0; i < validFiles.length; i += batchSize) {
+        final endIndex = (i + batchSize < validFiles.length) ? i + batchSize : validFiles.length;
+        final batch = validFiles.sublist(i, endIndex);
+        
+        List<MangaPage> batchPages = [];
+        
+        for (final file in batch) {
+          //生成文件
+          final imageData = file.content;
+          final pageFile = File(path.join(mangaDir.path, file.name));
+          await pageFile.writeAsBytes(imageData);
+          
+          Map<String, String> thumbnailMap = await ThumbnailService.generateThumbnailsByData(manga.id, file.name, imageData);
+          String? smallThumbnail = thumbnailMap["small"];
+          String? mediumThumbnail = thumbnailMap["medium"];
+          String? largeThumbnail = thumbnailMap["large"];
+          
+          MangaPage page = MangaPage(
+            id: generatePageId(file.name),
+            mangaId: manga.id,
+            pageIndex: allPages.length + batchPages.length + 1, // 设置正确的页码
+            localPath: pageFile.path,
+            largeThumbnail: largeThumbnail,
+            mediumThumbnail: mediumThumbnail,
+            smallThumbnail: smallThumbnail
+          );
+          batchPages.add(page);
         }
-        if (!supportedImageFormats
-            .contains(path.extension(file.name).toLowerCase())) {
-          continue;
+        
+        allPages.addAll(batchPages);
+        
+        // 触发批次处理完成回调
+        if (onBatchProcessed != null) {
+          onBatchProcessed(List.from(allPages)); // 传递当前所有已处理的页面
         }
-        //生成文件
-        final imageData = file.content;
-        final pageFile = File(path.join(mangaDir.path, file.name));
-        await pageFile.writeAsBytes(imageData);
-        Map<String, String> thumbnailMap =await ThumbnailService.generateThumbnailsByData(manga.id, file.name, imageData);
-        String? smallThumbnail = thumbnailMap["small"];
-        String? mediumThumbnail = thumbnailMap["medium"];
-        String? largeThumbnail = thumbnailMap["large"];
-        MangaPage page = MangaPage(
-          id: generatePageId(file.name),
-          mangaId: manga.id,
-          pageIndex: 0,
-          localPath: pageFile.path,
-          largeThumbnail: largeThumbnail,
-          mediumThumbnail: mediumThumbnail,
-          smallThumbnail: smallThumbnail
-        );
-        pages.add(page);
+        
+        // 添加小延迟，避免阻塞UI
+        await Future.delayed(const Duration(milliseconds: 50));
       }
-      pages.sort((a, b) => b.localPath.compareTo(a.localPath));
-      for (int i = 0; i < pages.length; i++) {
-        pages[i].pageIndex = i+1;
-      }
-      return pages;
-    } catch (e,stackTrace) {
+      
+      return allPages;
+    } catch (e, stackTrace) {
       log('从ZIP文件解压缩失败: ${manga.title}, 错误: $e, 堆栈: $stackTrace');
       return [];
     }

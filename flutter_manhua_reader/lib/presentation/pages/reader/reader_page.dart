@@ -11,11 +11,12 @@ import 'dart:io';
 
 import '../../../data/models/reading_progress.dart';
 import '../../providers/manga_provider.dart';
+import '../../widgets/lazy_thumbnail_list.dart';
+import '../../widgets/double_page_thumbnail_list.dart';
 
 enum ReadingMode {
   singlePage,
   doublePage,
-  continuousScroll,
 }
 
 enum ReadingDirection {
@@ -39,84 +40,161 @@ class ReaderPage extends ConsumerStatefulWidget {
 }
 
 class _ReaderPageState extends ConsumerState<ReaderPage> {
-  bool _showControls = true;
+  bool _showControls = false;
   late PageController _pageController;
   int _currentPageIndex = 0;
   ReadingMode _readingMode = ReadingMode.singlePage;
   ReadingDirection _readingDirection = ReadingDirection.leftToRight;
   bool _isLoading = true;
+  
+  // 双页模式相关状态
+  int _currentGroupIndex = 0; // 当前双页组索引
+  List<List<int>> _doublePageGroups = []; // 双页分组
 
   @override
   void initState() {
     super.initState();
     _currentPageIndex = widget.initialPage;
-    _pageController = PageController(initialPage: _currentPageIndex);
-    _enterFullscreen();
-    setState(() {
-      _isLoading = false;
-    });
+    
+    // 根据阅读模式计算初始页面索引
+    int initialPageControllerIndex = _currentPageIndex;
+    if (_readingMode == ReadingMode.doublePage) {
+      initialPageControllerIndex = (_currentPageIndex / 2).floor();
+      _currentGroupIndex = initialPageControllerIndex;
+    }
+    
+    _pageController = PageController(initialPage: initialPageControllerIndex);
+    // 直接设置全屏模式，不调用setState
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    _isLoading = false; // 直接设置，避免不必要的setState
+  }
+  
+  // 初始化双页分组
+  void _initializeDoublePageGroups([int? totalPages]) {
+    _doublePageGroups.clear();
+    if (totalPages == null) return;
+    
+    for (int i = 0; i < totalPages; i += 2) {
+      if (i + 1 < totalPages) {
+        _doublePageGroups.add([i, i + 1]);
+      } else {
+        _doublePageGroups.add([i]); // 最后一页单独成组
+      }
+    }
+  }
+
+  void _onGroupTap(int groupIndex) {
+    if (groupIndex >= 0 && groupIndex < _doublePageGroups.length) {
+      _currentGroupIndex = groupIndex;
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          groupIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+  
+  // 从单页索引获取双页组索引
+  int _getGroupIndexFromPageIndex(int pageIndex) {
+    return (pageIndex / 2).floor();
+  }
+  
+  // 从双页组索引获取第一页索引
+  int _getPageIndexFromGroupIndex(int groupIndex) {
+    if (groupIndex < _doublePageGroups.length) {
+      return _doublePageGroups[groupIndex][0];
+    }
+    return 0;
   }
 
   @override
   void dispose() {
-    _exitFullscreen();
+    // 在dispose时不调用setState，直接设置系统UI模式
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _pageController.dispose();
     super.dispose();
   }
 
   void _enterFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    setState(() {});
+    // 检查组件是否已被销毁
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _toggleControls() {
-    setState(() {
-      _showControls = !_showControls;
-    });
+    if (mounted) {
+      setState(() {
+        _showControls = !_showControls;
+      });
+    }
   }
 
   void _toggleFullscreen() {
-    setState(() {
-      _showControls = !_showControls;
-    });
-    
-    // 根据控制条状态切换全屏模式
-    if (_showControls) {
-      _exitFullscreen();
-    } else {
-      _enterFullscreen();
+    if (mounted) {
+      setState(() {
+        _showControls = !_showControls;
+      });
+      
+      // 根据控制条状态切换全屏模式
+      if (_showControls) {
+        _exitFullscreen();
+      } else {
+        _enterFullscreen();
+      }
     }
   }
 
   void _onPageChanged(int index) {
-    setState(() {
-      _currentPageIndex = index;
-    });
-    _saveReadingProgress();
+    if (mounted) {
+      setState(() {
+        if (_readingMode == ReadingMode.doublePage) {
+          // 双页模式：index是组索引，需要转换为页面索引
+          _currentGroupIndex = index;
+          _currentPageIndex = _getPageIndexFromGroupIndex(index);
+        } else {
+          // 单页模式：index就是页面索引
+          _currentPageIndex = index;
+        }
+      });
+      _saveReadingProgress();
+    }
   }
 
   void _saveReadingProgress() async {
+    // 检查组件是否仍然存在
+    if (!mounted) return;
+    
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.when(
       data: (manga) async {
-        if (manga != null) {
-          final progress = ReadingProgress(
-            id: '${widget.mangaId}_progress',
-            mangaId: widget.mangaId,
-            libraryId: manga.libraryId,
-            currentPage: _currentPageIndex + 1, // 转换为1基索引
-            totalPages: manga.totalPages,
-            progressPercentage: ((_currentPageIndex + 1) / manga.totalPages).clamp(0.0, 1.0),
-            lastReadAt: DateTime.now(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
+        // 在异步操作前再次检查
+        if (!mounted || manga == null) return;
+        
+        final progress = ReadingProgress(
+          id: '${widget.mangaId}_progress',
+          mangaId: widget.mangaId,
+          libraryId: manga.libraryId,
+          currentPage: _currentPageIndex + 1, // 转换为1基索引
+          totalPages: manga.totalPages,
+          progressPercentage: ((_currentPageIndex + 1) / manga.totalPages).clamp(0.0, 1.0),
+          lastReadAt: DateTime.now(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
+        // 在执行更新前最后一次检查
+        if (mounted) {
           await ref
               .read(mangaActionsProvider.notifier)
               .updateReadingProgress(widget.mangaId, progress);
@@ -128,29 +206,68 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _goToPreviousPage() {
-    if (_currentPageIndex > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+    if (!_pageController.hasClients) return;
+    
+    if (_readingMode == ReadingMode.doublePage) {
+      // 双页模式：检查当前组索引
+      if (_currentGroupIndex > 0) {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    } else {
+      // 单页模式：检查当前页面索引
+      if (_currentPageIndex > 0) {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     }
   }
 
   void _goToNextPage() {
-    final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
-    mangaAsync.whenData((manga) {
-      if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+    if (!_pageController.hasClients) return;
+    
+    if (_readingMode == ReadingMode.doublePage) {
+      // 双页模式：检查当前组索引
+      if (_currentGroupIndex < _doublePageGroups.length - 1) {
         _pageController.nextPage(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
         );
       }
-    });
+    } else {
+      // 单页模式：检查当前页面索引
+      final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
+      mangaAsync.whenData((manga) {
+        if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+          _pageController.nextPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   void _goToPage(int pageIndex) {
+    // 检查PageController是否已经attached
+    if (!_pageController.hasClients) {
+      return;
+    }
+    
+    int targetIndex = pageIndex;
+    
+    // 双页模式下需要转换页面索引为组索引
+    if (_readingMode == ReadingMode.doublePage) {
+      targetIndex = _getGroupIndexFromPageIndex(pageIndex);
+      _currentGroupIndex = targetIndex;
+    }
+    
     _pageController.animateToPage(
-      pageIndex,
+      targetIndex,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -204,7 +321,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               child: IconButton(
                 iconSize: 40,
                 icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
-                onPressed: _currentPageIndex > 0 ? _goToPreviousPage : null,
+                onPressed: (_readingMode == ReadingMode.doublePage 
+                    ? _currentGroupIndex > 0 
+                    : _currentPageIndex > 0) ? _goToPreviousPage : null,
               ),
             ),
           ),
@@ -221,12 +340,18 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 iconSize: 40,
                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
                 onPressed: () {
-                  final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
-                  mangaAsync.whenData((manga) {
-                    if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                  if (_readingMode == ReadingMode.doublePage) {
+                    if (_currentGroupIndex < _doublePageGroups.length - 1) {
                       _goToNextPage();
                     }
-                  });
+                  } else {
+                    final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
+                    mangaAsync.whenData((manga) {
+                      if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                        _goToNextPage();
+                      }
+                    });
+                  }
                 },
               ),
             ),
@@ -255,7 +380,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       : Icons.keyboard_arrow_right,
                   color: Colors.white,
                 ),
-                onPressed: _currentPageIndex > 0 ? _goToPreviousPage : null,
+                onPressed: (_readingMode == ReadingMode.doublePage 
+                    ? _currentGroupIndex > 0 
+                    : _currentPageIndex > 0) ? _goToPreviousPage : null,
               ),
             ),
           ),
@@ -277,12 +404,18 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
-                  mangaAsync.whenData((manga) {
-                    if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                  if (_readingMode == ReadingMode.doublePage) {
+                    if (_currentGroupIndex < _doublePageGroups.length - 1) {
                       _goToNextPage();
                     }
-                  });
+                  } else {
+                    final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
+                    mangaAsync.whenData((manga) {
+                      if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                        _goToNextPage();
+                      }
+                    });
+                  }
                 },
               ),
             ),
@@ -298,8 +431,6 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         return _buildSinglePageView(pages);
       case ReadingMode.doublePage:
         return _buildDoublePageView(pages);
-      case ReadingMode.continuousScroll:
-        return _buildContinuousScrollView(pages);
     }
   }
 
@@ -359,10 +490,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         // 双页模式下的页面变化处理
         final actualPageIndex = index * 2;
         if (actualPageIndex < pages.length) {
-          setState(() {
-            _currentPageIndex = actualPageIndex;
-          });
-          _saveReadingProgress();
+          _onPageChanged(actualPageIndex); // 使用统一的页面变化处理方法
         }
       },
       scrollDirection: Axis.horizontal,
@@ -371,49 +499,48 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     );
   }
 
-  Widget _buildContinuousScrollView(List<MangaPage> pages) {
-    return SingleChildScrollView(
-      scrollDirection: _readingDirection == ReadingDirection.topToBottom
-          ? Axis.vertical
-          : Axis.horizontal,
-      child: _readingDirection == ReadingDirection.topToBottom
-          ? Column(
-              children: pages.asMap().entries.map((entry) {
-                return Container(
-                  width: MediaQuery.of(context).size.width,
-                  child: _buildContinuousImageWidget(entry.value.localPath),
-                );
-              }).toList(),
-            )
-          : Row(
-              children: pages.asMap().entries.map((entry) {
-                return Container(
-                  height: MediaQuery.of(context).size.height,
-                  child: _buildContinuousImageWidget(entry.value.localPath),
-                );
-              }).toList(),
-            ),
-    );
-  }
+
 
   Widget _buildDoublePageWidget(MangaPage leftPage, MangaPage rightPage) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildContinuousImageWidget(
-            _readingDirection == ReadingDirection.rightToLeft
-                ? rightPage.localPath
-                : leftPage.localPath,
-          ),
-        ),
-        Expanded(
-          child: _buildContinuousImageWidget(
-            _readingDirection == ReadingDirection.rightToLeft
-                ? leftPage.localPath
-                : rightPage.localPath,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 计算每页的最大宽度，确保在大屏幕上不会有过多间隙
+        final maxPageWidth = constraints.maxWidth / 2;
+        
+        return Flex(
+          direction: Axis.horizontal,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              flex: 1,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: maxPageWidth,
+                ),
+                child: _buildContinuousImageWidget(
+                  _readingDirection == ReadingDirection.rightToLeft
+                      ? rightPage.localPath
+                      : leftPage.localPath,
+                ),
+              ),
+            ),
+            Flexible(
+              flex: 1,
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: maxPageWidth,
+                ),
+                child: _buildContinuousImageWidget(
+                  _readingDirection == ReadingDirection.rightToLeft
+                      ? leftPage.localPath
+                      : rightPage.localPath,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -465,44 +592,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
   }
 
-  Widget _buildThumbnailImage(MangaPage page) {
-    return page.localPath.startsWith('http')
-        ? CachedNetworkImage(
-            imageUrl: page.localPath,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => _buildThumbnailPlaceholder(page.pageIndex),
-            errorWidget: (context, url, error) => _buildThumbnailPlaceholder(page.pageIndex),
-          )
-        : Image.file(
-            File(page.localPath),
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildThumbnailPlaceholder(page.pageIndex);
-            },
-          );
-  }
-
-  Widget _buildThumbnailPlaceholder(int pageNumber) {
-    return Container(
-      color: Colors.grey[800],
-      child: Center(
-        child: Text(
-          pageNumber.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.black,
+        appBar: null,
         body: Center(
           child: CircularProgressIndicator(color: Colors.white),
         ),
@@ -620,40 +715,25 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       ),
                     ),
                   ),
-                // 全屏模式下的取消全屏按钮
-                if (!_showControls)
-                  Positioned(
-                    top: 40,
-                    right: 16,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(20),
+                // 统一的全屏/取消全屏按钮（右下方缩略图上方）
+                Positioned(
+                  bottom: _showControls ? 140 : 20, // 根据控制条显示状态调整位置
+                  right: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        _showControls ? Icons.fullscreen : Icons.fullscreen_exit,
+                        color: Colors.white,
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.fullscreen_exit, color: Colors.white),
-                        onPressed: _toggleFullscreen,
-                        tooltip: '退出全屏',
-                      ),
+                      onPressed: _toggleFullscreen,
+                      tooltip: _showControls ? '全屏' : '退出全屏',
                     ),
                   ),
-                // 非全屏模式下的全屏按钮（左下角）
-                if (_showControls)
-                  Positioned(
-                    bottom: 100,
-                    left: 16,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.fullscreen, color: Colors.white),
-                        onPressed: _toggleFullscreen,
-                        tooltip: '全屏',
-                      ),
-                    ),
-                  ),
+                ),
               ],
             ),
           );
@@ -706,42 +786,45 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // 缩略图列表
-                          Container(
-                            height: 60,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: pageAsync.when(
-                              data: (pages) => ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: pages.length,
-                                itemBuilder: (context, index) {
-                                  final page = pages[index];
-                                  final isCurrentPage = index == _currentPageIndex;
-                                  return GestureDetector(
-                                    onTap: () => _goToPage(index),
-                                    child: Container(
-                                      width: 40,
-                                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: isCurrentPage
-                                              ? Colors.white
-                                              : Colors.transparent,
-                                          width: 2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(2),
-                                        child: _buildThumbnailImage(page),
-                                      ),
-                                    ),
-                                  );
-                                },
+                          // 根据阅读模式显示不同的缩略图列表
+                          pageAsync.when(
+                            data: (pages) {
+                              _initializeDoublePageGroups(pages.length);
+                              
+                              if (_readingMode == ReadingMode.doublePage) {
+                                return DoublePageThumbnailList(
+                                  pages: pages,
+                                  doublePageGroups: _doublePageGroups,
+                                  currentGroupIndex: _currentGroupIndex,
+                                  onGroupTap: _onGroupTap,
+                                  height: 60,
+                                  preloadCount: 10,
+                                  itemWidth: 80,
+                                  itemSpacing: 4,
+                                );
+                              } else {
+                                return LazyThumbnailList(
+                                  pages: pages,
+                                  totalPages: manga.totalPages,
+                                  currentPage: _currentPageIndex,
+                                  onPageTap: (index) => _goToPage(index),
+                                  height: 60,
+                                  preloadCount: 10,
+                                  itemWidth: 40,
+                                  itemSpacing: 4,
+                                );
+                              }
+                            },
+                            loading: () => const SizedBox(
+                              height: 60,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
                               ),
-                              loading: () => const SizedBox.shrink(),
-                              error: (_, __) => const SizedBox.shrink(),
                             ),
+                            error: (_, __) => const SizedBox(height: 60),
                           ),
                           // 原有的进度条和按钮
                           Padding(
@@ -751,7 +834,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                                 IconButton(
                                   icon: const Icon(Icons.skip_previous,
                                       color: Colors.white),
-                                  onPressed: _currentPageIndex > 0
+                                  onPressed: (_readingMode == ReadingMode.doublePage 
+                                      ? _currentGroupIndex > 0 
+                                      : _currentPageIndex > 0)
                                       ? _goToPreviousPage
                                       : null,
                                 ),
@@ -760,19 +845,26 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        '${_currentPageIndex + 1} / ${manga.totalPages}',
+                                        _readingMode == ReadingMode.doublePage
+                                            ? 'G${_currentGroupIndex + 1} / ${_doublePageGroups.length} (P${_currentPageIndex + 1} / ${manga.totalPages})'
+                                            : '${_currentPageIndex + 1} / ${manga.totalPages}',
                                         style: const TextStyle(
                                             color: Colors.white, fontSize: 12),
                                       ),
                                       Slider(
-                                        value: manga.totalPages > 1
-                                            ? (_currentPageIndex / (manga.totalPages - 1)).clamp(0.0, 1.0)
-                                            : 0,
+                                        value: _readingMode == ReadingMode.doublePage
+                                            ? (_doublePageGroups.isNotEmpty ? (_currentGroupIndex / (_doublePageGroups.length - 1)).clamp(0.0, 1.0) : 0)
+                                            : (manga.totalPages > 1 ? (_currentPageIndex / (manga.totalPages - 1)).clamp(0.0, 1.0) : 0),
                                         onChanged: (value) {
-                                          final pageIndex =
-                                              (value * (manga.totalPages - 1))
-                                                  .round();
-                                          _goToPage(pageIndex);
+                                          if (_readingMode == ReadingMode.doublePage) {
+                                            if (_doublePageGroups.isNotEmpty) {
+                                              final targetGroupIndex = (value * (_doublePageGroups.length - 1)).round();
+                                              _onGroupTap(targetGroupIndex);
+                                            }
+                                          } else {
+                                            final pageIndex = (value * (manga.totalPages - 1)).round();
+                                            _goToPage(pageIndex);
+                                          }
                                         },
                                         activeColor: Colors.white,
                                         inactiveColor: Colors.white.withOpacity(0.3),
@@ -783,7 +875,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                                 IconButton(
                                   icon: const Icon(Icons.skip_next,
                                       color: Colors.white),
-                                  onPressed: _currentPageIndex < manga.totalPages - 1
+                                  onPressed: (_readingMode == ReadingMode.doublePage 
+                                      ? _currentGroupIndex < _doublePageGroups.length - 1
+                                      : _currentPageIndex < manga.totalPages - 1)
                                       ? _goToNextPage
                                       : null,
                                 ),
@@ -832,7 +926,26 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   onSelected: (selected) {
                     if (selected) {
                       setState(() {
+                        final oldMode = _readingMode;
                         _readingMode = mode;
+                        
+                        // 如果阅读模式发生变化，需要重新初始化页面控制器
+                        if (oldMode != mode) {
+                          _pageController.dispose();
+                          
+                          int newInitialPage;
+                          if (_readingMode == ReadingMode.doublePage) {
+                            // 切换到双页模式：根据当前页码所在组显示对应的组
+                            _currentGroupIndex = _getGroupIndexFromPageIndex(_currentPageIndex);
+                            newInitialPage = _currentGroupIndex;
+                          } else {
+                            // 切换到单页模式：以双页分组中的第一张为当前页码
+                            _currentPageIndex = _getPageIndexFromGroupIndex(_currentGroupIndex);
+                            newInitialPage = _currentPageIndex;
+                          }
+                          
+                          _pageController = PageController(initialPage: newInitialPage);
+                        }
                       });
                       Navigator.pop(context);
                     }
@@ -876,9 +989,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       case ReadingMode.singlePage:
         return '单页';
       case ReadingMode.doublePage:
-        return '双页';
-      case ReadingMode.continuousScroll:
-        return '连续滚动';
+          return '双页';
     }
   }
 
