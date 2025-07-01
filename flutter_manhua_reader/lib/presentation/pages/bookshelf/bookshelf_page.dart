@@ -376,48 +376,6 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
 
-  void _showMangaOptions(Manga manga, ReadingProgress? progress) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              manga.title,
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('查看详情'),
-              subtitle: const Text('浏览漫画信息和页面缩略图'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _openMangaDetail(manga);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.play_arrow),
-              title: const Text('开始阅读'),
-              subtitle: Text(
-                progress?.currentPage != null
-                    ? '从第 ${progress?.currentPage} 页继续'
-                    : '从第一页开始',
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                _startReading(manga, progress);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _openMangaDetail(Manga manga) {
     Navigator.of(context).push(
       MaterialPageRoute(

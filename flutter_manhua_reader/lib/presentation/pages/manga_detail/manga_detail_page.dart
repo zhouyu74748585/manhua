@@ -302,23 +302,6 @@ class MangaDetailPage extends ConsumerWidget {
 
   Widget _buildPageGrid(
       BuildContext context, Manga manga, ReadingProgress? progress, List<MangaPage> pages) {
-    // 获取图片实际尺寸的方法
-    Future<double> getImageAspectRatio(String imagePath) async {
-      try {
-        final file = File(imagePath);
-        if (!file.existsSync()) return 0.7; // 默认长宽比
-        
-        final bytes = await file.readAsBytes();
-        final codec = await ui.instantiateImageCodec(bytes);
-        final frame = await codec.getNextFrame();
-        final image = frame.image;
-        
-        return image.width / image.height;
-      } catch (e) {
-        return 0.7; // 默认长宽比
-      }
-    }
-
     // 新增 _buildPageThumbnail 方法
     Widget buildPageThumbnail(MangaPage page) {
       if (page.largeThumbnail != null &&
