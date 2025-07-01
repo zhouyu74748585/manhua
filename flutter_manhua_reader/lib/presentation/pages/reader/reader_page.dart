@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'dart:io';
@@ -46,7 +47,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   @override
   void initState() {
     super.initState();
-    _currentPageIndex = widget.initialPage - 1; // 转换为0基索引
+    _currentPageIndex = widget.initialPage; 
     _pageController = PageController(initialPage: _currentPageIndex);
     _enterFullscreen();
     setState(() {
@@ -139,11 +140,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     );
   }
 
-  Widget _buildPageWidget(dynamic manga, int pageNumber) {
+  Widget _buildPageWidget(dynamic pages, int pageNumber) {
     // 根据漫画信息和页码构建页面路径
-    final imagePath = '${manga.path}/page_$pageNumber.jpg';
-
-    return _buildImageWidget(imagePath);
+    MangaPage page=pages[pageNumber];
+    return _buildImageWidget(page.localPath);
   }
 
   Widget _buildImageWidget(String imagePath) {
@@ -154,6 +154,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       minScale: PhotoViewComputedScale.contained,
       maxScale: PhotoViewComputedScale.covered * 3.0,
       initialScale: PhotoViewComputedScale.contained,
+      basePosition: Alignment.center,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
       loadingBuilder: (context, event) => const Center(
         child: CircularProgressIndicator(color: Colors.white),
@@ -176,6 +177,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     }
 
     final mangaAsync = ref.watch(mangaDetailProvider(widget.mangaId));
+    final pageAsync = ref.watch(mangaPagesProvider(widget.mangaId));
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -207,9 +209,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               ],
             )
           : null,
-      body: mangaAsync.when(
-        data: (manga) {
-          if (manga == null || manga.totalPages == 0) {
+      body: pageAsync.when(
+        data: (pages) {
+          if (pages.isEmpty) {
             return const Center(
               child: Text(
                 '该漫画暂无页面',
@@ -222,10 +224,10 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             onTap: _toggleControls,
             child: PhotoViewGallery.builder(
               pageController: _pageController,
-              itemCount: manga.totalPages,
+              itemCount: pages.length,
               builder: (context, index) {
                 return PhotoViewGalleryPageOptions.customChild(
-                  child: _buildPageWidget(manga, index + 1),
+                  child: _buildPageWidget(pages, index),
                   minScale: PhotoViewComputedScale.contained,
                   maxScale: PhotoViewComputedScale.covered * 3.0,
                   initialScale: PhotoViewComputedScale.contained,

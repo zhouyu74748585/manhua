@@ -63,7 +63,6 @@ class DatabaseService {
         author TEXT,
         description TEXT,
         cover_path TEXT,
-        cover_path TEXT,
         tags TEXT,
         status TEXT,
         type TEXT,

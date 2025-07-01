@@ -280,9 +280,9 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       case GridSize.extraLarge:
         return const GridConfig(
           crossAxisCount: 1,
-          childAspectRatio: 1.2,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
+          childAspectRatio: 0.65, // 调整为更大的比例以填充宽度
+          crossAxisSpacing: 10, // 消除横向间距
+          mainAxisSpacing: 10, // 消除纵向间距
         );
     }
   }

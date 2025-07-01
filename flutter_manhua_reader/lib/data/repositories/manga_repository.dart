@@ -60,8 +60,8 @@ class LocalMangaRepository implements MangaRepository {
         bool hasThumbnail=false;
         String? thumbnailPath=manga.metadata['thumbnail'];
         if(thumbnailPath!=null){
-          File file=File(thumbnailPath);
-          if(await file.exists()){
+          Directory directory=Directory(thumbnailPath);
+          if(await directory.exists()){
              hasThumbnail=true;
           }
         }
