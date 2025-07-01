@@ -6,7 +6,6 @@ import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
