@@ -369,13 +369,13 @@ class MangaDetailPage extends ConsumerWidget {
             ),
             itemCount: totalPages,
             itemBuilder: (context, index) {
-              final pageNumber = index + 1;
+              final pageIndex = index + 1;
               final isCurrentPage =
-                  progress?.currentPage == pageNumber;
+                  progress?.currentPage == pageIndex;
 
               return GestureDetector(
                 onTap: () {
-                  _startReading(context, manga, pageNumber);
+                  _startReading(context, manga, pageIndex);
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -390,8 +390,8 @@ class MangaDetailPage extends ConsumerWidget {
                   child: Stack(
                     children: [
                       // 页面缩略图
-                      pages.isNotEmpty && pages.length >= pageNumber
-                          ? buildPageThumbnail(pages[pageNumber - 1])
+                      pages.isNotEmpty && pages.length >= pageIndex
+                          ? buildPageThumbnail(pages[pageIndex - 1])
                           : Container(
                               width: double.infinity,
                               height: double.infinity,
@@ -409,7 +409,7 @@ class MangaDetailPage extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '$pageNumber',
+                                    '$pageIndex',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,

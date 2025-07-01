@@ -1,7 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
+import 'package:archive/archive.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
 import '../models/manga.dart';
 import '../models/library.dart';
@@ -152,14 +155,19 @@ class FileScannerService {
         updatedAt: dirStats.modified,
       );
       List<MangaPage> pages = [];
-      imageFiles.forEach((element) {
+      for (var element in imageFiles) {
         pages.add(MangaPage(
           id: generateMangaId(element),
           mangaId: mangaId,
-          pageNumber: pages.length,
+          pageIndex: 0,
           localPath: element,
         ));
-      });
+      }
+      pages.sort((a, b) => b.localPath.compareTo(a.localPath));
+      for (int i = 0; i < pages.length; i++) {
+        pages[i].pageIndex = i+1;
+      }
+
       mangas.add(manga);
       mangaPages.addAll(pages);
       log('扫描到漫画: ${manga.path}');
@@ -262,5 +270,55 @@ class FileScannerService {
       'modified': fileStats.modified,
       'isSupported': supportedFormats.contains(fileExtension),
     };
+  }
+
+  static Future<List<MangaPage>> extractFileToDisk(Manga manga) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      //为当前漫画创建目录
+      final mangaDir = Directory(path.join(appDir.path, "thumbnails/${manga.id}/pages"));
+      if (!await mangaDir.exists()) {
+        await mangaDir.create();
+      }
+
+      final inputStream = InputFileStream(manga.path);
+      final archive = ZipDecoder().decodeStream(inputStream);
+      List<MangaPage> pages = [];
+      for (final file in archive) {
+        if (!file.isFile || file.name.startsWith('__MACOSX')) {
+          continue;
+        }
+        if (!supportedImageFormats
+            .contains(path.extension(file.name).toLowerCase())) {
+          continue;
+        }
+        //生成文件
+        final imageData = file.content;
+        final pageFile = File(path.join(mangaDir.path, file.name));
+        await pageFile.writeAsBytes(imageData);
+        Map<String, String> thumbnailMap =await ThumbnailService.generateThumbnailsByData(manga.id, file.name, imageData);
+        String? smallThumbnail = thumbnailMap["small"];
+        String? mediumThumbnail = thumbnailMap["medium"];
+        String? largeThumbnail = thumbnailMap["large"];
+        MangaPage page = MangaPage(
+          id: generatePageId(file.name),
+          mangaId: manga.id,
+          pageIndex: 0,
+          localPath: pageFile.path,
+          largeThumbnail: largeThumbnail,
+          mediumThumbnail: mediumThumbnail,
+          smallThumbnail: smallThumbnail
+        );
+        pages.add(page);
+      }
+      pages.sort((a, b) => b.localPath.compareTo(a.localPath));
+      for (int i = 0; i < pages.length; i++) {
+        pages[i].pageIndex = i+1;
+      }
+      return pages;
+    } catch (e) {
+      log('从ZIP文件解压缩失败: ${manga.title}, 错误: $e');
+      return [];
+    }
   }
 }

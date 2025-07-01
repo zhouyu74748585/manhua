@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/library.dart';
 import '../../data/models/manga.dart';
-import '../../services/library_service.dart';
+import '../../data/services/library_service.dart';
 import 'manga_provider.dart';
 
 part 'library_provider.g.dart';

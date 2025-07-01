@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -89,7 +90,46 @@ class ThumbnailService {
     return thumbnailPaths;
   }
 
-  static Future<void> deleteThumbnail(String? directoryPath) async {
+  static Future<Map<String, String>> generateThumbnailsByData(
+    String mangaId, String originalImgPath,Uint8List data) async {
+
+    final image = img.decodeImage(data);
+    if (image == null) {
+      log('解码图片失败');
+      return {};
+    }
+
+    final Map<String, String> thumbnailPaths = {};
+    final cacheDir = await _getCacheDirectory();
+
+    for (var entry in thumbnailSizes.entries) {
+      final sizeKey = entry.key;
+      final width = entry.value;
+
+      try {
+        // 调整图片尺寸
+        Directory directory =
+            Directory(path.join(cacheDir.path, '$mangaId/$sizeKey/'));
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final thumbnail = img.copyResize(image, width: width);
+        final thumbnailFileName = generateThumbnailFileName(originalImgPath);
+        final thumbnailFile =
+            File(path.join(directory.path, thumbnailFileName));
+
+        // 以JPEG格式保存缩略图
+        await thumbnailFile.writeAsBytes(img.encodeJpg(thumbnail, quality: 85));
+        thumbnailPaths[sizeKey] = thumbnailFile.path;
+      } catch (e) {
+        log('生成尺寸为 $sizeKey 的缩略图失败: $e');
+      }
+    }
+
+    return thumbnailPaths;
+  }
+
+  static Future<void> deleteDirectory(String? directoryPath) async {
     if (directoryPath != null) {
       Directory directory = Directory(directoryPath);
       if (directory.existsSync()) {

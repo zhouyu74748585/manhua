@@ -141,9 +141,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     );
   }
 
-  Widget _buildPageWidget(dynamic pages, int pageNumber) {
+  Widget _buildPageWidget(dynamic pages, int pageIndex) {
     // 根据漫画信息和页码构建页面路径
-    MangaPage page = pages[pageNumber];
+    MangaPage page = pages[pageIndex];
     return _buildImageWidget(page.localPath);
   }
 

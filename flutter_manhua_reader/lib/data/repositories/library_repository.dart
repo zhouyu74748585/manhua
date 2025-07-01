@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
-import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
+import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
@@ -222,7 +222,7 @@ class LocalLibraryRepository implements LibraryRepository {
           //删除进度信息
           await _mangaRepository.deleteProgressByMangaId(mangaToDelete.id);
           //删除缩略图
-          await ThumbnailService.deleteThumbnail(
+          await ThumbnailService.deleteDirectory(
               mangaToDelete.metadata['thumbnail']);
           // 删除封面缓存
           await CoverCacheService.deleteCacheForFile(mangaToDelete.path);
@@ -270,9 +270,7 @@ class LocalLibraryRepository implements LibraryRepository {
                 coverPath: result['cover'],
                 totalPages: result['pages'] ?? 0,
               );
-              List<MangaPage> pageList = result['pageInfos'];
               await _mangaRepository.updateManga(updateManga);
-              await _mangaRepository.savePageList(pageList);
             } else if (m.type == MangaType.pdf) {
               File pdfFile = File(m.path);
               final result =

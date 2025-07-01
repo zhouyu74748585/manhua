@@ -429,7 +429,7 @@ class DatabaseService {
       {
         'id': page.id,
         'manga_id': page.mangaId,
-        'page_index': page.pageNumber,
+        'page_index': page.pageIndex,
         'local_path': page.localPath,
         'large_thumbnail': page.largeThumbnail,
         'medium_thumbnail': page.mediumThumbnail,
@@ -444,7 +444,7 @@ class DatabaseService {
     await db.update(
       _pageTable,
       {
-        'page_index': page.pageNumber,
+        'page_index': page.pageIndex,
         'local_path': page.localPath,
         'large_thumbnail': page.largeThumbnail,
         'medium_thumbnail': page.mediumThumbnail,

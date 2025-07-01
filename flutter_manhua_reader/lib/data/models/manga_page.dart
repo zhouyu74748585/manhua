@@ -6,24 +6,36 @@ part 'manga_page.g.dart';
 class MangaPage {
   final String id;
   final String mangaId;
-  final int pageNumber;
+  int _pageIndex; // 移除final并改为私有变量
   final String localPath;
   final String? largeThumbnail;
   final String? mediumThumbnail;
   final String? smallThumbnail;
 
-  const MangaPage({
+  MangaPage({
     required this.id,
     required this.mangaId,
-    required this.pageNumber,
+    required int pageIndex, // 构造函数参数保持不变
     required this.localPath,
     this.largeThumbnail,
     this.mediumThumbnail,
     this.smallThumbnail,
-  });
+  }) : _pageIndex = pageIndex; // 初始化私有变量
+
+  // Getter
+  int get pageIndex => _pageIndex;
+
+  // Setter - 控制页码更新并添加验证
+  set pageIndex(int value) {
+    if (value < 0) {
+      throw ArgumentError('页码不能为负数');
+    }
+    _pageIndex = value;
+  }
 
   factory MangaPage.fromJson(Map<String, dynamic> json) =>
       _$MangaPageFromJson(json);
+
   Map<String, dynamic> toJson() => _$MangaPageToJson(this);
 
   // 从数据库Map创建MangaPage对象
@@ -31,7 +43,7 @@ class MangaPage {
     return MangaPage(
       id: map['id'] as String,
       mangaId: map['manga_id'] as String,
-      pageNumber: map['page_index'] as int,
+      pageIndex: map['page_index'] as int, // 使用命名参数调用构造函数
       localPath: map['local_path'] as String,
       largeThumbnail: map['large_thumbnail'] as String?,
       mediumThumbnail: map['medium_thumbnail'] as String?,
@@ -44,7 +56,7 @@ class MangaPage {
     return {
       'id': id,
       'manga_id': mangaId,
-      'page_index': pageNumber,
+      'page_index': pageIndex, // 使用getter
       'local_path': localPath,
       'large_thumbnail': largeThumbnail,
       'medium_thumbnail': mediumThumbnail,
@@ -55,7 +67,7 @@ class MangaPage {
   MangaPage copyWith({
     String? id,
     String? mangaId,
-    int? pageNumber,
+    int? pageIndex, // 保持copyWith参数不变
     String? localPath,
     String? largeThumbnail,
     String? mediumThumbnail,
@@ -64,7 +76,7 @@ class MangaPage {
     return MangaPage(
       id: id ?? this.id,
       mangaId: mangaId ?? this.mangaId,
-      pageNumber: pageNumber ?? this.pageNumber,
+      pageIndex: pageIndex ?? this.pageIndex, // 使用getter
       localPath: localPath ?? this.localPath,
       largeThumbnail: largeThumbnail ?? this.largeThumbnail,
       mediumThumbnail: mediumThumbnail ?? this.mediumThumbnail,
@@ -83,6 +95,6 @@ class MangaPage {
 
   @override
   String toString() {
-    return 'MangaPage(id: $id, pageNumber: $pageNumber, localPath: $localPath)';
+    return 'MangaPage(id: $id, pageIndex: $pageIndex, localPath: $localPath)';
   }
 }

@@ -2,7 +2,8 @@ import 'dart:developer';
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
+import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
+import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/manga.dart';
 import '../models/manga_page.dart';
@@ -91,7 +92,7 @@ class LocalMangaRepository implements MangaRepository {
           }
         }
         if (!hasThumbnail) {
-          generateThumbnails(manga);
+          generatePageAndThumbnails(manga);
         }
       }
       return manga;
@@ -101,14 +102,24 @@ class LocalMangaRepository implements MangaRepository {
     }
   }
 
-  Future<void> generateThumbnails(Manga manga) async {
+  Future<void> generatePageAndThumbnails(Manga manga) async {
+     List<MangaPage> pages = await getPageByMangaId(manga.id);
     if (manga.type != MangaType.folder) {
       if (manga.coverPath == null && manga.coverPath == null) {
         if (manga.type == MangaType.archive) {
+          List<MangaPage> pages = await FileScannerService.extractFileToDisk(manga);
+          String? thumbnailPath = pages[0].largeThumbnail?.split("large").first;
+          manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
+          manga.metadata
+              .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
+          if (thumbnailPath != null) {
+            await updateManga(manga);
+            await savePageList(pages);
+          }
+          log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
         } else if (manga.type == MangaType.pdf) {}
       }
     } else {
-      List<MangaPage> pages = await getPageByMangaId(manga.id);
       String? thumbnailPath;
       for (MangaPage page in pages) {
         String localPath = page.localPath;
@@ -118,18 +129,18 @@ class LocalMangaRepository implements MangaRepository {
         String? mediumThumbnail = thumbnailMap["medium"];
         String? largeThumbnail = thumbnailMap["large"];
         thumbnailPath = largeThumbnail?.split("large").first;
-        final updatePage = page.copyWith(
+        final updatePages = page.copyWith(
           smallThumbnail: smallThumbnail,
           mediumThumbnail: mediumThumbnail,
           largeThumbnail: largeThumbnail,
         );
-        await this.updatePage(updatePage);
+        await updatePage(updatePages);
       }
       manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
       manga.metadata
           .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
       if (thumbnailPath != null) {
-        await DatabaseService.updateManga(manga);
+        await updateManga(manga);
       }
       log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
     }
@@ -400,7 +411,7 @@ class LocalMangaRepository implements MangaRepository {
     return MangaPage(
       id: map['id'] as String,
       mangaId: map['manga_id'] as String,
-      pageNumber: map['page_index'] as int,
+      pageIndex: map['page_index'] as int,
       localPath: map['local_path'] as String,
       largeThumbnail: map['large_thumbnail'] as String?,
       mediumThumbnail: map['medium_thumbnail'] as String?,

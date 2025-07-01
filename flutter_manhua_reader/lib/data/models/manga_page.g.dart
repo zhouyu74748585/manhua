@@ -9,7 +9,7 @@ part of 'manga_page.dart';
 MangaPage _$MangaPageFromJson(Map<String, dynamic> json) => MangaPage(
       id: json['id'] as String,
       mangaId: json['mangaId'] as String,
-      pageNumber: (json['pageNumber'] as num).toInt(),
+      pageIndex: (json['pageIndex'] as num).toInt(),
       localPath: json['localPath'] as String,
       largeThumbnail: json['largeThumbnail'] as String?,
       mediumThumbnail: json['mediumThumbnail'] as String?,
@@ -19,7 +19,7 @@ MangaPage _$MangaPageFromJson(Map<String, dynamic> json) => MangaPage(
 Map<String, dynamic> _$MangaPageToJson(MangaPage instance) => <String, dynamic>{
       'id': instance.id,
       'mangaId': instance.mangaId,
-      'pageNumber': instance.pageNumber,
+      'pageIndex': instance.pageIndex,
       'localPath': instance.localPath,
       'largeThumbnail': instance.largeThumbnail,
       'mediumThumbnail': instance.mediumThumbnail,

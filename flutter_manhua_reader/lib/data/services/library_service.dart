@@ -3,9 +3,9 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../data/models/library.dart';
-import '../data/repositories/library_repository.dart';
-import '../data/models/manga.dart';
+import '../models/library.dart';
+import '../repositories/library_repository.dart';
+import '../models/manga.dart';
 part 'library_service.g.dart';
 
 @riverpod

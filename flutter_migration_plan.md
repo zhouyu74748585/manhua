@@ -142,7 +142,7 @@ class ApiClient {
 abstract class MangaApiService {
   Future<List<Manga>> getMangas();
   Future<Manga> getManga(String id);
-  Future<String> getMangaPage(String mangaId, int pageNumber);
+  Future<String> getMangaPage(String mangaId, int pageIndex);
 }
 ```
 
