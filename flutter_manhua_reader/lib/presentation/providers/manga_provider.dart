@@ -58,6 +58,20 @@ Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
   return repository.getMangaById(mangaId);
 }
 
+// 带回调的漫画详情提供者
+@riverpod
+Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String mangaId) async {
+  final repository = ref.watch(mangaRepositoryProvider);
+  return repository.getMangaByIdWithCallback(
+    mangaId,
+    onThumbnailGenerated: () {
+      // 缩略图生成完成后刷新相关数据
+      ref.invalidate(mangaDetailProvider(mangaId));
+      ref.invalidate(mangaPagesProvider(mangaId));
+    },
+  );
+}
+
 @riverpod
 Future<ReadingProgress?> mangaProgress(MangaProgressRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);

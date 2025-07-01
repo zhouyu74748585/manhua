@@ -54,6 +54,7 @@ class CoverCacheService {
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
       ArchiveFile? coverFile;
+      int pageCount=0;
       for (final file in archive) {
         if (!file.isFile || file.name.startsWith('__MACOSX')) {
           continue;
@@ -66,6 +67,7 @@ class CoverCacheService {
         if (file.name.compareTo(coverFile.name) < 0) {
           coverFile = file;
         }
+        pageCount++;
       }
       if (coverFile == null) {
         return null;
@@ -80,14 +82,14 @@ class CoverCacheService {
 
       // 如果缓存文件已存在，直接返回路径
       if (await cacheFile.exists()) {
-        return {'cover': cacheFile.path, 'pages': archive.length};
+        return {'cover': cacheFile.path, 'pages': pageCount};
       }
       // 提取并保存封面图片
       final imageData = coverFile.content;
       await cacheFile.writeAsBytes(imageData);
       return {
         'cover': cacheFile.path,
-        'pages': archive.length,
+        'pages': pageCount,
       };
     } catch (e) {
       log('从ZIP文件提取封面失败: $zipFile, 错误: $e');
@@ -208,8 +210,8 @@ class CoverCacheService {
       await coverFile.copy(cacheFile.path);
 
       return cacheFile.path;
-    } catch (e) {
-      log('从目录提取封面失败: $directoryPath, 错误: $e');
+    } catch (e, stackTrace) {
+      log('从目录提取封面失败: $directoryPath, 错误: $e, 栈跟踪: $stackTrace');
       return null;
     }
   }

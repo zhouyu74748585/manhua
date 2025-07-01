@@ -19,7 +19,7 @@ class MangaDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
+    final mangaAsync = ref.watch(mangaDetailWithCallbackProvider(mangaId));
     final pages = ref.watch(mangaPagesProvider(mangaId)).value ?? [];
     final progress = ref.watch(mangaProgressProvider(mangaId)).value;
     return Scaffold(
@@ -59,7 +59,8 @@ class MangaDetailPage extends ConsumerWidget {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    ref.invalidate(mangaDetailProvider(mangaId));
+                    ref.invalidate(mangaDetailWithCallbackProvider(mangaId));
+                    ref.invalidate(mangaPagesProvider(mangaId));
                   },
                   child: const Text('重试'),
                 ),

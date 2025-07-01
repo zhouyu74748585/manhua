@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,6 +16,7 @@ abstract class MangaRepository {
   Future<List<Manga>> getAllManga();
   Future<List<ReadingProgress>> getAllMangaReadingProgress();
   Future<Manga?> getMangaById(String id);
+  Future<Manga?> getMangaByIdWithCallback(String id, {VoidCallback? onThumbnailGenerated});
   Future<ReadingProgress?> getReadingProgressById(String id);
   Future<List<Manga>> searchManga(String query);
   Future<List<Manga>> getMangaByCategory(String category);
@@ -102,7 +104,30 @@ class LocalMangaRepository implements MangaRepository {
     }
   }
 
-  Future<void> generatePageAndThumbnails(Manga manga) async {
+  Future<Manga?> getMangaByIdWithCallback(String id, {VoidCallback? onThumbnailGenerated}) async {
+    try {
+      Manga? manga = await DatabaseService.getMangaById(id);
+      if (manga != null) {
+        bool hasThumbnail = false;
+        String? thumbnailPath = manga.metadata['thumbnail'];
+        if (thumbnailPath != null) {
+          Directory directory = Directory(thumbnailPath);
+          if (await directory.exists()) {
+            hasThumbnail = true;
+          }
+        }
+        if (!hasThumbnail) {
+          generatePageAndThumbnails(manga, onComplete: onThumbnailGenerated);
+        }
+      }
+      return manga;
+    } catch (e) {
+      log('查询漫画失败: $e');
+      return null;
+    }
+  }
+
+  Future<void> generatePageAndThumbnails(Manga manga, {VoidCallback? onComplete}) async {
      List<MangaPage> pages = await getPageByMangaId(manga.id);
     if (manga.type != MangaType.folder) {
       if (manga.type == MangaType.archive) {
@@ -142,6 +167,9 @@ class LocalMangaRepository implements MangaRepository {
       }
       log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
     }
+    
+    // 缩略图生成完成后调用回调
+    onComplete?.call();
   }
 
   @override

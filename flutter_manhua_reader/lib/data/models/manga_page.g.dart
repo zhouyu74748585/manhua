@@ -19,9 +19,9 @@ MangaPage _$MangaPageFromJson(Map<String, dynamic> json) => MangaPage(
 Map<String, dynamic> _$MangaPageToJson(MangaPage instance) => <String, dynamic>{
       'id': instance.id,
       'mangaId': instance.mangaId,
-      'pageIndex': instance.pageIndex,
       'localPath': instance.localPath,
       'largeThumbnail': instance.largeThumbnail,
       'mediumThumbnail': instance.mediumThumbnail,
       'smallThumbnail': instance.smallThumbnail,
+      'pageIndex': instance.pageIndex,
     };

@@ -246,6 +246,139 @@ class _MangaDetailProviderElement
   String get mangaId => (origin as MangaDetailProvider).mangaId;
 }
 
+String _$mangaDetailWithCallbackHash() =>
+    r'35955cf1a1ace55a4d570c2fba1e99bd368aebdf';
+
+/// See also [mangaDetailWithCallback].
+@ProviderFor(mangaDetailWithCallback)
+const mangaDetailWithCallbackProvider = MangaDetailWithCallbackFamily();
+
+/// See also [mangaDetailWithCallback].
+class MangaDetailWithCallbackFamily extends Family<AsyncValue<Manga?>> {
+  /// See also [mangaDetailWithCallback].
+  const MangaDetailWithCallbackFamily();
+
+  /// See also [mangaDetailWithCallback].
+  MangaDetailWithCallbackProvider call(
+    String mangaId,
+  ) {
+    return MangaDetailWithCallbackProvider(
+      mangaId,
+    );
+  }
+
+  @override
+  MangaDetailWithCallbackProvider getProviderOverride(
+    covariant MangaDetailWithCallbackProvider provider,
+  ) {
+    return call(
+      provider.mangaId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'mangaDetailWithCallbackProvider';
+}
+
+/// See also [mangaDetailWithCallback].
+class MangaDetailWithCallbackProvider
+    extends AutoDisposeFutureProvider<Manga?> {
+  /// See also [mangaDetailWithCallback].
+  MangaDetailWithCallbackProvider(
+    String mangaId,
+  ) : this._internal(
+          (ref) => mangaDetailWithCallback(
+            ref as MangaDetailWithCallbackRef,
+            mangaId,
+          ),
+          from: mangaDetailWithCallbackProvider,
+          name: r'mangaDetailWithCallbackProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$mangaDetailWithCallbackHash,
+          dependencies: MangaDetailWithCallbackFamily._dependencies,
+          allTransitiveDependencies:
+              MangaDetailWithCallbackFamily._allTransitiveDependencies,
+          mangaId: mangaId,
+        );
+
+  MangaDetailWithCallbackProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.mangaId,
+  }) : super.internal();
+
+  final String mangaId;
+
+  @override
+  Override overrideWith(
+    FutureOr<Manga?> Function(MangaDetailWithCallbackRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MangaDetailWithCallbackProvider._internal(
+        (ref) => create(ref as MangaDetailWithCallbackRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        mangaId: mangaId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<Manga?> createElement() {
+    return _MangaDetailWithCallbackProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MangaDetailWithCallbackProvider && other.mangaId == mangaId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, mangaId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MangaDetailWithCallbackRef on AutoDisposeFutureProviderRef<Manga?> {
+  /// The parameter `mangaId` of this provider.
+  String get mangaId;
+}
+
+class _MangaDetailWithCallbackProviderElement
+    extends AutoDisposeFutureProviderElement<Manga?>
+    with MangaDetailWithCallbackRef {
+  _MangaDetailWithCallbackProviderElement(super.provider);
+
+  @override
+  String get mangaId => (origin as MangaDetailWithCallbackProvider).mangaId;
+}
+
 String _$mangaProgressHash() => r'dc70f0509257347d6a1733c2adca16a8bf0543cc';
 
 /// See also [mangaProgress].
