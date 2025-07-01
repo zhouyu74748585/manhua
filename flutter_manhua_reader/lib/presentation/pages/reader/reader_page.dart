@@ -311,33 +311,44 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   Widget _buildDoublePageView(List<MangaPage> pages) {
-    final doublePages = <Widget>[];
-    for (int i = 0; i < pages.length; i += 2) {
-      if (i + 1 < pages.length) {
-        // 双页
-        doublePages.add(_buildDoublePageWidget(pages[i], pages[i + 1]));
-      } else {
-        // 单页（最后一页）
-        doublePages.add(_buildPageWidget(pages, i));
-      }
-    }
-
+    // 计算双页数量
+    final doublePageCount = (pages.length / 2).ceil();
+    
     return PhotoViewGallery.builder(
       pageController: _pageController,
-      itemCount: doublePages.length,
+      itemCount: doublePageCount,
       builder: (context, index) {
-        return PhotoViewGalleryPageOptions.customChild(
-          child: doublePages[index],
-          minScale: PhotoViewComputedScale.contained,
-          maxScale: PhotoViewComputedScale.covered * 3.0,
-          initialScale: PhotoViewComputedScale.contained,
-        );
+        final leftPageIndex = index * 2;
+        final rightPageIndex = leftPageIndex + 1;
+        
+        if (rightPageIndex < pages.length) {
+          // 双页
+          return PhotoViewGalleryPageOptions.customChild(
+            child: _buildDoublePageWidget(pages[leftPageIndex], pages[rightPageIndex]),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2.0,
+            initialScale: PhotoViewComputedScale.contained,
+          );
+        } else {
+          // 单页（最后一页）
+          return PhotoViewGalleryPageOptions(
+            imageProvider: pages[leftPageIndex].localPath.startsWith('http')
+                ? CachedNetworkImageProvider(pages[leftPageIndex].localPath) as ImageProvider
+                : FileImage(File(pages[leftPageIndex].localPath)),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 3.0,
+            initialScale: PhotoViewComputedScale.contained,
+          );
+        }
       },
       onPageChanged: (index) {
         // 双页模式下的页面变化处理
         final actualPageIndex = index * 2;
         if (actualPageIndex < pages.length) {
-          _onPageChanged(actualPageIndex);
+          setState(() {
+            _currentPageIndex = actualPageIndex;
+          });
+          _saveReadingProgress();
         }
       },
       scrollDirection: Axis.horizontal,
@@ -356,7 +367,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               children: pages.asMap().entries.map((entry) {
                 return Container(
                   width: MediaQuery.of(context).size.width,
-                  child: _buildImageWidget(entry.value.localPath),
+                  child: _buildContinuousImageWidget(entry.value.localPath),
                 );
               }).toList(),
             )
@@ -364,7 +375,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               children: pages.asMap().entries.map((entry) {
                 return Container(
                   height: MediaQuery.of(context).size.height,
-                  child: _buildImageWidget(entry.value.localPath),
+                  child: _buildContinuousImageWidget(entry.value.localPath),
                 );
               }).toList(),
             ),
@@ -375,14 +386,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     return Row(
       children: [
         Expanded(
-          child: _buildImageWidget(
+          child: _buildContinuousImageWidget(
             _readingDirection == ReadingDirection.rightToLeft
                 ? rightPage.localPath
                 : leftPage.localPath,
           ),
         ),
         Expanded(
-          child: _buildImageWidget(
+          child: _buildContinuousImageWidget(
             _readingDirection == ReadingDirection.rightToLeft
                 ? leftPage.localPath
                 : rightPage.localPath,
@@ -415,6 +426,29 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         child: Icon(Icons.error, color: Colors.white, size: 48),
       ),
     );
+  }
+
+  Widget _buildContinuousImageWidget(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: imagePath,
+        fit: BoxFit.contain,
+        placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        errorWidget: (context, url, error) => const Center(
+          child: Icon(Icons.error, color: Colors.white, size: 48),
+        ),
+      );
+    } else {
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const Center(
+          child: Icon(Icons.error, color: Colors.white, size: 48),
+        ),
+      );
+    }
   }
 
   Widget _buildThumbnailImage(MangaPage page) {
@@ -476,6 +510,16 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 error: (_, __) => const Text('漫画阅读'),
               ),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.library_books),
+                  onPressed: () {
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/bookshelf',
+                      (route) => false,
+                    );
+                  },
+                  tooltip: '书架',
+                ),
                 IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () {
@@ -539,10 +583,28 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 GestureDetector(
                   onTap: _toggleControls,
                   onTapDown: (details) => _handleTapNavigation(details, context),
+                  onSecondaryTap: () => Navigator.of(context).pop(), // 右键返回
                   child: _buildReaderView(pages),
                 ),
                 // 放大的导航按钮
                 if (!_showControls) _buildNavigationButtons(context),
+                // 全屏模式下的返回按钮
+                if (!_showControls)
+                  Positioned(
+                    top: 40,
+                    left: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: '返回',
+                      ),
+                    ),
+                  ),
               ],
             ),
           );

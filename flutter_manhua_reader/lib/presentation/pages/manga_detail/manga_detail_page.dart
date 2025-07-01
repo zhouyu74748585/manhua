@@ -114,6 +114,16 @@ class MangaDetailPage extends ConsumerWidget {
       ),
       actions: [
         IconButton(
+          icon: const Icon(Icons.library_books, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/bookshelf',
+              (route) => false,
+            );
+          },
+          tooltip: '书架',
+        ),
+        IconButton(
           icon: Icon(
             manga.isFavorite ? Icons.favorite : Icons.favorite_border,
             color: manga.isFavorite ? Colors.red : Colors.white,

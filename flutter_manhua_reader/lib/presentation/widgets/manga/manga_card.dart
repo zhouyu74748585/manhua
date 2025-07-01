@@ -74,11 +74,6 @@ class _MangaCardState extends State<MangaCard> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.play_arrow, color: Colors.white),
-                                      onPressed: widget.onTap,
-                                      tooltip: '开始阅读',
-                                    ),
-                                    IconButton(
                                       icon: const Icon(Icons.info_outline, color: Colors.white),
                                       onPressed: widget.onTap,
                                       tooltip: '查看详情',
@@ -117,17 +112,19 @@ class _MangaCardState extends State<MangaCard> {
                             ],
                           ),
                         ),
-                      // 底部进度条（非悬停状态）
-                      if (!_isHovered && widget.progress != null)
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: LinearProgressIndicator(
-                            value: widget.progress!,
-                            backgroundColor: Colors.grey.withOpacity(0.5),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary,
+                      // 中央的大开始阅读按钮（悬停时显示）
+                      if (_isHovered)
+                        Center(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: IconButton(
+                              iconSize: 48,
+                              icon: const Icon(Icons.play_arrow, color: Colors.white),
+                              onPressed: widget.onTap,
+                              tooltip: '开始阅读',
                             ),
                           ),
                         ),
@@ -136,19 +133,7 @@ class _MangaCardState extends State<MangaCard> {
                 ),
               ),
             ),
-             // 封面下方的窄进度条
-             if (widget.progress != null)
-               Container(
-                 height: 3,
-                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                 child: LinearProgressIndicator(
-                   value: widget.progress!,
-                   backgroundColor: Colors.grey.withOpacity(0.3),
-                   valueColor: AlwaysStoppedAnimation<Color>(
-                     Theme.of(context).colorScheme.primary,
-                   ),
-                 ),
-               ),
+
              const SizedBox(height: 8),
              Text(
                widget.title,

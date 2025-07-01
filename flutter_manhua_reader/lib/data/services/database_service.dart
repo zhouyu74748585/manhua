@@ -104,7 +104,6 @@ class DatabaseService {
          id TEXT PRIMARY KEY,
          manga_id TEXT NOT NULL,
          library_id TEXT NOT NULL,
-         current_page_id TEXT,
          current_apeg INTEGER NOT NULL DEFAULT 1,
          current_page INTEGER NOT NULL DEFAULT 1,
          total_pages INTEGER NOT NULL DEFAULT 1,
@@ -464,6 +463,7 @@ class DatabaseService {
       {
         'id': progress.id,
         'manga_id': progress.mangaId,
+        'library_id': progress.libraryId,
         'current_page': progress.currentPage,
         'total_pages': progress.totalPages,
         'progress_percentage': progress.progressPercentage,

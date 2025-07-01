@@ -250,7 +250,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           totalPages: manga.totalPages,
           currentPage: progress?.currentPage ?? 0,
           progress: progress?.progressPercentage,
-          onTap: () => _showMangaOptions(manga, progress),
+          onTap: () => _startReading(manga,progress),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
@@ -303,7 +303,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           coverPath: manga.coverPath,
           subtitle: manga.author,
           progress: progress?.progressPercentage,
-          onTap: () => _showMangaOptions(manga, progress),
+          onTap: () => _openMangaDetail(manga),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
