@@ -73,7 +73,12 @@ class FileScannerService {
         }
       } else if (entity is Directory) {
         // 递归扫描子目录
-        await _scanDirectoryRecursive(entity, libraryId, mangas, mangaPages);
+        try{
+          await _scanDirectoryRecursive(entity, libraryId, mangas, mangaPages);
+        }catch(e, stackTrace){
+          log('扫描子目录时出错: $e, 栈跟踪: $stackTrace');
+        }
+       
       }
     }
   }

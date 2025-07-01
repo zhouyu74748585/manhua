@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
@@ -292,6 +294,23 @@ class MangaDetailPage extends ConsumerWidget {
 
   Widget _buildPageGrid(
       BuildContext context, Manga manga, ReadingProgress? progress, List<MangaPage> pages) {
+    // 获取图片实际尺寸的方法
+    Future<double> getImageAspectRatio(String imagePath) async {
+      try {
+        final file = File(imagePath);
+        if (!file.existsSync()) return 0.7; // 默认长宽比
+        
+        final bytes = await file.readAsBytes();
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        final image = frame.image;
+        
+        return image.width / image.height;
+      } catch (e) {
+        return 0.7; // 默认长宽比
+      }
+    }
+
     // 新增 _buildPageThumbnail 方法
     Widget buildPageThumbnail(MangaPage page) {
       if (page.largeThumbnail != null &&
@@ -359,15 +378,14 @@ class MangaDetailPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           // 页面网格
-          GridView.builder(
+          MasonryGridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
             ),
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
             itemCount: totalPages,
             itemBuilder: (context, index) {
               final pageIndex = index + 1;

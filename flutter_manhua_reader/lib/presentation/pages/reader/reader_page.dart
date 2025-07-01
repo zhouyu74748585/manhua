@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,7 +142,257 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     );
   }
 
-  Widget _buildPageWidget(dynamic pages, int pageIndex) {
+  void _handleTapNavigation(TapDownDetails details, BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final tapPosition = details.globalPosition;
+    
+    if (_readingDirection == ReadingDirection.topToBottom) {
+      // 垂直阅读：点击上半部分上一页，下半部分下一页
+      if (tapPosition.dy < screenSize.height / 2) {
+        _goToPreviousPage();
+      } else {
+        _goToNextPage();
+      }
+    } else {
+      // 水平阅读：点击左右两边换页
+      if (_readingDirection == ReadingDirection.leftToRight) {
+        if (tapPosition.dx < screenSize.width / 2) {
+          _goToPreviousPage();
+        } else {
+          _goToNextPage();
+        }
+      } else {
+        // 从右到左
+        if (tapPosition.dx < screenSize.width / 2) {
+          _goToNextPage();
+        } else {
+          _goToPreviousPage();
+        }
+      }
+    }
+  }
+
+  Widget _buildNavigationButtons(BuildContext context) {
+    if (_readingDirection == ReadingDirection.topToBottom) {
+      // 垂直阅读：上下按钮
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: double.infinity,
+            height: 80,
+            alignment: Alignment.center,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: IconButton(
+                iconSize: 40,
+                icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
+                onPressed: _currentPageIndex > 0 ? _goToPreviousPage : null,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            height: 80,
+            alignment: Alignment.center,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: IconButton(
+                iconSize: 40,
+                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                onPressed: () {
+                  final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
+                  mangaAsync.whenData((manga) {
+                    if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                      _goToNextPage();
+                    }
+                  });
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // 水平阅读：左右按钮
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 80,
+            height: double.infinity,
+            alignment: Alignment.center,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: IconButton(
+                iconSize: 40,
+                icon: Icon(
+                  _readingDirection == ReadingDirection.leftToRight
+                      ? Icons.keyboard_arrow_left
+                      : Icons.keyboard_arrow_right,
+                  color: Colors.white,
+                ),
+                onPressed: _currentPageIndex > 0 ? _goToPreviousPage : null,
+              ),
+            ),
+          ),
+          Container(
+            width: 80,
+            height: double.infinity,
+            alignment: Alignment.center,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: IconButton(
+                iconSize: 40,
+                icon: Icon(
+                  _readingDirection == ReadingDirection.leftToRight
+                      ? Icons.keyboard_arrow_right
+                      : Icons.keyboard_arrow_left,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
+                  mangaAsync.whenData((manga) {
+                    if (manga != null && _currentPageIndex < manga.totalPages - 1) {
+                      _goToNextPage();
+                    }
+                  });
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget _buildReaderView(List<MangaPage> pages) {
+    switch (_readingMode) {
+      case ReadingMode.singlePage:
+        return _buildSinglePageView(pages);
+      case ReadingMode.doublePage:
+        return _buildDoublePageView(pages);
+      case ReadingMode.continuousScroll:
+        return _buildContinuousScrollView(pages);
+    }
+  }
+
+  Widget _buildSinglePageView(List<MangaPage> pages) {
+    return PhotoViewGallery.builder(
+      pageController: _pageController,
+      itemCount: pages.length,
+      builder: (context, index) {
+        return PhotoViewGalleryPageOptions.customChild(
+          child: _buildPageWidget(pages, index),
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: PhotoViewComputedScale.covered * 3.0,
+          initialScale: PhotoViewComputedScale.contained,
+        );
+      },
+      onPageChanged: _onPageChanged,
+      scrollDirection: _readingDirection == ReadingDirection.topToBottom
+          ? Axis.vertical
+          : Axis.horizontal,
+      reverse: _readingDirection == ReadingDirection.rightToLeft,
+      backgroundDecoration: const BoxDecoration(color: Colors.black),
+    );
+  }
+
+  Widget _buildDoublePageView(List<MangaPage> pages) {
+    final doublePages = <Widget>[];
+    for (int i = 0; i < pages.length; i += 2) {
+      if (i + 1 < pages.length) {
+        // 双页
+        doublePages.add(_buildDoublePageWidget(pages[i], pages[i + 1]));
+      } else {
+        // 单页（最后一页）
+        doublePages.add(_buildPageWidget(pages, i));
+      }
+    }
+
+    return PhotoViewGallery.builder(
+      pageController: _pageController,
+      itemCount: doublePages.length,
+      builder: (context, index) {
+        return PhotoViewGalleryPageOptions.customChild(
+          child: doublePages[index],
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: PhotoViewComputedScale.covered * 3.0,
+          initialScale: PhotoViewComputedScale.contained,
+        );
+      },
+      onPageChanged: (index) {
+        // 双页模式下的页面变化处理
+        final actualPageIndex = index * 2;
+        if (actualPageIndex < pages.length) {
+          _onPageChanged(actualPageIndex);
+        }
+      },
+      scrollDirection: Axis.horizontal,
+      reverse: _readingDirection == ReadingDirection.rightToLeft,
+      backgroundDecoration: const BoxDecoration(color: Colors.black),
+    );
+  }
+
+  Widget _buildContinuousScrollView(List<MangaPage> pages) {
+    return SingleChildScrollView(
+      scrollDirection: _readingDirection == ReadingDirection.topToBottom
+          ? Axis.vertical
+          : Axis.horizontal,
+      child: _readingDirection == ReadingDirection.topToBottom
+          ? Column(
+              children: pages.asMap().entries.map((entry) {
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  child: _buildImageWidget(entry.value.localPath),
+                );
+              }).toList(),
+            )
+          : Row(
+              children: pages.asMap().entries.map((entry) {
+                return Container(
+                  height: MediaQuery.of(context).size.height,
+                  child: _buildImageWidget(entry.value.localPath),
+                );
+              }).toList(),
+            ),
+    );
+  }
+
+  Widget _buildDoublePageWidget(MangaPage leftPage, MangaPage rightPage) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildImageWidget(
+            _readingDirection == ReadingDirection.rightToLeft
+                ? rightPage.localPath
+                : leftPage.localPath,
+          ),
+        ),
+        Expanded(
+          child: _buildImageWidget(
+            _readingDirection == ReadingDirection.rightToLeft
+                ? leftPage.localPath
+                : rightPage.localPath,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPageWidget(List<MangaPage> pages, int pageIndex) {
     // 根据漫画信息和页码构建页面路径
     MangaPage page = pages[pageIndex];
     return _buildImageWidget(page.localPath);
@@ -162,6 +413,39 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       ),
       errorBuilder: (context, error, stackTrace) => const Center(
         child: Icon(Icons.error, color: Colors.white, size: 48),
+      ),
+    );
+  }
+
+  Widget _buildThumbnailImage(MangaPage page) {
+    return page.localPath.startsWith('http')
+        ? CachedNetworkImage(
+            imageUrl: page.localPath,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => _buildThumbnailPlaceholder(page.pageIndex),
+            errorWidget: (context, url, error) => _buildThumbnailPlaceholder(page.pageIndex),
+          )
+        : Image.file(
+            File(page.localPath),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildThumbnailPlaceholder(page.pageIndex);
+            },
+          );
+  }
+
+  Widget _buildThumbnailPlaceholder(int pageNumber) {
+    return Container(
+      color: Colors.grey[800],
+      child: Center(
+        child: Text(
+          pageNumber.toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -221,25 +505,45 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             );
           }
 
-          return GestureDetector(
-            onTap: _toggleControls,
-            child: PhotoViewGallery.builder(
-              pageController: _pageController,
-              itemCount: pages.length,
-              builder: (context, index) {
-                return PhotoViewGalleryPageOptions.customChild(
-                  child: _buildPageWidget(pages, index),
-                  minScale: PhotoViewComputedScale.contained,
-                  maxScale: PhotoViewComputedScale.covered * 3.0,
-                  initialScale: PhotoViewComputedScale.contained,
-                );
-              },
-              onPageChanged: _onPageChanged,
-              scrollDirection: _readingDirection == ReadingDirection.topToBottom
-                  ? Axis.vertical
-                  : Axis.horizontal,
-              reverse: _readingDirection == ReadingDirection.rightToLeft,
-              backgroundDecoration: const BoxDecoration(color: Colors.black),
+          return Listener(
+            onPointerSignal: (pointerSignal) {
+              if (pointerSignal is PointerScrollEvent) {
+                // 根据阅读方向处理鼠标滚动
+                if (_readingDirection == ReadingDirection.topToBottom) {
+                  // 垂直滚动
+                  if (pointerSignal.scrollDelta.dy > 0) {
+                    _goToNextPage();
+                  } else if (pointerSignal.scrollDelta.dy < 0) {
+                    _goToPreviousPage();
+                  }
+                } else {
+                  // 水平滚动
+                  if (pointerSignal.scrollDelta.dy > 0) {
+                    if (_readingDirection == ReadingDirection.leftToRight) {
+                      _goToNextPage();
+                    } else {
+                      _goToPreviousPage();
+                    }
+                  } else if (pointerSignal.scrollDelta.dy < 0) {
+                    if (_readingDirection == ReadingDirection.leftToRight) {
+                      _goToPreviousPage();
+                    } else {
+                      _goToNextPage();
+                    }
+                  }
+                }
+              }
+            },
+            child: Stack(
+              children: [
+                GestureDetector(
+                  onTap: _toggleControls,
+                  onTapDown: (details) => _handleTapNavigation(details, context),
+                  child: _buildReaderView(pages),
+                ),
+                // 放大的导航按钮
+                if (!_showControls) _buildNavigationButtons(context),
+              ],
             ),
           );
         },
@@ -273,48 +577,93 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               data: (manga) => manga != null && manga.totalPages > 0
                   ? Container(
                       color: Colors.black.withOpacity(0.7),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.skip_previous,
-                                color: Colors.white),
-                            onPressed: _currentPageIndex > 0
-                                ? _goToPreviousPage
-                                : null,
+                          // 缩略图列表
+                          Container(
+                            height: 60,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: pageAsync.when(
+                              data: (pages) => ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: pages.length,
+                                itemBuilder: (context, index) {
+                                  final page = pages[index];
+                                  final isCurrentPage = index == _currentPageIndex;
+                                  return GestureDetector(
+                                    onTap: () => _goToPage(index),
+                                    child: Container(
+                                      width: 40,
+                                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: isCurrentPage
+                                              ? Colors.white
+                                              : Colors.transparent,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(2),
+                                        child: _buildThumbnailImage(page),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
+                            ),
                           ),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                          // 原有的进度条和按钮
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
                               children: [
-                                Text(
-                                  '${_currentPageIndex + 1} / ${manga.totalPages}',
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 12),
+                                IconButton(
+                                  icon: const Icon(Icons.skip_previous,
+                                      color: Colors.white),
+                                  onPressed: _currentPageIndex > 0
+                                      ? _goToPreviousPage
+                                      : null,
                                 ),
-                                Slider(
-                                  value: manga.totalPages > 1
-                                      ? _currentPageIndex /
-                                          (manga.totalPages - 1)
-                                      : 0,
-                                  onChanged: (value) {
-                                    final pageIndex =
-                                        (value * (manga.totalPages - 1))
-                                            .round();
-                                    _goToPage(pageIndex);
-                                  },
-                                  activeColor: Colors.white,
-                                  inactiveColor: Colors.white.withOpacity(0.3),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${_currentPageIndex + 1} / ${manga.totalPages}',
+                                        style: const TextStyle(
+                                            color: Colors.white, fontSize: 12),
+                                      ),
+                                      Slider(
+                                        value: manga.totalPages > 1
+                                            ? _currentPageIndex /
+                                                (manga.totalPages - 1)
+                                            : 0,
+                                        onChanged: (value) {
+                                          final pageIndex =
+                                              (value * (manga.totalPages - 1))
+                                                  .round();
+                                          _goToPage(pageIndex);
+                                        },
+                                        activeColor: Colors.white,
+                                        inactiveColor: Colors.white.withOpacity(0.3),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.skip_next,
+                                      color: Colors.white),
+                                  onPressed: _currentPageIndex < manga.totalPages - 1
+                                      ? _goToNextPage
+                                      : null,
                                 ),
                               ],
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.skip_next,
-                                color: Colors.white),
-                            onPressed: _currentPageIndex < manga.totalPages - 1
-                                ? _goToNextPage
-                                : null,
                           ),
                         ],
                       ),
