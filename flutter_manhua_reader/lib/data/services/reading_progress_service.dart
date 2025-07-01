@@ -19,6 +19,7 @@ class ReadingProgressService {
     final progress = ReadingProgress(
       id: progressId,
       mangaId: manga.id,
+      libraryId: manga.libraryId,
       currentPage: 1,
       totalPages: totalPages,
       progressPercentage: 0.0,
@@ -32,13 +33,14 @@ class ReadingProgressService {
 
   /// 为单体漫画文件创建初始化的阅读进度
   static Future<ReadingProgress> createInitialProgressForSingleFile(
-      String mangaId, int pageCount) async {
+      Manga manga, int pageCount) async {
     final now = DateTime.now();
-    final progressId = 'progress_${mangaId}_${now.millisecondsSinceEpoch}';
+    final progressId = 'progress_${manga.id}_${now.millisecondsSinceEpoch}';
 
     final progress = ReadingProgress(
       id: progressId,
-      mangaId: mangaId,
+      mangaId: manga.id,
+      libraryId: manga.libraryId,
       currentPage: 0,
       totalPages: pageCount > 0 ? pageCount : 1,
       progressPercentage: 0.0,

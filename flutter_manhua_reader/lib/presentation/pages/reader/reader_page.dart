@@ -47,7 +47,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   @override
   void initState() {
     super.initState();
-    _currentPageIndex = widget.initialPage; 
+    _currentPageIndex = widget.initialPage;
     _pageController = PageController(initialPage: _currentPageIndex);
     _enterFullscreen();
     setState(() {
@@ -93,6 +93,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           final progress = ReadingProgress(
             id: '${widget.mangaId}_progress',
             mangaId: widget.mangaId,
+            libraryId: manga.libraryId,
             currentPage: _currentPageIndex + 1, // 转换为1基索引
             totalPages: manga.totalPages,
             progressPercentage: (_currentPageIndex + 1) / manga.totalPages,
@@ -142,7 +143,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
 
   Widget _buildPageWidget(dynamic pages, int pageNumber) {
     // 根据漫画信息和页码构建页面路径
-    MangaPage page=pages[pageNumber];
+    MangaPage page = pages[pageNumber];
     return _buildImageWidget(page.localPath);
   }
 

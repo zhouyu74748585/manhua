@@ -6,7 +6,7 @@ part of 'library_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$libraryRepositoryHash() => r'c7d8320746b31779341098a453b4bd19a2ed1ed0';
+String _$libraryRepositoryHash() => r'dad6ac484b2b9b3b867a365a68a15954b24fbb73';
 
 /// See also [libraryRepository].
 @ProviderFor(libraryRepository)

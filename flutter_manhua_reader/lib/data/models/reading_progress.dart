@@ -6,6 +6,7 @@ part 'reading_progress.g.dart';
 class ReadingProgress {
   final String id;
   final String mangaId;
+  final String libraryId; // 所属漫画库ID
   final int currentPage;
   final int totalPages;
   final double progressPercentage;
@@ -16,6 +17,7 @@ class ReadingProgress {
   const ReadingProgress({
     required this.id,
     required this.mangaId,
+    required this.libraryId,
     required this.currentPage,
     required this.totalPages,
     required this.progressPercentage,
@@ -33,6 +35,7 @@ class ReadingProgress {
     return ReadingProgress(
       id: map['id'] as String,
       mangaId: map['manga_id'] as String,
+      libraryId: map['library_id'] as String,
       currentPage: map['current_page'] as int,
       totalPages: map['total_pages'] as int,
       progressPercentage: (map['progress_percentage'] as num).toDouble(),
@@ -59,6 +62,7 @@ class ReadingProgress {
   ReadingProgress copyWith({
     String? id,
     String? mangaId,
+    String? libraryId,
     int? currentPage,
     int? totalPages,
     double? progressPercentage,
@@ -69,6 +73,7 @@ class ReadingProgress {
     return ReadingProgress(
       id: id ?? this.id,
       mangaId: mangaId ?? this.mangaId,
+      libraryId: libraryId ?? this.libraryId,
       currentPage: currentPage ?? this.currentPage,
       totalPages: totalPages ?? this.totalPages,
       progressPercentage: progressPercentage ?? this.progressPercentage,

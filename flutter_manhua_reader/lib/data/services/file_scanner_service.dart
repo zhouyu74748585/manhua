@@ -6,7 +6,6 @@ import 'package:tuple/tuple.dart';
 import '../models/manga.dart';
 import '../models/library.dart';
 import 'cover_cache_service.dart';
-import 'reading_progress_service.dart';
 
 class FileScannerService {
   // 支持的漫画文件格式
@@ -117,7 +116,7 @@ class FileScannerService {
       // 按文件名排序
       imageFiles.sort();
 
-      final mangaId = _generateMangaId(directory.path);
+      final mangaId = generateMangaId(directory.path);
       final title = path.basename(directory.path);
 
       // 获取目录的修改时间
@@ -135,9 +134,6 @@ class FileScannerService {
 
       // 创建初始化的阅读进度
       final totalPages = imageFiles.length;
-      final readingProgress =
-          await ReadingProgressService.createInitialProgressForSingleFile(
-              mangaId, totalPages);
       Manga manga = Manga(
         id: mangaId,
         libraryId: libraryId,
@@ -154,12 +150,11 @@ class FileScannerService {
         isFavorite: false,
         createdAt: DateTime.now(),
         updatedAt: dirStats.modified,
-        readingProgress: readingProgress,
       );
       List<MangaPage> pages = [];
       imageFiles.forEach((element) {
         pages.add(MangaPage(
-          id: _generateMangaId(element),
+          id: generateMangaId(element),
           mangaId: mangaId,
           pageNumber: pages.length,
           localPath: element,
@@ -186,7 +181,7 @@ class FileScannerService {
 
     try {
       final fileStats = await file.stat();
-      final mangaId = _generateMangaId(file.path);
+      final mangaId = generateMangaId(file.path);
 
       // 提取漫画标题（从文件名）
       final title = _extractTitleFromFileName(fileName);
@@ -198,10 +193,6 @@ class FileScannerService {
       // 创建初始化的阅读进度
       final fileSize = await file.length() / 1024;
       final totalPages = pages;
-      final readingProgress =
-          await ReadingProgressService.createInitialProgressForSingleFile(
-              mangaId, totalPages);
-
       return Manga(
           id: mangaId,
           libraryId: libraryId,
@@ -218,7 +209,6 @@ class FileScannerService {
           isFavorite: false,
           createdAt: DateTime.now(),
           updatedAt: fileStats.modified,
-          readingProgress: readingProgress,
           fileSize: fileSize.toInt());
     } catch (e) {
       log('扫描文件失败: ${file.path}, 错误: $e');
@@ -242,9 +232,14 @@ class FileScannerService {
   }
 
   /// 生成漫画ID
-  static String _generateMangaId(String filePath) {
+  static String generateMangaId(String filePath) {
     // 使用文件路径的哈希值作为ID
     return 'manga_${filePath.hashCode.abs()}';
+  }
+
+  static String generatePageId(String filePath) {
+    // 使用文件路径的哈希值作为ID
+    return 'page_${filePath.hashCode.abs()}';
   }
 
   /// 获取文件的基本信息

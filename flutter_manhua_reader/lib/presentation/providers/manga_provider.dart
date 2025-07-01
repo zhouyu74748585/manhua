@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -18,6 +17,17 @@ final mangaRepositoryProvider = Provider<MangaRepository>((ref) {
 Future<List<Manga>> allManga(AllMangaRef ref) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getAllManga();
+}
+
+@riverpod
+Future<Map<String,ReadingProgress>> allMangaProgress(AllMangaProgressRef ref) async {
+  final repository = ref.watch(mangaRepositoryProvider);
+  List<ReadingProgress> list=await repository.getAllMangaReadingProgress();
+  Map<String,ReadingProgress> result={};
+  for (var element in list) {
+      result[element.mangaId]=element;
+  }
+  return result;
 }
 
 // 收藏漫画列表提供者
@@ -46,6 +56,12 @@ Future<List<Manga>> recentlyUpdatedManga(RecentlyUpdatedMangaRef ref) async {
 Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getMangaById(mangaId);
+}
+
+@riverpod
+Future<ReadingProgress?> mangaProgress(MangaProgressRef ref, String mangaId) async {
+  final repository = ref.watch(mangaRepositoryProvider);
+  return repository.getReadingProgressById(mangaId);
 }
 
 @riverpod

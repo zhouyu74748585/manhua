@@ -39,10 +39,6 @@ Manga _$MangaFromJson(Map<String, dynamic> json) => Manga(
       isFavorite: json['isFavorite'] as bool? ?? false,
       isCompleted: json['isCompleted'] as bool? ?? false,
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
-      readingProgress: json['readingProgress'] == null
-          ? null
-          : ReadingProgress.fromJson(
-              json['readingProgress'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
@@ -69,7 +65,6 @@ Map<String, dynamic> _$MangaToJson(Manga instance) => <String, dynamic>{
       'isFavorite': instance.isFavorite,
       'isCompleted': instance.isCompleted,
       'metadata': instance.metadata,
-      'readingProgress': instance.readingProgress,
     };
 
 const _$MangaTypeEnumMap = {

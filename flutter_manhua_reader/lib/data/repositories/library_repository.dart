@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
@@ -216,10 +217,15 @@ class LocalLibraryRepository implements LibraryRepository {
         try {
           // 删除漫画
           await _mangaRepository.deleteManga(mangaToDelete.id);
-
+          //删除页面信息
+          await _mangaRepository.deletePageByMangaId(mangaToDelete.id);
+          //删除进度信息
+          await _mangaRepository.deleteProgressByMangaId(mangaToDelete.id);
+          //删除缩略图
+          await ThumbnailService.deleteThumbnail(
+              mangaToDelete.metadata['thumbnail']);
           // 删除封面缓存
           await CoverCacheService.deleteCacheForFile(mangaToDelete.path);
-
           log('已删除不存在的漫画: ${mangaToDelete.title} (${mangaToDelete.path})');
         } catch (e) {
           log('删除漫画失败: ${mangaToDelete.title}, 错误: $e');
@@ -257,14 +263,16 @@ class LocalLibraryRepository implements LibraryRepository {
         if (m.coverPath == null && m.coverPath == null) {
           if (m.type == MangaType.archive) {
             File zipFile = File(m.path);
-            final result =
-                await CoverCacheService.extractAndCacheCoverFromZip(zipFile);
+            final result = await CoverCacheService.extractAndCacheCoverFromZip(
+                zipFile, m.id);
             if (result != null) {
               final updateManga = m.copyWith(
                 coverPath: result['cover'],
                 totalPages: result['pages'] ?? 0,
               );
+              List<MangaPage> pageList = result['pageInfos'];
               await _mangaRepository.updateManga(updateManga);
+              await _mangaRepository.savePageList(pageList);
             } else if (m.type == MangaType.pdf) {
               File pdfFile = File(m.path);
               final result =
@@ -335,11 +343,13 @@ class LocalLibraryRepository implements LibraryRepository {
       // 从数据库获取该库的实际漫画数量
       final libraryManga = await DatabaseService.getMangaByLibraryId(libraryId);
       final totalManga = libraryManga.length;
-
+      final readProgress =
+          await DatabaseService.getReadingProgressByLibraryId(libraryId);
       // 计算已读和收藏数量（简化实现）
-      final readManga = libraryManga
-          .where((manga) => manga.readingProgress?.isCompleted == true)
-          .length;
+      final readManga = readProgress
+              ?.where((readProgres) => readProgres.isCompleted == true)
+              .length ??
+          0;
       final favoriteManga =
           libraryManga.where((manga) => manga.isFavorite == true).length;
 

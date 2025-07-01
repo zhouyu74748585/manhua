@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'dart:io';
 
 import '../../../data/models/manga.dart';
@@ -20,7 +21,7 @@ class MangaDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
     final pages = ref.watch(mangaPagesProvider(mangaId)).value ?? [];
-
+    final progress = ref.watch(mangaProgressProvider(mangaId)).value;
     return Scaffold(
       body: mangaAsync.when(
         data: (manga) {
@@ -33,8 +34,8 @@ class MangaDetailPage extends ConsumerWidget {
           return CustomScrollView(
             slivers: [
               _buildSliverAppBar(context, ref, manga),
-              _buildMangaInfo(context, manga),
-              _buildPageGrid(context, manga, pages),
+              _buildMangaInfo(context, manga,progress),
+              _buildPageGrid(context, manga, progress,pages),
             ],
           );
         },
@@ -192,7 +193,7 @@ class MangaDetailPage extends ConsumerWidget {
     }
   }
 
-  Widget _buildMangaInfo(BuildContext context, Manga manga) {
+  Widget _buildMangaInfo(BuildContext context, Manga manga,ReadingProgress? progress) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -225,7 +226,7 @@ class MangaDetailPage extends ConsumerWidget {
                   ),
                 ),
                 // 阅读进度
-                if (manga.readingProgress != null)
+                if (progress != null)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -236,7 +237,7 @@ class MangaDetailPage extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      '${manga.readingProgress!.currentPage}/${manga.totalPages}',
+                      '${progress.currentPage}/${manga.totalPages}',
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.bold,
@@ -289,7 +290,7 @@ class MangaDetailPage extends ConsumerWidget {
   }
 
   Widget _buildPageGrid(
-      BuildContext context, Manga manga, List<MangaPage> pages) {
+      BuildContext context, Manga manga, ReadingProgress? progress, List<MangaPage> pages) {
     // 新增 _buildPageThumbnail 方法
     Widget buildPageThumbnail(MangaPage page) {
       if (page.largeThumbnail != null &&
@@ -348,7 +349,7 @@ class MangaDetailPage extends ConsumerWidget {
               TextButton.icon(
                 onPressed: () {
                   _startReading(
-                      context, manga, manga.readingProgress?.currentPage ?? 1);
+                      context, manga, progress?.currentPage ?? 1);
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('开始阅读'),
@@ -370,7 +371,7 @@ class MangaDetailPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               final pageNumber = index + 1;
               final isCurrentPage =
-                  manga.readingProgress?.currentPage == pageNumber;
+                  progress?.currentPage == pageNumber;
 
               return GestureDetector(
                 onTap: () {

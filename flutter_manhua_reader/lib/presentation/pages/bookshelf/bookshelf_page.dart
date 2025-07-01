@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:manhua_reader_flutter/presentation/widgets/manga/manga_list_tile.dart';
 import '../../providers/manga_provider.dart';
 import '../../providers/library_provider.dart';
@@ -32,7 +33,6 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   Widget build(BuildContext context) {
     final mangaListAsync = ref.watch(allMangaProvider);
     final librariesAsync = ref.watch(allLibrariesProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('书架'),
@@ -162,7 +162,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
 
   Widget _buildMangaList(List<Manga> mangaList) {
     final librariesAsync = ref.watch(allLibrariesProvider);
-
+    final readingProcessMapAsync = ref.watch(allMangaProgressProvider);
     // 首先过滤出只属于激活状态漫画库的漫画
     List<Manga> filteredList = librariesAsync.when(
       data: (libraries) {
@@ -196,7 +196,8 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     }
 
     // 排序
-    filteredList = _sortMangaList(filteredList);
+    filteredList =
+        _sortMangaList(filteredList, readingProcessMapAsync.value ?? {});
 
     if (filteredList.isEmpty) {
       return Center(
@@ -220,13 +221,14 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     }
 
     if (_viewMode == BookshelfViewMode.grid) {
-      return _buildGridView(filteredList);
+      return _buildGridView(filteredList, readingProcessMapAsync.value ?? {});
     } else {
-      return _buildListView(filteredList);
+      return _buildListView(filteredList, readingProcessMapAsync.value ?? {});
     }
   }
 
-  Widget _buildGridView(List<Manga> mangaList) {
+  Widget _buildGridView(List<Manga> mangaList,
+      Map<String, ReadingProgress> readingProcessMapAsync) {
     final gridConfig = _getGridConfig(_gridSize);
 
     return GridView.builder(
@@ -240,14 +242,15 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       itemCount: mangaList.length,
       itemBuilder: (context, index) {
         final manga = mangaList[index];
+        final progress = readingProcessMapAsync[manga.id];
         return MangaCard(
           title: manga.title,
           coverPath: manga.coverPath,
           subtitle: manga.author,
           totalPages: manga.totalPages,
-          currentPage: manga.readingProgress?.currentPage ?? 0,
-          progress: manga.readingProgress?.progressPercentage,
-          onTap: () => _showMangaOptions(manga),
+          currentPage: progress?.currentPage ?? 0,
+          progress: progress?.progressPercentage,
+          onTap: () => _showMangaOptions(manga, progress),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
@@ -287,25 +290,28 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     }
   }
 
-  Widget _buildListView(List<Manga> mangaList) {
+  Widget _buildListView(List<Manga> mangaList,
+      Map<String, ReadingProgress> readingProcessMapAsync) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: mangaList.length,
       itemBuilder: (context, index) {
         final manga = mangaList[index];
+        final progress = readingProcessMapAsync[manga.id];
         return MangaListTile(
           title: manga.title,
           coverPath: manga.coverPath,
           subtitle: manga.author,
-          progress: manga.readingProgress?.progressPercentage,
-          onTap: () => _showMangaOptions(manga),
+          progress: progress?.progressPercentage,
+          onTap: () => _showMangaOptions(manga, progress),
           onLongPress: () => _toggleFavorite(manga),
         );
       },
     );
   }
 
-  List<Manga> _sortMangaList(List<Manga> mangaList) {
+  List<Manga> _sortMangaList(List<Manga> mangaList,
+      Map<String, ReadingProgress> readingProcessMapAsync) {
     final sortedList = List<Manga>.from(mangaList);
 
     switch (_sortMode) {
@@ -328,8 +334,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         break;
       case BookshelfSortMode.lastRead:
         sortedList.sort((a, b) {
-          final lastReadA = a.readingProgress?.lastReadAt ?? DateTime(1970);
-          final lastReadB = b.readingProgress?.lastReadAt ?? DateTime(1970);
+          final lastReadA =
+              readingProcessMapAsync[a.id]?.lastReadAt ?? DateTime(1970);
+          final lastReadB =
+              readingProcessMapAsync[b.id]?.lastReadAt ?? DateTime(1970);
           return lastReadB.compareTo(lastReadA);
         });
         break;
@@ -368,7 +376,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
 
-  void _showMangaOptions(Manga manga) {
+  void _showMangaOptions(Manga manga, ReadingProgress? progress) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -395,13 +403,13 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
               leading: const Icon(Icons.play_arrow),
               title: const Text('开始阅读'),
               subtitle: Text(
-                manga.readingProgress?.currentPage != null
-                    ? '从第 ${manga.readingProgress!.currentPage} 页继续'
+                progress?.currentPage != null
+                    ? '从第 ${progress?.currentPage} 页继续'
                     : '从第一页开始',
               ),
               onTap: () {
                 Navigator.of(context).pop();
-                _startReading(manga);
+                _startReading(manga, progress);
               },
             ),
           ],
@@ -418,8 +426,8 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     );
   }
 
-  void _startReading(Manga manga) {
-    final startPage = manga.readingProgress?.currentPage ?? 1;
+  void _startReading(Manga manga, ReadingProgress? progress) {
+    final startPage = progress?.currentPage ?? 1;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReaderPage(

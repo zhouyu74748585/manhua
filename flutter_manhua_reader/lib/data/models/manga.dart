@@ -54,7 +54,6 @@ class Manga {
   final bool isFavorite;
   final bool isCompleted; // 是否已读完
   final Map<String, dynamic> metadata; // 元数据
-  final ReadingProgress? readingProgress;
 
   const Manga({
     required this.id,
@@ -80,7 +79,6 @@ class Manga {
     this.isFavorite = false,
     this.isCompleted = false,
     this.metadata = const {},
-    this.readingProgress,
   });
 
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
@@ -136,7 +134,6 @@ class Manga {
       isFavorite: isFavorite ?? this.isFavorite,
       isCompleted: isCompleted ?? this.isCompleted,
       metadata: metadata ?? this.metadata,
-      readingProgress: readingProgress ?? this.readingProgress,
     );
   }
 

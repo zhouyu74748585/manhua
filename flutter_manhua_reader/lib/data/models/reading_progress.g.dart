@@ -10,6 +10,7 @@ ReadingProgress _$ReadingProgressFromJson(Map<String, dynamic> json) =>
     ReadingProgress(
       id: json['id'] as String,
       mangaId: json['mangaId'] as String,
+      libraryId: json['libraryId'] as String,
       currentPage: (json['currentPage'] as num).toInt(),
       totalPages: (json['totalPages'] as num).toInt(),
       progressPercentage: (json['progressPercentage'] as num).toDouble(),
@@ -22,6 +23,7 @@ Map<String, dynamic> _$ReadingProgressToJson(ReadingProgress instance) =>
     <String, dynamic>{
       'id': instance.id,
       'mangaId': instance.mangaId,
+      'libraryId': instance.libraryId,
       'currentPage': instance.currentPage,
       'totalPages': instance.totalPages,
       'progressPercentage': instance.progressPercentage,

@@ -88,4 +88,13 @@ class ThumbnailService {
 
     return thumbnailPaths;
   }
+
+  static Future<void> deleteThumbnail(String? directoryPath) async {
+    if (directoryPath != null) {
+      Directory directory = Directory(directoryPath);
+      if (directory.existsSync()) {
+        directory.delete(recursive: true);
+      }
+    }
+  }
 }

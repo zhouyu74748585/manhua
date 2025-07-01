@@ -12,7 +12,9 @@ import '../services/database_service.dart';
 abstract class MangaRepository {
   // 漫画相关
   Future<List<Manga>> getAllManga();
+  Future<List<ReadingProgress>> getAllMangaReadingProgress();
   Future<Manga?> getMangaById(String id);
+  Future<ReadingProgress?> getReadingProgressById(String id);
   Future<List<Manga>> searchManga(String query);
   Future<List<Manga>> getMangaByCategory(String category);
   Future<List<Manga>> getFavoriteManga();
@@ -23,13 +25,14 @@ abstract class MangaRepository {
   Future<void> deleteManga(String id);
   Future<void> updateMangaFavoriteStatus(String id, bool isFavorite);
   Future<void> updateReadingProgress(String mangaId, ReadingProgress progress);
+  Future<void> deleteProgressByMangaId(String id);
 
   // 页面相关
   Future<MangaPage?> getPageById(String id);
   Future<List<MangaPage>> getPageByMangaId(String id);
   Future<void> savePage(MangaPage page);
   Future<void> updatePage(MangaPage manga);
-  Future<void> deletePage(String id);
+  Future<void> deletePageByMangaId(String id);
 
   // 批量操作
   Future<void> saveMangaList(List<Manga> mangaList);
@@ -53,19 +56,41 @@ class LocalMangaRepository implements MangaRepository {
   }
 
   @override
+  Future<List<ReadingProgress>> getAllMangaReadingProgress() async {
+    try {
+      final dbManga = await DatabaseService.getAllMangaReadingProgress();
+      return dbManga;
+    } catch (e) {
+      log('查询漫画进度失败: $e');
+      return List.empty();
+    }
+  }
+
+  @override
+  Future<ReadingProgress?> getReadingProgressById(String id) async {
+    try {
+      final dbManga = await DatabaseService.getReadingProgressByMangaId(id);
+      return dbManga;
+    } catch (e) {
+      log('查询漫画进度失败: $e');
+      return null;
+    }
+  }
+
+  @override
   Future<Manga?> getMangaById(String id) async {
     try {
-      Manga? manga= await DatabaseService.getMangaById(id);
-      if(manga!=null){
-        bool hasThumbnail=false;
-        String? thumbnailPath=manga.metadata['thumbnail'];
-        if(thumbnailPath!=null){
-          Directory directory=Directory(thumbnailPath);
-          if(await directory.exists()){
-             hasThumbnail=true;
+      Manga? manga = await DatabaseService.getMangaById(id);
+      if (manga != null) {
+        bool hasThumbnail = false;
+        String? thumbnailPath = manga.metadata['thumbnail'];
+        if (thumbnailPath != null) {
+          Directory directory = Directory(thumbnailPath);
+          if (await directory.exists()) {
+            hasThumbnail = true;
           }
         }
-        if(!hasThumbnail){
+        if (!hasThumbnail) {
           generateThumbnails(manga);
         }
       }
@@ -100,8 +125,9 @@ class LocalMangaRepository implements MangaRepository {
         );
         await this.updatePage(updatePage);
       }
-      manga.metadata.putIfAbsent("thumbnail", ()=>thumbnailPath);
-      manga.metadata.putIfAbsent("thumbnailGenerteDate", ()=>DateTime.now().toString());
+      manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
+      manga.metadata
+          .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
       if (thumbnailPath != null) {
         await DatabaseService.updateManga(manga);
       }
@@ -233,6 +259,15 @@ class LocalMangaRepository implements MangaRepository {
   }
 
   @override
+  Future<void> deleteProgressByMangaId(String id) async {
+    try {
+      await DatabaseService.deleteReadingProgress(id);
+    } catch (e) {
+      log('删除漫画进度失败: $e');
+    }
+  }
+
+  @override
   Future<MangaPage?> getPageById(String id) async {
     final db = await DatabaseService.database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -261,14 +296,18 @@ class LocalMangaRepository implements MangaRepository {
     await DatabaseService.insertPage(page);
   }
 
+  @override
   Future<void> updatePage(MangaPage page) async {
     await DatabaseService.updatePage(page);
   }
 
   @override
-  Future<void> deletePage(String id) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    // 简化实现
+  Future<void> deletePageByMangaId(String id) async {
+    try {
+      await DatabaseService.deletePageByMangaId(id);
+    } catch (e) {
+      log('删除漫画页失败: $e');
+    }
   }
 
   @override

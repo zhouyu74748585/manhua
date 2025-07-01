@@ -1,8 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
+import 'package:archive/archive_io.dart';
+import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -49,13 +51,12 @@ class CoverCacheService {
 
   /// 从ZIP文件提取并缓存封面
   static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(
-      File zipFile) async {
+      File zipFile, String mangaId) async {
     try {
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
-
       ArchiveFile? coverFile;
-
+      List<String> fileNames = [];
       for (final file in archive) {
         if (!file.isFile || file.name.startsWith('__MACOSX')) {
           continue;
@@ -68,6 +69,7 @@ class CoverCacheService {
         if (file.name.compareTo(coverFile.name) < 0) {
           coverFile = file;
         }
+        fileNames.add(file.name);
       }
       if (coverFile == null) {
         return null;
@@ -87,7 +89,22 @@ class CoverCacheService {
       // 提取并保存封面图片
       final imageData = coverFile.content;
       await cacheFile.writeAsBytes(imageData);
-      return {'cover': cacheFile.path, 'pages': archive.length};
+      //生成页面地址信息,先将文件名自然排序
+      fileNames.sort();
+      List<MangaPage> pages = [];
+      for (var element in fileNames) {
+        pages.add(MangaPage(
+          id: FileScannerService.generatePageId(element),
+          mangaId: mangaId,
+          pageNumber: pages.length,
+          localPath: element,
+        ));
+      }
+      return {
+        'cover': cacheFile.path,
+        'pages': archive.length,
+        'pageInfos': pages
+      };
     } catch (e) {
       log('从ZIP文件提取封面失败: $zipFile, 错误: $e');
       return null;

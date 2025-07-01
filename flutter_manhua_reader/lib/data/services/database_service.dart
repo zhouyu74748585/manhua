@@ -103,6 +103,7 @@ class DatabaseService {
        CREATE TABLE $_readingProgressTable (
          id TEXT PRIMARY KEY,
          manga_id TEXT NOT NULL,
+         library_id TEXT NOT NULL,
          current_page_id TEXT,
          current_apeg INTEGER NOT NULL DEFAULT 1,
          current_page INTEGER NOT NULL DEFAULT 1,
@@ -284,9 +285,6 @@ class DatabaseService {
         'created_at': manga.createdAt?.millisecondsSinceEpoch ??
             DateTime.now().millisecondsSinceEpoch,
         'updated_at': manga.updatedAt?.millisecondsSinceEpoch,
-        'reading_progress': manga.readingProgress != null
-            ? jsonEncode(manga.readingProgress!.toJson())
-            : null,
         'file_path': manga.path,
         'file_size': manga.fileSize,
         'metadata': jsonEncode(manga.metadata),
@@ -357,9 +355,6 @@ class DatabaseService {
         'source_url': manga.sourceUrl,
         'last_read_at': manga.lastReadAt?.toIso8601String(),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
-        'reading_progress': manga.readingProgress != null
-            ? jsonEncode(manga.readingProgress!.toJson())
-            : null,
         'file_path': manga.path,
         'metadata': jsonEncode(manga.metadata),
       },
@@ -423,9 +418,6 @@ class DatabaseService {
       metadata: map['metadata'] != null
           ? Map<String, dynamic>.from(jsonDecode(map['metadata']))
           : {},
-      readingProgress: map['reading_progress'] != null
-          ? _parseReadingProgress(map['reading_progress'])
-          : null,
     );
   }
 
@@ -498,6 +490,7 @@ class DatabaseService {
     return ReadingProgress(
       id: map['id'],
       mangaId: map['manga_id'],
+      libraryId: map['library_id'],
       currentPage: map['current_page'],
       totalPages: map['total_pages'],
       progressPercentage: (map['progress_percentage'] as num).toDouble(),
@@ -507,10 +500,70 @@ class DatabaseService {
     );
   }
 
+  static Future getAllMangaReadingProgress() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      _readingProgressTable,
+    );
+
+    if (maps.isEmpty) return null;
+
+    return List.generate(maps.length, (i) {
+      Map map = maps[i];
+      return ReadingProgress(
+        id: map['id'],
+        mangaId: map['manga_id'],
+        libraryId: map['library_id'],
+        currentPage: map['current_page'],
+        totalPages: map['total_pages'],
+        progressPercentage: (map['progress_percentage'] as num).toDouble(),
+        lastReadAt: DateTime.fromMillisecondsSinceEpoch(map['last_read_at']),
+        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
+      );
+    });
+  }
+
+  static Future<List<ReadingProgress>?> getReadingProgressByLibraryId(
+      String libraryId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      _readingProgressTable,
+      where: 'library_id = ?',
+      whereArgs: [libraryId],
+    );
+
+    if (maps.isEmpty) return null;
+
+    return List.generate(maps.length, (i) {
+      Map map = maps[i];
+      return ReadingProgress(
+        id: map['id'],
+        mangaId: map['manga_id'],
+        libraryId: map['library_id'],
+        currentPage: map['current_page'],
+        totalPages: map['total_pages'],
+        progressPercentage: (map['progress_percentage'] as num).toDouble(),
+        lastReadAt: DateTime.fromMillisecondsSinceEpoch(map['last_read_at']),
+        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
+      );
+    });
+  }
+
   static Future<void> deleteReadingProgress(String mangaId) async {
     final db = await database;
     await db.delete(
       _readingProgressTable,
+      where: 'manga_id = ?',
+      whereArgs: [mangaId],
+    );
+  }
+
+  static Future<void> deletePageByMangaId(String mangaId) async {
+    final db = await database;
+    await db.delete(
+      _pageTable,
       where: 'manga_id = ?',
       whereArgs: [mangaId],
     );
@@ -523,18 +576,6 @@ class DatabaseService {
     await db.delete(_pageTable);
     await db.delete(_mangaTable);
     await db.delete(_libraryTable);
-  }
-
-  static ReadingProgress? _parseReadingProgress(String? jsonString) {
-    if (jsonString == null || jsonString.isEmpty) return null;
-
-    try {
-      final Map<String, dynamic> json = jsonDecode(jsonString);
-      return ReadingProgress.fromJson(json);
-    } catch (e) {
-      // 如果解析失败，返回null
-      return null;
-    }
   }
 
   static Future<void> close() async {

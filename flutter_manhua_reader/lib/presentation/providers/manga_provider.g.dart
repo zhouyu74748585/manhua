@@ -22,6 +22,25 @@ final allMangaProvider = AutoDisposeFutureProvider<List<Manga>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AllMangaRef = AutoDisposeFutureProviderRef<List<Manga>>;
+String _$allMangaProgressHash() => r'ac10046a7bcb41d6dfc8f28523732510a729c193';
+
+/// See also [allMangaProgress].
+@ProviderFor(allMangaProgress)
+final allMangaProgressProvider =
+    AutoDisposeFutureProvider<Map<String, ReadingProgress>>.internal(
+  allMangaProgress,
+  name: r'allMangaProgressProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$allMangaProgressHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AllMangaProgressRef
+    = AutoDisposeFutureProviderRef<Map<String, ReadingProgress>>;
 String _$favoriteMangaHash() => r'20acb8a4d1439783e4b17668c19acf8ff0d03366';
 
 /// See also [favoriteManga].
@@ -225,6 +244,138 @@ class _MangaDetailProviderElement
 
   @override
   String get mangaId => (origin as MangaDetailProvider).mangaId;
+}
+
+String _$mangaProgressHash() => r'dc70f0509257347d6a1733c2adca16a8bf0543cc';
+
+/// See also [mangaProgress].
+@ProviderFor(mangaProgress)
+const mangaProgressProvider = MangaProgressFamily();
+
+/// See also [mangaProgress].
+class MangaProgressFamily extends Family<AsyncValue<ReadingProgress?>> {
+  /// See also [mangaProgress].
+  const MangaProgressFamily();
+
+  /// See also [mangaProgress].
+  MangaProgressProvider call(
+    String mangaId,
+  ) {
+    return MangaProgressProvider(
+      mangaId,
+    );
+  }
+
+  @override
+  MangaProgressProvider getProviderOverride(
+    covariant MangaProgressProvider provider,
+  ) {
+    return call(
+      provider.mangaId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'mangaProgressProvider';
+}
+
+/// See also [mangaProgress].
+class MangaProgressProvider
+    extends AutoDisposeFutureProvider<ReadingProgress?> {
+  /// See also [mangaProgress].
+  MangaProgressProvider(
+    String mangaId,
+  ) : this._internal(
+          (ref) => mangaProgress(
+            ref as MangaProgressRef,
+            mangaId,
+          ),
+          from: mangaProgressProvider,
+          name: r'mangaProgressProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$mangaProgressHash,
+          dependencies: MangaProgressFamily._dependencies,
+          allTransitiveDependencies:
+              MangaProgressFamily._allTransitiveDependencies,
+          mangaId: mangaId,
+        );
+
+  MangaProgressProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.mangaId,
+  }) : super.internal();
+
+  final String mangaId;
+
+  @override
+  Override overrideWith(
+    FutureOr<ReadingProgress?> Function(MangaProgressRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MangaProgressProvider._internal(
+        (ref) => create(ref as MangaProgressRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        mangaId: mangaId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<ReadingProgress?> createElement() {
+    return _MangaProgressProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MangaProgressProvider && other.mangaId == mangaId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, mangaId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MangaProgressRef on AutoDisposeFutureProviderRef<ReadingProgress?> {
+  /// The parameter `mangaId` of this provider.
+  String get mangaId;
+}
+
+class _MangaProgressProviderElement
+    extends AutoDisposeFutureProviderElement<ReadingProgress?>
+    with MangaProgressRef {
+  _MangaProgressProviderElement(super.provider);
+
+  @override
+  String get mangaId => (origin as MangaProgressProvider).mangaId;
 }
 
 String _$mangaPagesHash() => r'fb476b56087c78e341ffd8a2f3875ab87734287a';
