@@ -7,7 +7,7 @@ class SectionHeader extends StatelessWidget {
   final VoidCallback? onMoreTap;
   final Widget? trailing;
   final EdgeInsetsGeometry? padding;
-  
+
   const SectionHeader({
     super.key,
     required this.title,
@@ -17,7 +17,7 @@ class SectionHeader extends StatelessWidget {
     this.trailing,
     this.padding,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -31,16 +31,16 @@ class SectionHeader extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     subtitle!,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
               ],

@@ -1,10 +1,13 @@
+import 'dart:developer';
+
 import '../models/reading_progress.dart';
 import '../models/manga.dart';
 import 'database_service.dart';
 
 class ReadingProgressService {
   /// 为漫画创建初始化的阅读进度
-  static Future<ReadingProgress> createInitialProgress(Manga manga, int totalPages) async {
+  static Future<ReadingProgress> createInitialProgress(
+      Manga manga, int totalPages) async {
     // 如果没有页面，设置总页数为1（避免除零错误）
     if (totalPages == 0) {
       totalPages = 1;
@@ -28,7 +31,8 @@ class ReadingProgressService {
   }
 
   /// 为单体漫画文件创建初始化的阅读进度
-  static Future<ReadingProgress> createInitialProgressForSingleFile(String mangaId, int pageCount) async {
+  static Future<ReadingProgress> createInitialProgressForSingleFile(
+      String mangaId, int pageCount) async {
     final now = DateTime.now();
     final progressId = 'progress_${mangaId}_${now.millisecondsSinceEpoch}';
 
@@ -52,7 +56,7 @@ class ReadingProgressService {
     int? currentPage,
   }) async {
     final now = DateTime.now();
-    
+
     // 计算新的进度百分比
     double newProgressPercentage = currentProgress.progressPercentage;
     if (currentPage != null && currentProgress.totalPages > 0) {
@@ -74,9 +78,10 @@ class ReadingProgressService {
   }
 
   /// 标记为已完成
-  static Future<ReadingProgress> markAsCompleted(ReadingProgress currentProgress) async {
+  static Future<ReadingProgress> markAsCompleted(
+      ReadingProgress currentProgress) async {
     final now = DateTime.now();
-    
+
     final completedProgress = currentProgress.copyWith(
       currentPage: currentProgress.totalPages,
       progressPercentage: 1.0,
@@ -88,9 +93,10 @@ class ReadingProgressService {
   }
 
   /// 重置阅读进度
-  static Future<ReadingProgress> resetProgress(ReadingProgress currentProgress) async {
+  static Future<ReadingProgress> resetProgress(
+      ReadingProgress currentProgress) async {
     final now = DateTime.now();
-    
+
     final resetProgress = currentProgress.copyWith(
       currentPage: 1,
       progressPercentage: 0.0,
@@ -101,14 +107,12 @@ class ReadingProgressService {
     return resetProgress;
   }
 
-
-
   /// 保存阅读进度到数据库
   static Future<void> saveProgress(ReadingProgress progress) async {
     try {
       await DatabaseService.insertOrUpdateReadingProgress(progress);
     } catch (e) {
-      print('保存阅读进度失败: ${progress.id}, 错误: $e');
+      log('保存阅读进度失败: ${progress.id}, 错误: $e');
       rethrow;
     }
   }
@@ -118,7 +122,7 @@ class ReadingProgressService {
     try {
       return await DatabaseService.getReadingProgressByMangaId(mangaId);
     } catch (e) {
-      print('获取阅读进度失败: $mangaId, 错误: $e');
+      log('获取阅读进度失败: $mangaId, 错误: $e');
       return null;
     }
   }
@@ -128,7 +132,7 @@ class ReadingProgressService {
     try {
       await DatabaseService.deleteReadingProgress(mangaId);
     } catch (e) {
-      print('删除阅读进度失败: $mangaId, 错误: $e');
+      log('删除阅读进度失败: $mangaId, 错误: $e');
       rethrow;
     }
   }

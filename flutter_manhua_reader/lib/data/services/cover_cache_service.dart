@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -10,7 +11,7 @@ import 'package:pdfx/pdfx.dart';
 
 class CoverCacheService {
   static const String _cacheDir = 'covers';
-    // 支持的图片格式
+  // 支持的图片格式
   static const List<String> supportedImageFormats = [
     '.jpg',
     '.jpeg',
@@ -25,7 +26,7 @@ class CoverCacheService {
   static Future<void> init() async {
     final appDir = await getApplicationDocumentsDirectory();
     _coverCacheDirectory = Directory(path.join(appDir.path, _cacheDir));
-    
+
     if (!await _coverCacheDirectory!.exists()) {
       await _coverCacheDirectory!.create(recursive: true);
     }
@@ -40,98 +41,93 @@ class CoverCacheService {
   }
 
   /// 生成缓存文件名
-  static String _generateCacheFileName(String originalPath, String imageExtension) {
+  static String _generateCacheFileName(
+      String originalPath, String imageExtension) {
     final hash = md5.convert(utf8.encode(originalPath)).toString();
     return '$hash$imageExtension';
   }
 
-
-
-
   /// 从ZIP文件提取并缓存封面
-  static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(File zipFile) async {
+  static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(
+      File zipFile) async {
     try {
-
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
 
       ArchiveFile? coverFile;
 
       for (final file in archive) {
-          if (!file.isFile || file.name.startsWith('__MACOSX')) {continue;}
-          if(!supportedImageFormats.contains(path.extension(file.name).toLowerCase())) {continue;}
-          coverFile ??= file;
-          if(file.name.compareTo(coverFile.name)<0){
-            coverFile=file;
-          }
-
+        if (!file.isFile || file.name.startsWith('__MACOSX')) {
+          continue;
+        }
+        if (!supportedImageFormats
+            .contains(path.extension(file.name).toLowerCase())) {
+          continue;
+        }
+        coverFile ??= file;
+        if (file.name.compareTo(coverFile.name) < 0) {
+          coverFile = file;
+        }
       }
-      if(coverFile==null){
+      if (coverFile == null) {
         return null;
       }
-  
+
       // 生成缓存文件路径
       final imageExtension = path.extension(coverFile.name.toLowerCase());
-      final cacheFileName = _generateCacheFileName(coverFile.name, imageExtension);
+      final cacheFileName =
+          _generateCacheFileName(coverFile.name, imageExtension);
       final cacheDir = await _getCacheDirectory();
       final cacheFile = File(path.join(cacheDir.path, cacheFileName));
 
       // 如果缓存文件已存在，直接返回路径
       if (await cacheFile.exists()) {
-        return {
-          'cover': cacheFile.path,
-          'pages': archive.length
-        };
+        return {'cover': cacheFile.path, 'pages': archive.length};
       }
       // 提取并保存封面图片
       final imageData = coverFile.content;
       await cacheFile.writeAsBytes(imageData);
-      return {
-        'cover': cacheFile.path,
-        'pages': archive.length
-      };
+      return {'cover': cacheFile.path, 'pages': archive.length};
     } catch (e) {
-      print('从ZIP文件提取封面失败: $zipFile, 错误: $e');
+      log('从ZIP文件提取封面失败: $zipFile, 错误: $e');
       return null;
     }
   }
 
   /// 从PDF文件提取并缓存首页作为封面
-  static Future<Map<String, dynamic>?> extractAndCacheCoverFromPdf(File pdfFile) async {
+  static Future<Map<String, dynamic>?> extractAndCacheCoverFromPdf(
+      File pdfFile) async {
     try {
       // 检查平台支持
       if (kIsWeb) {
-        print('Web平台PDF封面提取功能受限，跳过: $pdfFile');
+        log('Web平台PDF封面提取功能受限，跳过: $pdfFile');
         return null;
       }
-      
+
       // 生成缓存文件名
       final cacheFileName = _generateCacheFileName(pdfFile.path, '.png');
       final cacheDir = await _getCacheDirectory();
       final cacheFile = File(path.join(cacheDir.path, cacheFileName));
-      
+
       PdfDocument? document;
-      
+
       try {
         // 打开PDF文档
         document = await PdfDocument.openFile(pdfFile.path);
-        
+
         if (document.pagesCount == 0) {
-          print('PDF文档页数为0: $pdfFile');
+          log('PDF文档页数为0: $pdfFile');
           return null;
         }
-        
+
         // 如果缓存已存在，直接返回
         if (await cacheFile.exists()) {
-           return {
-            'cover': cacheFile.path,
-            'pages': document.pagesCount
-          };
+          return {'cover': cacheFile.path, 'pages': document.pagesCount};
         }
 
         // 获取第一页
         final page = await document.getPage(1);
-        
+
         // 渲染页面为图像
         final pageImage = await page.render(
           width: page.width,
@@ -139,43 +135,40 @@ class CoverCacheService {
           format: PdfPageImageFormat.png,
         );
         if (pageImage == null) {
-          print('PDF页面转换为图像失败: $pdfFile');
+          log('PDF页面转换为图像失败: $pdfFile');
           return null;
         }
         await cacheFile.writeAsBytes(pageImage.bytes);
-        
-        print('PDF封面提取成功: $pdfFile -> ${cacheFile.path}');
-        
-        return {
-          'cover': cacheFile.path,
-          'pages': document.pagesCount
-        };
+
+        log('PDF封面提取成功: $pdfFile -> ${cacheFile.path}');
+
+        return {'cover': cacheFile.path, 'pages': document.pagesCount};
       } on MissingPluginException catch (e) {
-        print('PDF渲染插件未找到，跳过PDF封面提取: $pdfFile, 错误: $e');
+        log('PDF渲染插件未找到，跳过PDF封面提取: $pdfFile, 错误: $e');
         return null;
       } on PlatformException catch (e) {
-        print('PDF渲染平台异常: $pdfFile, 错误: $e');
+        log('PDF渲染平台异常: $pdfFile, 错误: $e');
         return null;
       } on UnsupportedError catch (e) {
-        print('PDF渲染不支持当前操作: $pdfFile, 错误: $e');
+        log('PDF渲染不支持当前操作: $pdfFile, 错误: $e');
         return null;
       } finally {
-         // 确保资源被正确清理
-         try {
-           document?.close();
-         } catch (e) {
-           print('清理PDF资源时出错: $e');
-         }
-       }
+        // 确保资源被正确清理
+        try {
+          document?.close();
+        } catch (e) {
+          log('清理PDF资源时出错: $e');
+        }
+      }
     } catch (e) {
-      print('从PDF文件提取封面失败: $pdfFile, 错误: $e');
+      log('从PDF文件提取封面失败: $pdfFile, 错误: $e');
       return null;
     }
   }
-  
 
   /// 从图片目录提取并缓存封面
-  static Future<String?> extractAndCacheCoverFromDirectory(String directoryPath) async {
+  static Future<String?> extractAndCacheCoverFromDirectory(
+      String directoryPath) async {
     try {
       final directory = Directory(directoryPath);
       if (!await directory.exists()) {
@@ -200,7 +193,8 @@ class CoverCacheService {
 
       // 生成缓存文件路径
       final imageExtension = path.extension(coverFile.path).toLowerCase();
-      final cacheFileName = _generateCacheFileName(directoryPath, imageExtension);
+      final cacheFileName =
+          _generateCacheFileName(directoryPath, imageExtension);
       final cacheDir = await _getCacheDirectory();
       final cacheFile = File(path.join(cacheDir.path, cacheFileName));
 
@@ -211,10 +205,10 @@ class CoverCacheService {
 
       // 复制封面图片到缓存目录
       await coverFile.copy(cacheFile.path);
-      
+
       return cacheFile.path;
     } catch (e) {
-      print('从目录提取封面失败: $directoryPath, 错误: $e');
+      log('从目录提取封面失败: $directoryPath, 错误: $e');
       return null;
     }
   }
@@ -234,7 +228,7 @@ class CoverCacheService {
         await cacheDir.create(recursive: true);
       }
     } catch (e) {
-      print('清理封面缓存失败: $e');
+      log('清理封面缓存失败: $e');
     }
   }
 
@@ -255,7 +249,7 @@ class CoverCacheService {
       }
       return totalSize;
     } catch (e) {
-      print('获取缓存大小失败: $e');
+      log('获取缓存大小失败: $e');
       return 0;
     }
   }
@@ -265,16 +259,17 @@ class CoverCacheService {
     try {
       final cacheDir = await _getCacheDirectory();
       final hash = md5.convert(utf8.encode(filePath)).toString();
-      
+
       // 查找并删除匹配的缓存文件
       await for (final entity in cacheDir.list()) {
-        if (entity is File && path.basenameWithoutExtension(entity.path) == hash) {
+        if (entity is File &&
+            path.basenameWithoutExtension(entity.path) == hash) {
           await entity.delete();
           break;
         }
       }
     } catch (e) {
-      print('删除缓存文件失败: $filePath, 错误: $e');
+      log('删除缓存文件失败: $filePath, 错误: $e');
     }
   }
 }

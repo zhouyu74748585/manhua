@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'dart:convert';
+import 'dart:io';
+import 'package:manhua_reader_flutter/services/thumbnail_service.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/manga.dart';
 import '../models/manga_page.dart';
@@ -21,27 +23,25 @@ abstract class MangaRepository {
   Future<void> deleteManga(String id);
   Future<void> updateMangaFavoriteStatus(String id, bool isFavorite);
   Future<void> updateReadingProgress(String mangaId, ReadingProgress progress);
-  
+
   // 页面相关
   Future<MangaPage?> getPageById(String id);
   Future<List<MangaPage>> getPageByMangaId(String id);
   Future<void> savePage(MangaPage page);
   Future<void> updatePage(MangaPage manga);
   Future<void> deletePage(String id);
-  
+
   // 批量操作
   Future<void> saveMangaList(List<Manga> mangaList);
   Future<void> savePageList(List<MangaPage> pageList);
-  
+
   // 清理操作
   Future<void> clearCache();
   Future<void> clearAllData();
 }
 
 class LocalMangaRepository implements MangaRepository {
- 
-
-   @override
+  @override
   Future<List<Manga>> getAllManga() async {
     try {
       final dbManga = await DatabaseService.getAllManga();
@@ -51,17 +51,64 @@ class LocalMangaRepository implements MangaRepository {
       return List.empty();
     }
   }
-  
+
   @override
   Future<Manga?> getMangaById(String id) async {
     try {
-      return await DatabaseService.getMangaById(id);
+      Manga? manga= await DatabaseService.getMangaById(id);
+      if(manga!=null){
+        bool hasThumbnail=false;
+        String? thumbnailPath=manga.metadata['thumbnail'];
+        if(thumbnailPath!=null){
+          File file=File(thumbnailPath);
+          if(await file.exists()){
+             hasThumbnail=true;
+          }
+        }
+        if(!hasThumbnail){
+          generateThumbnails(manga);
+        }
+      }
+      return manga;
     } catch (e) {
       log('查询漫画失败: $e');
       return null;
     }
   }
-  
+
+  Future<void> generateThumbnails(Manga manga) async {
+    if (manga.type != MangaType.folder) {
+      if (manga.coverPath == null && manga.coverPath == null) {
+        if (manga.type == MangaType.archive) {
+        } else if (manga.type == MangaType.pdf) {}
+      }
+    } else {
+      List<MangaPage> pages = await getPageByMangaId(manga.id);
+      String? thumbnailPath;
+      for (MangaPage page in pages) {
+        String localPath = page.localPath;
+        Map<String, String> thumbnailMap =
+            await ThumbnailService.generateThumbnails(page.mangaId, localPath);
+        String? smallThumbnail = thumbnailMap["small"];
+        String? mediumThumbnail = thumbnailMap["medium"];
+        String? largeThumbnail = thumbnailMap["large"];
+        thumbnailPath = largeThumbnail?.split("large").first;
+        final updatePage = page.copyWith(
+          smallThumbnail: smallThumbnail,
+          mediumThumbnail: mediumThumbnail,
+          largeThumbnail: largeThumbnail,
+        );
+        await this.updatePage(updatePage);
+      }
+      manga.metadata.putIfAbsent("thumbnail", ()=>thumbnailPath);
+      manga.metadata.putIfAbsent("thumbnailGenerteDate", ()=>DateTime.now().toString());
+      if (thumbnailPath != null) {
+        await DatabaseService.updateManga(manga);
+      }
+      log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
+    }
+  }
+
   @override
   Future<List<Manga>> searchManga(String query) async {
     final db = await DatabaseService.database;
@@ -71,10 +118,10 @@ class LocalMangaRepository implements MangaRepository {
       whereArgs: ['%$query%', '%$query%', '%$query%'],
       orderBy: 'title ASC',
     );
-    
+
     return maps.map((map) => _mapToManga(map)).toList();
   }
-  
+
   @override
   Future<List<Manga>> getMangaByCategory(String category) async {
     final db = await DatabaseService.database;
@@ -84,10 +131,10 @@ class LocalMangaRepository implements MangaRepository {
       whereArgs: ['%$category%'],
       orderBy: 'title ASC',
     );
-    
+
     return maps.map((map) => _mapToManga(map)).toList();
   }
-  
+
   @override
   Future<List<Manga>> getFavoriteManga() async {
     final db = await DatabaseService.database;
@@ -97,10 +144,10 @@ class LocalMangaRepository implements MangaRepository {
       whereArgs: [1],
       orderBy: 'title ASC',
     );
-    
+
     return maps.map((map) => _mapToManga(map)).toList();
   }
-  
+
   @override
   Future<List<Manga>> getRecentlyReadManga() async {
     final db = await DatabaseService.database;
@@ -110,10 +157,10 @@ class LocalMangaRepository implements MangaRepository {
       orderBy: 'last_read_at DESC',
       limit: 20,
     );
-    
+
     return maps.map((map) => _mapToManga(map)).toList();
   }
-  
+
   @override
   Future<List<Manga>> getRecentlyUpdatedManga() async {
     final db = await DatabaseService.database;
@@ -122,28 +169,28 @@ class LocalMangaRepository implements MangaRepository {
       orderBy: 'updated_at DESC',
       limit: 20,
     );
-    
+
     return maps.map((map) => _mapToManga(map)).toList();
   }
-  
+
   @override
   Future<void> saveManga(Manga manga) async {
     try {
       await DatabaseService.insertManga(manga);
     } catch (e) {
-       log('保存漫画失败: $e');
+      log('保存漫画失败: $e');
     }
   }
 
-    @override
+  @override
   Future<void> updateManga(Manga manga) async {
-     try {
-        await DatabaseService.updateManga(manga);
+    try {
+      await DatabaseService.updateManga(manga);
     } catch (e) {
       log('更新漫画失败: $e');
     }
   }
-  
+
   @override
   Future<void> deleteManga(String id) async {
     try {
@@ -152,7 +199,7 @@ class LocalMangaRepository implements MangaRepository {
       log('删除漫画失败: $e');
     }
   }
-  
+
   @override
   Future<void> updateMangaFavoriteStatus(String id, bool isFavorite) async {
     try {
@@ -165,15 +212,16 @@ class LocalMangaRepository implements MangaRepository {
       log('更新漫画失败: $e');
     }
   }
-  
+
   @override
-  Future<void> updateReadingProgress(String mangaId, ReadingProgress progress) async {
+  Future<void> updateReadingProgress(
+      String mangaId, ReadingProgress progress) async {
     final manga = await getMangaById(mangaId);
     if (manga == null) return;
-    
+
     final now = DateTime.now();
     await DatabaseService.insertOrUpdateReadingProgress(progress);
-    
+
     // 更新漫画的最后阅读时间
     final db = await DatabaseService.database;
     await db.update(
@@ -184,7 +232,6 @@ class LocalMangaRepository implements MangaRepository {
     );
   }
 
-
   @override
   Future<MangaPage?> getPageById(String id) async {
     final db = await DatabaseService.database;
@@ -194,39 +241,36 @@ class LocalMangaRepository implements MangaRepository {
       whereArgs: [id],
       limit: 1,
     );
-    
+
     if (maps.isEmpty) return null;
     return MangaPage.fromMap(maps.first);
   }
- @override
-    Future<List<MangaPage>> getPageByMangaId(String id) async{
+
+  @override
+  Future<List<MangaPage>> getPageByMangaId(String id) async {
     final db = await DatabaseService.database;
-        final List<Map<String, dynamic>> maps = await db.query(
-          'manga_page',
-          where: 'manga_id = ?',
-          whereArgs: [id]
-        );
-        
-        if (maps.isEmpty) return [];
-        return maps.map((map) => _mapToMangaPage(map)).toList();
-    }
-  
+    final List<Map<String, dynamic>> maps =
+        await db.query('manga_page', where: 'manga_id = ?', whereArgs: [id]);
+
+    if (maps.isEmpty) return [];
+    return maps.map((map) => _mapToMangaPage(map)).toList();
+  }
+
   @override
   Future<void> savePage(MangaPage page) async {
     await DatabaseService.insertPage(page);
   }
 
-  Future<void> updatePage(MangaPage page) async{
-     await DatabaseService.updatePage(page);
+  Future<void> updatePage(MangaPage page) async {
+    await DatabaseService.updatePage(page);
   }
 
-  
   @override
   Future<void> deletePage(String id) async {
     await Future.delayed(const Duration(milliseconds: 100));
     // 简化实现
   }
-  
+
   @override
   Future<void> saveMangaList(List<Manga> mangaList) async {
     try {
@@ -242,14 +286,12 @@ class LocalMangaRepository implements MangaRepository {
       }
     }
   }
-  
- 
-  
+
   @override
   Future<void> savePageList(List<MangaPage> pageList) async {
     final db = await DatabaseService.database;
     final batch = db.batch();
-    
+
     for (final page in pageList) {
       batch.insert(
         'manga_page',
@@ -257,10 +299,10 @@ class LocalMangaRepository implements MangaRepository {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     }
-    
+
     await batch.commit();
   }
-  
+
   @override
   Future<void> clearCache() async {
     final db = await DatabaseService.database;
@@ -268,7 +310,7 @@ class LocalMangaRepository implements MangaRepository {
     await db.delete('manga_page');
     // 可以根据需要清除其他缓存数据
   }
-  
+
   @override
   Future<void> clearAllData() async {
     await DatabaseService.clearAllData();
@@ -282,11 +324,11 @@ class LocalMangaRepository implements MangaRepository {
       subtitle: map['subtitle'] as String?,
       author: map['author'] as String?,
       description: map['description'] as String?,
-      coverUrl: map['cover_url'] as String?,
       coverPath: map['cover_path'] as String?,
       libraryId: map['library_id'] as String,
       path: map['path'] as String,
-      tags: map['tags'] != null ? List<String>.from(jsonDecode(map['tags'])) : [],
+      tags:
+          map['tags'] != null ? List<String>.from(jsonDecode(map['tags'])) : [],
       status: MangaStatus.values.firstWhere(
         (e) => e.name == map['status'],
         orElse: () => MangaStatus.unknown,
@@ -295,9 +337,13 @@ class LocalMangaRepository implements MangaRepository {
         (e) => e.name == map['type'],
         orElse: () => MangaType.folder,
       ),
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
-      lastReadAt: map['last_read_at'] != null ? DateTime.parse(map['last_read_at']) : null,
+      updatedAt:
+          map['updated_at'] != null ? DateTime.parse(map['updated_at']) : null,
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      lastReadAt: map['last_read_at'] != null
+          ? DateTime.parse(map['last_read_at'])
+          : null,
       totalPages: map['total_pages'] as int? ?? 0,
       currentPage: map['current_page'] as int? ?? 0,
       rating: map['rating'] as double?,
@@ -305,7 +351,9 @@ class LocalMangaRepository implements MangaRepository {
       sourceUrl: map['source_url'] as String?,
       isFavorite: (map['is_favorite'] as int?) == 1,
       isCompleted: (map['is_completed'] as int?) == 1,
-      metadata: map['metadata'] != null ? Map<String, dynamic>.from(jsonDecode(map['metadata'])) : {},
+      metadata: map['metadata'] != null
+          ? Map<String, dynamic>.from(jsonDecode(map['metadata']))
+          : {},
     );
   }
 

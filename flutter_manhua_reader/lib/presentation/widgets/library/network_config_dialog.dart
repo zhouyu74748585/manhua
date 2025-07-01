@@ -5,20 +5,20 @@ import '../../../data/models/network_config.dart';
 class NetworkConfigDialog extends StatefulWidget {
   final NetworkConfig? initialConfig;
   final Function(NetworkConfig) onSave;
-  
+
   const NetworkConfigDialog({
     super.key,
     this.initialConfig,
     required this.onSave,
   });
-  
+
   @override
   State<NetworkConfigDialog> createState() => _NetworkConfigDialogState();
 }
 
 class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late NetworkProtocol _selectedProtocol;
   final _hostController = TextEditingController();
   final _portController = TextEditingController();
@@ -27,19 +27,20 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
   final _shareNameController = TextEditingController();
   final _exportPathController = TextEditingController();
   final _remotePathController = TextEditingController();
-  
+
   bool _useSSL = false;
   bool _showPassword = false;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     if (widget.initialConfig != null) {
       final config = widget.initialConfig!;
       _selectedProtocol = config.protocol;
       _hostController.text = config.host;
-      _portController.text = config.port?.toString() ?? config.protocol.defaultPort;
+      _portController.text =
+          config.port?.toString() ?? config.protocol.defaultPort;
       _usernameController.text = config.username ?? '';
       _passwordController.text = config.password ?? '';
       _shareNameController.text = config.shareName ?? '';
@@ -51,7 +52,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
       _portController.text = _selectedProtocol.defaultPort;
     }
   }
-  
+
   @override
   void dispose() {
     _hostController.dispose();
@@ -63,7 +64,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
     _remotePathController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -87,7 +88,8 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                   value: _selectedProtocol,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   items: NetworkProtocol.values.map((protocol) {
                     return DropdownMenuItem(
@@ -99,9 +101,10 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                           Text(protocol.displayName),
                           Text(
                             protocol.description,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
                           ),
                         ],
                       ),
@@ -117,7 +120,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // 主机地址
                 TextFormField(
                   controller: _hostController,
@@ -134,7 +137,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // 端口号
                 if (_selectedProtocol.requiredFields.contains('port'))
                   Column(
@@ -165,7 +168,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                
+
                 // 用户名
                 if (_selectedProtocol.requiredFields.contains('username'))
                   Column(
@@ -186,7 +189,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                
+
                 // 密码
                 if (_selectedProtocol.requiredFields.contains('password'))
                   Column(
@@ -197,7 +200,9 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                           labelText: '密码',
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
-                            icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                            icon: Icon(_showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility),
                             onPressed: () {
                               setState(() {
                                 _showPassword = !_showPassword;
@@ -216,7 +221,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                
+
                 // SMB 共享名
                 if (_selectedProtocol == NetworkProtocol.smb)
                   Column(
@@ -238,7 +243,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                
+
                 // NFS 导出路径
                 if (_selectedProtocol == NetworkProtocol.nfs)
                   Column(
@@ -260,7 +265,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-                
+
                 // 远程路径
                 TextFormField(
                   controller: _remotePathController,
@@ -271,7 +276,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // WebDAV SSL 选项
                 if (_selectedProtocol == NetworkProtocol.webdav)
                   Column(
@@ -289,7 +294,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 8),
                     ],
                   ),
-                
+
                 // 连接预览
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -333,15 +338,25 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
       ],
     );
   }
-  
+
   String _buildConnectionPreview() {
-    final host = _hostController.text.trim().isEmpty ? '<主机地址>' : _hostController.text.trim();
-    final port = _portController.text.trim().isEmpty ? _selectedProtocol.defaultPort : _portController.text.trim();
-    final username = _usernameController.text.trim().isEmpty ? '<用户名>' : _usernameController.text.trim();
-    final shareName = _shareNameController.text.trim().isEmpty ? '<共享名>' : _shareNameController.text.trim();
-    final exportPath = _exportPathController.text.trim().isEmpty ? '<导出路径>' : _exportPathController.text.trim();
+    final host = _hostController.text.trim().isEmpty
+        ? '<主机地址>'
+        : _hostController.text.trim();
+    final port = _portController.text.trim().isEmpty
+        ? _selectedProtocol.defaultPort
+        : _portController.text.trim();
+    final username = _usernameController.text.trim().isEmpty
+        ? '<用户名>'
+        : _usernameController.text.trim();
+    final shareName = _shareNameController.text.trim().isEmpty
+        ? '<共享名>'
+        : _shareNameController.text.trim();
+    final exportPath = _exportPathController.text.trim().isEmpty
+        ? '<导出路径>'
+        : _exportPathController.text.trim();
     final remotePath = _remotePathController.text.trim();
-    
+
     switch (_selectedProtocol) {
       case NetworkProtocol.smb:
         return 'smb://$username@$host:$port/$shareName${remotePath.isNotEmpty ? '/$remotePath' : ''}';
@@ -356,31 +371,43 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
         return 'nfs://$host:$port$exportPath${remotePath.isNotEmpty ? '/$remotePath' : ''}';
     }
   }
-  
+
   void _saveConfig() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     final config = NetworkConfig(
       protocol: _selectedProtocol,
       host: _hostController.text.trim(),
-      port: _portController.text.trim().isNotEmpty ? int.tryParse(_portController.text.trim()) : null,
-      username: _usernameController.text.trim().isNotEmpty ? _usernameController.text.trim() : null,
-      password: _passwordController.text.trim().isNotEmpty ? _passwordController.text.trim() : null,
-      shareName: _shareNameController.text.trim().isNotEmpty ? _shareNameController.text.trim() : null,
-      exportPath: _exportPathController.text.trim().isNotEmpty ? _exportPathController.text.trim() : null,
-      remotePath: _remotePathController.text.trim().isNotEmpty ? _remotePathController.text.trim() : null,
+      port: _portController.text.trim().isNotEmpty
+          ? int.tryParse(_portController.text.trim())
+          : null,
+      username: _usernameController.text.trim().isNotEmpty
+          ? _usernameController.text.trim()
+          : null,
+      password: _passwordController.text.trim().isNotEmpty
+          ? _passwordController.text.trim()
+          : null,
+      shareName: _shareNameController.text.trim().isNotEmpty
+          ? _shareNameController.text.trim()
+          : null,
+      exportPath: _exportPathController.text.trim().isNotEmpty
+          ? _exportPathController.text.trim()
+          : null,
+      remotePath: _remotePathController.text.trim().isNotEmpty
+          ? _remotePathController.text.trim()
+          : null,
       useSSL: _useSSL,
     );
-    
+
     if (!config.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('配置信息不完整，请检查必填项')),
       );
       return;
     }
-    
+
     widget.onSave(config);
     Navigator.of(context).pop();
   }

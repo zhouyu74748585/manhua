@@ -104,7 +104,8 @@ class NetworkConfig {
     this.additionalSettings = const {},
   });
 
-  factory NetworkConfig.fromJson(Map<String, dynamic> json) => _$NetworkConfigFromJson(json);
+  factory NetworkConfig.fromJson(Map<String, dynamic> json) =>
+      _$NetworkConfigFromJson(json);
   Map<String, dynamic> toJson() => _$NetworkConfigToJson(this);
 
   // 从连接字符串解析配置
@@ -112,7 +113,7 @@ class NetworkConfig {
     try {
       final uri = Uri.parse(connectionString);
       NetworkProtocol protocol;
-      
+
       switch (uri.scheme.toLowerCase()) {
         case 'smb':
           protocol = NetworkProtocol.smb;
@@ -133,11 +134,11 @@ class NetworkConfig {
         default:
           protocol = NetworkProtocol.smb;
       }
-      
+
       String? shareName;
       String? exportPath;
       String? remotePath = uri.path;
-      
+
       if (protocol == NetworkProtocol.smb && uri.pathSegments.isNotEmpty) {
         shareName = uri.pathSegments.first;
         if (uri.pathSegments.length > 1) {
@@ -157,13 +158,16 @@ class NetworkConfig {
           }
         }
       }
-      
+
       return NetworkConfig(
         protocol: protocol,
         host: uri.host,
         port: uri.hasPort ? uri.port : null,
-        username: uri.userInfo.isNotEmpty ? uri.userInfo.split(':').first : null,
-        password: uri.userInfo.contains(':') ? uri.userInfo.split(':').skip(1).join(':') : null,
+        username:
+            uri.userInfo.isNotEmpty ? uri.userInfo.split(':').first : null,
+        password: uri.userInfo.contains(':')
+            ? uri.userInfo.split(':').skip(1).join(':')
+            : null,
         shareName: shareName,
         exportPath: exportPath,
         remotePath: remotePath?.isEmpty == true ? null : remotePath,
@@ -208,7 +212,7 @@ class NetworkConfig {
   String get connectionUrl {
     final portStr = port != null ? ':$port' : '';
     final pathStr = remotePath ?? '';
-    
+
     switch (protocol) {
       case NetworkProtocol.smb:
         return 'smb://$host$portStr/$shareName$pathStr';
@@ -227,15 +231,19 @@ class NetworkConfig {
   /// 验证配置是否完整
   bool get isValid {
     if (host.isEmpty) return false;
-    
+
     final required = protocol.requiredFields;
-    
-    if (required.contains('username') && (username?.isEmpty ?? true)) return false;
-    if (required.contains('password') && (password?.isEmpty ?? true)) return false;
-    if (required.contains('shareName') && (shareName?.isEmpty ?? true)) return false;
-    if (required.contains('exportPath') && (exportPath?.isEmpty ?? true)) return false;
+
+    if (required.contains('username') && (username?.isEmpty ?? true))
+      return false;
+    if (required.contains('password') && (password?.isEmpty ?? true))
+      return false;
+    if (required.contains('shareName') && (shareName?.isEmpty ?? true))
+      return false;
+    if (required.contains('exportPath') && (exportPath?.isEmpty ?? true))
+      return false;
     if (required.contains('port') && port == null) return false;
-    
+
     return true;
   }
 }

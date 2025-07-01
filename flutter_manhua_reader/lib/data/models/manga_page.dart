@@ -17,12 +17,13 @@ class MangaPage {
     required this.mangaId,
     required this.pageNumber,
     required this.localPath,
-    this.largeThumbnail ,
-    this.mediumThumbnail ,
-    this.smallThumbnail ,
+    this.largeThumbnail,
+    this.mediumThumbnail,
+    this.smallThumbnail,
   });
 
-  factory MangaPage.fromJson(Map<String, dynamic> json) => _$MangaPageFromJson(json);
+  factory MangaPage.fromJson(Map<String, dynamic> json) =>
+      _$MangaPageFromJson(json);
   Map<String, dynamic> toJson() => _$MangaPageToJson(this);
 
   // 从数据库Map创建MangaPage对象
@@ -53,7 +54,7 @@ class MangaPage {
 
   MangaPage copyWith({
     String? id,
-     String? mangaId,
+    String? mangaId,
     int? pageNumber,
     String? localPath,
     String? largeThumbnail,

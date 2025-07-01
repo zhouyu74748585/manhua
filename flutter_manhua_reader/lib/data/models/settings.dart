@@ -16,7 +16,7 @@ class AppSettings {
   final bool enableAnalytics;
   final bool enableCrashReporting;
   final DateTime? lastBackupAt;
-  
+
   const AppSettings({
     this.themeMode = ThemeMode.system,
     this.locale = const Locale('zh', 'CN'),
@@ -27,21 +27,23 @@ class AppSettings {
     this.enableCrashReporting = false,
     this.lastBackupAt,
   });
-  
-  factory AppSettings.fromJson(Map<String, dynamic> json) => _$AppSettingsFromJson(json);
+
+  factory AppSettings.fromJson(Map<String, dynamic> json) =>
+      _$AppSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$AppSettingsToJson(this);
-  
+
   static Locale _localeFromJson(Map<String, dynamic> json) {
-    return Locale(json['languageCode'] as String, json['countryCode'] as String?);
+    return Locale(
+        json['languageCode'] as String, json['countryCode'] as String?);
   }
-  
+
   static Map<String, dynamic> _localeToJson(Locale locale) {
     return {
       'languageCode': locale.languageCode,
       'countryCode': locale.countryCode,
     };
   }
-  
+
   AppSettings copyWith({
     ThemeMode? themeMode,
     Locale? locale,
@@ -81,7 +83,7 @@ class ReaderSettings {
   final double doubleTapZoomScale;
   final bool enablePreloading;
   final int preloadPages;
-  
+
   const ReaderSettings({
     this.readingMode = ReadingMode.single,
     this.readingDirection = ReadingDirection.leftToRight,
@@ -98,10 +100,11 @@ class ReaderSettings {
     this.enablePreloading = true,
     this.preloadPages = 3,
   });
-  
-  factory ReaderSettings.fromJson(Map<String, dynamic> json) => _$ReaderSettingsFromJson(json);
+
+  factory ReaderSettings.fromJson(Map<String, dynamic> json) =>
+      _$ReaderSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$ReaderSettingsToJson(this);
-  
+
   ReaderSettings copyWith({
     ReadingMode? readingMode,
     ReadingDirection? readingDirection,
@@ -146,7 +149,7 @@ class LibraryViewSettings {
   final bool showUnread;
   final bool showDownloaded;
   final List<String> hiddenCategories;
-  
+
   const LibraryViewSettings({
     this.viewMode = ViewMode.grid,
     this.sortBy = SortOrder.titleAsc,
@@ -156,10 +159,11 @@ class LibraryViewSettings {
     this.showDownloaded = true,
     this.hiddenCategories = const [],
   });
-  
-  factory LibraryViewSettings.fromJson(Map<String, dynamic> json) => _$LibraryViewSettingsFromJson(json);
+
+  factory LibraryViewSettings.fromJson(Map<String, dynamic> json) =>
+      _$LibraryViewSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$LibraryViewSettingsToJson(this);
-  
+
   LibraryViewSettings copyWith({
     ViewMode? viewMode,
     SortOrder? sortBy,
@@ -184,17 +188,17 @@ class LibraryViewSettings {
 @JsonSerializable()
 class DownloadSettings {
   final bool downloadOnlyOnWifi;
-  
+
   final int maxConcurrentDownloads;
-  
+
   final String downloadPath;
-  
+
   final bool deleteAfterReading;
-  
+
   final int maxStorageSize; // MB
-  
+
   final bool autoDeleteOldChapters;
-  
+
   const DownloadSettings({
     this.downloadOnlyOnWifi = true,
     this.maxConcurrentDownloads = 3,
@@ -203,10 +207,11 @@ class DownloadSettings {
     this.maxStorageSize = 1024, // 1GB
     this.autoDeleteOldChapters = false,
   });
-  
-  factory DownloadSettings.fromJson(Map<String, dynamic> json) => _$DownloadSettingsFromJson(json);
+
+  factory DownloadSettings.fromJson(Map<String, dynamic> json) =>
+      _$DownloadSettingsFromJson(json);
   Map<String, dynamic> toJson() => _$DownloadSettingsToJson(this);
-  
+
   DownloadSettings copyWith({
     bool? downloadOnlyOnWifi,
     int? maxConcurrentDownloads,
@@ -217,11 +222,13 @@ class DownloadSettings {
   }) {
     return DownloadSettings(
       downloadOnlyOnWifi: downloadOnlyOnWifi ?? this.downloadOnlyOnWifi,
-      maxConcurrentDownloads: maxConcurrentDownloads ?? this.maxConcurrentDownloads,
+      maxConcurrentDownloads:
+          maxConcurrentDownloads ?? this.maxConcurrentDownloads,
       downloadPath: downloadPath ?? this.downloadPath,
       deleteAfterReading: deleteAfterReading ?? this.deleteAfterReading,
       maxStorageSize: maxStorageSize ?? this.maxStorageSize,
-      autoDeleteOldChapters: autoDeleteOldChapters ?? this.autoDeleteOldChapters,
+      autoDeleteOldChapters:
+          autoDeleteOldChapters ?? this.autoDeleteOldChapters,
     );
   }
 }

@@ -9,24 +9,24 @@ import '../core/constants/app_constants.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
     final router = ref.watch(appRouterProvider);
-    
+
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      
+
       // 主题配置
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      
+
       // 路由配置
       routerConfig: router,
-      
+
       // 本地化配置
       supportedLocales: const [
         Locale('zh', 'CN'), // 简体中文
@@ -39,7 +39,7 @@ class App extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      
+
       // 构建器
       builder: (context, child) {
         return MediaQuery(

@@ -24,13 +24,13 @@ enum ReadingDirection {
 class ReaderPage extends ConsumerStatefulWidget {
   final String mangaId;
   final int initialPage;
-  
+
   const ReaderPage({
     super.key,
     required this.mangaId,
     this.initialPage = 1,
   });
-  
+
   @override
   ConsumerState<ReaderPage> createState() => _ReaderPageState();
 }
@@ -42,7 +42,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   ReadingMode _readingMode = ReadingMode.singlePage;
   ReadingDirection _readingDirection = ReadingDirection.leftToRight;
   bool _isLoading = true;
-  
+
   @override
   void initState() {
     super.initState();
@@ -53,41 +53,37 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       _isLoading = false;
     });
   }
-  
+
   @override
   void dispose() {
     _exitFullscreen();
     _pageController.dispose();
     super.dispose();
   }
-  
 
-  
   void _enterFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    setState(() {
-    });
+    setState(() {});
   }
-  
+
   void _exitFullscreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    setState(() {
-    });
+    setState(() {});
   }
-  
+
   void _toggleControls() {
     setState(() {
       _showControls = !_showControls;
     });
   }
-  
+
   void _onPageChanged(int index) {
     setState(() {
       _currentPageIndex = index;
     });
     _saveReadingProgress();
   }
-  
+
   void _saveReadingProgress() async {
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.when(
@@ -103,8 +99,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           );
-          
-          await ref.read(mangaActionsProvider.notifier)
+
+          await ref
+              .read(mangaActionsProvider.notifier)
               .updateReadingProgress(widget.mangaId, progress);
         }
       },
@@ -112,7 +109,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       error: (_, __) {},
     );
   }
-  
+
   void _goToPreviousPage() {
     if (_currentPageIndex > 0) {
       _pageController.previousPage(
@@ -121,7 +118,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       );
     }
   }
-  
+
   void _goToNextPage() {
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.whenData((manga) {
@@ -133,7 +130,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       }
     });
   }
-  
+
   void _goToPage(int pageIndex) {
     _pageController.animateToPage(
       pageIndex,
@@ -141,14 +138,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       curve: Curves.easeInOut,
     );
   }
-  
+
   Widget _buildPageWidget(dynamic manga, int pageNumber) {
     // 根据漫画信息和页码构建页面路径
     final imagePath = '${manga.path}/page_$pageNumber.jpg';
-    
+
     return _buildImageWidget(imagePath);
   }
-  
+
   Widget _buildImageWidget(String imagePath) {
     return PhotoView(
       imageProvider: imagePath.startsWith('http')
@@ -166,7 +163,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -177,37 +174,39 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         ),
       );
     }
-    
+
     final mangaAsync = ref.watch(mangaDetailProvider(widget.mangaId));
-    
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _showControls ? AppBar(
-        backgroundColor: Colors.black.withOpacity(0.7),
-        foregroundColor: Colors.white,
-        title: mangaAsync.when(
-          data: (manga) => Text(manga?.title ?? '漫画阅读'),
-          loading: () => const Text('漫画阅读'),
-          error: (_, __) => const Text('漫画阅读'),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              _showReaderSettings();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_border),
-            onPressed: () {
-              // TODO: 添加书签
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('书签功能待实现')),
-              );
-            },
-          ),
-        ],
-      ) : null,
+      appBar: _showControls
+          ? AppBar(
+              backgroundColor: Colors.black.withOpacity(0.7),
+              foregroundColor: Colors.white,
+              title: mangaAsync.when(
+                data: (manga) => Text(manga?.title ?? '漫画阅读'),
+                loading: () => const Text('漫画阅读'),
+                error: (_, __) => const Text('漫画阅读'),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () {
+                    _showReaderSettings();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.bookmark_border),
+                  onPressed: () {
+                    // TODO: 添加书签
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('书签功能待实现')),
+                    );
+                  },
+                ),
+              ],
+            )
+          : null,
       body: mangaAsync.when(
         data: (manga) {
           if (manga == null || manga.totalPages == 0) {
@@ -218,7 +217,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
               ),
             );
           }
-          
+
           return GestureDetector(
             onTap: _toggleControls,
             child: PhotoViewGallery.builder(
@@ -233,8 +232,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 );
               },
               onPageChanged: _onPageChanged,
-              scrollDirection: _readingDirection == ReadingDirection.topToBottom 
-                  ? Axis.vertical 
+              scrollDirection: _readingDirection == ReadingDirection.topToBottom
+                  ? Axis.vertical
                   : Axis.horizontal,
               reverse: _readingDirection == ReadingDirection.rightToLeft,
               backgroundDecoration: const BoxDecoration(color: Colors.black),
@@ -266,49 +265,65 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ),
         ),
       ),
-      bottomNavigationBar: _showControls ? mangaAsync.when(
-        data: (manga) => manga != null && manga.totalPages > 0 ? Container(
-          color: Colors.black.withOpacity(0.7),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.skip_previous, color: Colors.white),
-                onPressed: _currentPageIndex > 0 ? _goToPreviousPage : null,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${_currentPageIndex + 1} / ${manga.totalPages}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    Slider(
-                      value: manga.totalPages > 1 ? _currentPageIndex / (manga.totalPages - 1) : 0,
-                      onChanged: (value) {
-                        final pageIndex = (value * (manga.totalPages - 1)).round();
-                        _goToPage(pageIndex);
-                      },
-                      activeColor: Colors.white,
-                      inactiveColor: Colors.white.withOpacity(0.3),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.skip_next, color: Colors.white),
-                onPressed: _currentPageIndex < manga.totalPages - 1 ? _goToNextPage : null,
-              ),
-            ],
-          ),
-        ) : null,
-        loading: () => null,
-        error: (_, __) => null,
-      ) : null,
+      bottomNavigationBar: _showControls
+          ? mangaAsync.when(
+              data: (manga) => manga != null && manga.totalPages > 0
+                  ? Container(
+                      color: Colors.black.withOpacity(0.7),
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.skip_previous,
+                                color: Colors.white),
+                            onPressed: _currentPageIndex > 0
+                                ? _goToPreviousPage
+                                : null,
+                          ),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '${_currentPageIndex + 1} / ${manga.totalPages}',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 12),
+                                ),
+                                Slider(
+                                  value: manga.totalPages > 1
+                                      ? _currentPageIndex /
+                                          (manga.totalPages - 1)
+                                      : 0,
+                                  onChanged: (value) {
+                                    final pageIndex =
+                                        (value * (manga.totalPages - 1))
+                                            .round();
+                                    _goToPage(pageIndex);
+                                  },
+                                  activeColor: Colors.white,
+                                  inactiveColor: Colors.white.withOpacity(0.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.skip_next,
+                                color: Colors.white),
+                            onPressed: _currentPageIndex < manga.totalPages - 1
+                                ? _goToNextPage
+                                : null,
+                          ),
+                        ],
+                      ),
+                    )
+                  : null,
+              loading: () => null,
+              error: (_, __) => null,
+            )
+          : null,
     );
   }
-  
+
   void _showReaderSettings() {
     showModalBottomSheet(
       context: context,
@@ -321,10 +336,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           children: [
             const Text(
               '阅读设置',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // 阅读模式
             const Text('阅读模式', style: TextStyle(color: Colors.white)),
             const SizedBox(height: 8),
@@ -345,9 +363,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 );
               }).toList(),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 阅读方向
             const Text('阅读方向', style: TextStyle(color: Colors.white)),
             const SizedBox(height: 8),
@@ -368,14 +386,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 );
               }).toList(),
             ),
-            
+
             const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
-  
+
   String _getReadingModeLabel(ReadingMode mode) {
     switch (mode) {
       case ReadingMode.singlePage:
@@ -386,7 +404,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
         return '连续滚动';
     }
   }
-  
+
   String _getReadingDirectionLabel(ReadingDirection direction) {
     switch (direction) {
       case ReadingDirection.leftToRight:

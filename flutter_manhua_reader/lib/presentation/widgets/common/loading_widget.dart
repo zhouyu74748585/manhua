@@ -4,14 +4,14 @@ class LoadingWidget extends StatelessWidget {
   final String? message;
   final double? size;
   final Color? color;
-  
+
   const LoadingWidget({
     super.key,
     this.message,
     this.size,
     this.color,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -30,8 +30,8 @@ class LoadingWidget extends StatelessWidget {
             Text(
               message!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -45,13 +45,13 @@ class LoadingWidget extends StatelessWidget {
 class ListLoadingWidget extends StatelessWidget {
   final int itemCount;
   final double itemHeight;
-  
+
   const ListLoadingWidget({
     super.key,
     this.itemCount = 5,
     this.itemHeight = 80,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -86,7 +86,7 @@ class ListLoadingWidget extends StatelessWidget {
       },
     );
   }
-  
+
   Widget _buildShimmer(double width, double height, {double? borderRadius}) {
     return Container(
       width: width,
@@ -104,14 +104,14 @@ class GridLoadingWidget extends StatelessWidget {
   final int itemCount;
   final int crossAxisCount;
   final double aspectRatio;
-  
+
   const GridLoadingWidget({
     super.key,
     this.itemCount = 8,
     this.crossAxisCount = 2,
     this.aspectRatio = 0.7,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -130,7 +130,8 @@ class GridLoadingWidget extends StatelessWidget {
             children: [
               Expanded(
                 flex: 3,
-                child: _buildShimmer(double.infinity, double.infinity, borderRadius: 8),
+                child: _buildShimmer(double.infinity, double.infinity,
+                    borderRadius: 8),
               ),
               Expanded(
                 flex: 1,
@@ -153,7 +154,7 @@ class GridLoadingWidget extends StatelessWidget {
       },
     );
   }
-  
+
   Widget _buildShimmer(double width, double height, {double? borderRadius}) {
     return Container(
       width: width,
@@ -170,13 +171,13 @@ class GridLoadingWidget extends StatelessWidget {
 class PageLoadingWidget extends StatelessWidget {
   final String? title;
   final String? message;
-  
+
   const PageLoadingWidget({
     super.key,
     this.title,
     this.message,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manhua_reader_flutter/presentation/widgets/manga/manga_list_tile.dart';
 import '../../providers/manga_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/manga/manga_card.dart';
@@ -8,12 +9,14 @@ import '../manga_detail/manga_detail_page.dart';
 import '../reader/reader_page.dart';
 
 enum BookshelfViewMode { grid, list }
+
 enum BookshelfSortMode { title, author, dateAdded, lastRead }
+
 enum GridSize { small, medium, large, extraLarge }
 
 class BookshelfPage extends ConsumerStatefulWidget {
   const BookshelfPage({super.key});
-  
+
   @override
   ConsumerState<BookshelfPage> createState() => _BookshelfPageState();
 }
@@ -24,12 +27,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   GridSize _gridSize = GridSize.medium;
   String _searchQuery = '';
   String? _selectedLibraryId; // 选中的漫画库ID，null表示显示所有
-  
+
   @override
   Widget build(BuildContext context) {
     final mangaListAsync = ref.watch(allMangaProvider);
     final librariesAsync = ref.watch(allLibrariesProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('书架'),
@@ -42,31 +45,37 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           PopupMenuButton<String?>(
             icon: const Icon(Icons.library_books),
             tooltip: '筛选漫画库',
-            onSelected: (libraryId) => setState(() => _selectedLibraryId = libraryId),
+            onSelected: (libraryId) =>
+                setState(() => _selectedLibraryId = libraryId),
             itemBuilder: (context) {
               return librariesAsync.when(
                 data: (libraries) {
                   // 只显示激活状态的漫画库
-                  final enabledLibraries = libraries.where((lib) => lib.isEnabled).toList();
+                  final enabledLibraries =
+                      libraries.where((lib) => lib.isEnabled).toList();
                   return [
                     const PopupMenuItem<String?>(
                       value: null,
                       child: Text('所有激活漫画库'),
                     ),
                     ...enabledLibraries.map((library) => PopupMenuItem<String?>(
-                      value: library.id,
-                      child: Text(library.name),
-                    )),
+                          value: library.id,
+                          child: Text(library.name),
+                        )),
                   ];
                 },
-                loading: () => [const PopupMenuItem(
-                  value: null,
-                  child: Text('加载中...'),
-                )],
-                error: (_, __) => [const PopupMenuItem(
-                  value: null,
-                  child: Text('加载失败'),
-                )],
+                loading: () => [
+                  const PopupMenuItem(
+                    value: null,
+                    child: Text('加载中...'),
+                  )
+                ],
+                error: (_, __) => [
+                  const PopupMenuItem(
+                    value: null,
+                    child: Text('加载失败'),
+                  )
+                ],
               );
             },
           ),
@@ -118,12 +127,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
               ],
             ),
           IconButton(
-            icon: Icon(_viewMode == BookshelfViewMode.grid 
-                ? Icons.view_list 
+            icon: Icon(_viewMode == BookshelfViewMode.grid
+                ? Icons.view_list
                 : Icons.view_module),
             onPressed: () => setState(() {
-              _viewMode = _viewMode == BookshelfViewMode.grid 
-                  ? BookshelfViewMode.list 
+              _viewMode = _viewMode == BookshelfViewMode.grid
+                  ? BookshelfViewMode.list
                   : BookshelfViewMode.grid;
             }),
           ),
@@ -150,10 +159,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   Widget _buildMangaList(List<Manga> mangaList) {
     final librariesAsync = ref.watch(allLibrariesProvider);
-    
+
     // 首先过滤出只属于激活状态漫画库的漫画
     List<Manga> filteredList = librariesAsync.when(
       data: (libraries) {
@@ -161,7 +170,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             .where((lib) => lib.isEnabled)
             .map((lib) => lib.id)
             .toSet();
-        
+
         return mangaList.where((manga) {
           return enabledLibraryIds.contains(manga.libraryId);
         }).toList();
@@ -169,25 +178,26 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       loading: () => [],
       error: (_, __) => [],
     );
-    
+
     // 再根据选中的漫画库进行过滤
     if (_selectedLibraryId != null) {
       filteredList = filteredList.where((manga) {
         return manga.libraryId == _selectedLibraryId;
       }).toList();
     }
-    
+
     // 过滤搜索结果
     if (_searchQuery.isNotEmpty) {
       filteredList = filteredList.where((manga) {
         return manga.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               (manga.author?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+            (manga.author?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                false);
       }).toList();
     }
-    
+
     // 排序
     filteredList = _sortMangaList(filteredList);
-    
+
     if (filteredList.isEmpty) {
       return Center(
         child: Column(
@@ -201,26 +211,24 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              _searchQuery.isNotEmpty 
-                  ? '尝试使用不同的关键词搜索'
-                  : '去漫画库扫描一些漫画吧',
+              _searchQuery.isNotEmpty ? '尝试使用不同的关键词搜索' : '去漫画库扫描一些漫画吧',
               style: TextStyle(color: Colors.grey[500]),
             ),
           ],
         ),
       );
     }
-    
+
     if (_viewMode == BookshelfViewMode.grid) {
       return _buildGridView(filteredList);
     } else {
       return _buildListView(filteredList);
     }
   }
-  
+
   Widget _buildGridView(List<Manga> mangaList) {
     final gridConfig = _getGridConfig(_gridSize);
-    
+
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -234,10 +242,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         final manga = mangaList[index];
         return MangaCard(
           title: manga.title,
-          coverUrl: manga.coverUrl,
+          coverPath: manga.coverPath,
           subtitle: manga.author,
           totalPages: manga.totalPages,
-          currentPage: manga.readingProgress?.currentPage,
+          currentPage: manga.readingProgress?.currentPage ?? 0,
           progress: manga.readingProgress?.progressPercentage,
           onTap: () => _showMangaOptions(manga),
           onLongPress: () => _toggleFavorite(manga),
@@ -245,7 +253,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       },
     );
   }
-  
+
   GridConfig _getGridConfig(GridSize size) {
     switch (size) {
       case GridSize.small:
@@ -278,7 +286,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         );
     }
   }
-  
+
   Widget _buildListView(List<Manga> mangaList) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -287,7 +295,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         final manga = mangaList[index];
         return MangaListTile(
           title: manga.title,
-          coverUrl: manga.coverUrl,
+          coverPath: manga.coverPath,
           subtitle: manga.author,
           progress: manga.readingProgress?.progressPercentage,
           onTap: () => _showMangaOptions(manga),
@@ -296,10 +304,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       },
     );
   }
-  
+
   List<Manga> _sortMangaList(List<Manga> mangaList) {
     final sortedList = List<Manga>.from(mangaList);
-    
+
     switch (_sortMode) {
       case BookshelfSortMode.title:
         sortedList.sort((a, b) => a.title.compareTo(b.title));
@@ -326,10 +334,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         });
         break;
     }
-    
+
     return sortedList;
   }
-  
+
   void _showSearchDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -359,7 +367,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   void _showMangaOptions(Manga manga) {
     showModalBottomSheet(
       context: context,
@@ -401,7 +409,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   void _openMangaDetail(Manga manga) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -409,7 +417,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   void _startReading(Manga manga) {
     final startPage = manga.readingProgress?.currentPage ?? 1;
     Navigator.of(context).push(
@@ -421,12 +429,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       ),
     );
   }
-  
+
   void _toggleFavorite(Manga manga) {
     ref.read(mangaActionsProvider.notifier).toggleFavorite(
-      manga.id, 
-      !manga.isFavorite,
-    );
+          manga.id,
+          !manga.isFavorite,
+        );
   }
 }
 
@@ -436,7 +444,7 @@ class GridConfig {
   final double childAspectRatio;
   final double crossAxisSpacing;
   final double mainAxisSpacing;
-  
+
   const GridConfig({
     required this.crossAxisCount,
     required this.childAspectRatio,

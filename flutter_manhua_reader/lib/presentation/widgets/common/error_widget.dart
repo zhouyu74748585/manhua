@@ -7,7 +7,7 @@ class AppErrorWidget extends StatelessWidget {
   final VoidCallback? onRetry;
   final String? retryText;
   final Widget? action;
-  
+
   const AppErrorWidget({
     super.key,
     this.title,
@@ -17,7 +17,7 @@ class AppErrorWidget extends StatelessWidget {
     this.retryText,
     this.action,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -36,18 +36,17 @@ class AppErrorWidget extends StatelessWidget {
               Text(
                 title!,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.grey[700],
-                ),
+                      color: Colors.grey[700],
+                    ),
                 textAlign: TextAlign.center,
               ),
-            if (title != null && message != null)
-              const SizedBox(height: 8),
+            if (title != null && message != null) const SizedBox(height: 8),
             if (message != null)
               Text(
                 message!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 24),
@@ -69,12 +68,12 @@ class AppErrorWidget extends StatelessWidget {
 // 网络错误组件
 class NetworkErrorWidget extends StatelessWidget {
   final VoidCallback? onRetry;
-  
+
   const NetworkErrorWidget({
     super.key,
     this.onRetry,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return AppErrorWidget(
@@ -92,7 +91,7 @@ class EmptyDataWidget extends StatelessWidget {
   final String? message;
   final IconData? icon;
   final Widget? action;
-  
+
   const EmptyDataWidget({
     super.key,
     this.title,
@@ -100,7 +99,7 @@ class EmptyDataWidget extends StatelessWidget {
     this.icon,
     this.action,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return AppErrorWidget(
@@ -116,13 +115,13 @@ class EmptyDataWidget extends StatelessWidget {
 class ServerErrorWidget extends StatelessWidget {
   final VoidCallback? onRetry;
   final String? message;
-  
+
   const ServerErrorWidget({
     super.key,
     this.onRetry,
     this.message,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return AppErrorWidget(
@@ -138,13 +137,13 @@ class ServerErrorWidget extends StatelessWidget {
 class PermissionErrorWidget extends StatelessWidget {
   final VoidCallback? onRequestPermission;
   final String? message;
-  
+
   const PermissionErrorWidget({
     super.key,
     this.onRequestPermission,
     this.message,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return AppErrorWidget(
@@ -163,7 +162,7 @@ class PageErrorWidget extends StatelessWidget {
   final String? message;
   final VoidCallback? onRetry;
   final VoidCallback? onBack;
-  
+
   const PageErrorWidget({
     super.key,
     this.title,
@@ -171,7 +170,7 @@ class PageErrorWidget extends StatelessWidget {
     this.onRetry,
     this.onBack,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -196,13 +195,13 @@ class PageErrorWidget extends StatelessWidget {
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
   final Widget Function(Object error, StackTrace? stackTrace)? errorBuilder;
-  
+
   const ErrorBoundary({
     super.key,
     required this.child,
     this.errorBuilder,
   });
-  
+
   @override
   State<ErrorBoundary> createState() => _ErrorBoundaryState();
 }
@@ -210,7 +209,7 @@ class ErrorBoundary extends StatefulWidget {
 class _ErrorBoundaryState extends State<ErrorBoundary> {
   Object? _error;
   StackTrace? _stackTrace;
-  
+
   @override
   void initState() {
     super.initState();
@@ -221,14 +220,14 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
       });
     };
   }
-  
+
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
       if (widget.errorBuilder != null) {
         return widget.errorBuilder!(_error!, _stackTrace);
       }
-      
+
       return AppErrorWidget(
         title: '应用错误',
         message: '应用遇到了一个错误，请重启应用',
@@ -241,7 +240,7 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         retryText: '重新加载',
       );
     }
-    
+
     return widget.child;
   }
 }

@@ -8,7 +8,7 @@ class LibraryCard extends StatelessWidget {
   final VoidCallback onScan;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  
+
   const LibraryCard({
     super.key,
     required this.library,
@@ -18,7 +18,7 @@ class LibraryCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -63,7 +63,7 @@ class LibraryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // 信息行
             Row(
               children: [
@@ -88,7 +88,7 @@ class LibraryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // 操作按钮行
             Row(
               children: [
@@ -109,7 +109,7 @@ class LibraryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                
+
                 // 编辑按钮
                 OutlinedButton.icon(
                   onPressed: onEdit,
@@ -117,7 +117,7 @@ class LibraryCard extends StatelessWidget {
                   label: const Text('编辑'),
                 ),
                 const Spacer(),
-                
+
                 // 删除按钮
                 IconButton(
                   onPressed: onDelete,
@@ -132,7 +132,7 @@ class LibraryCard extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildInfoChip({
     required IconData icon,
     required String label,
@@ -162,7 +162,7 @@ class LibraryCard extends StatelessWidget {
       ),
     );
   }
-  
+
   String _getTypeLabel(LibraryType type) {
     switch (type) {
       case LibraryType.local:
@@ -173,7 +173,7 @@ class LibraryCard extends StatelessWidget {
         return '云端';
     }
   }
-  
+
   Color _getTypeColor(LibraryType type) {
     switch (type) {
       case LibraryType.local:
@@ -184,11 +184,11 @@ class LibraryCard extends StatelessWidget {
         return Colors.purple;
     }
   }
-  
+
   String _formatLastScan(DateTime lastScan) {
     final now = DateTime.now();
     final difference = now.difference(lastScan);
-    
+
     if (difference.inMinutes < 1) {
       return '刚刚';
     } else if (difference.inHours < 1) {

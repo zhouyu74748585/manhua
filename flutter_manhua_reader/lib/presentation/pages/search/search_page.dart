@@ -3,31 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   final String? initialQuery;
-  
+
   const SearchPage({
     super.key,
     this.initialQuery,
   });
-  
+
   @override
   ConsumerState<SearchPage> createState() => _SearchPageState();
 }
 
 class _SearchPageState extends ConsumerState<SearchPage> {
   late TextEditingController _searchController;
-  
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
   }
-  
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

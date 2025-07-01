@@ -3,44 +3,44 @@ class AppConstants {
   static const String appName = '漫画阅读器';
   static const String appVersion = '1.0.0';
   static const String appDescription = 'A modern manga reader application';
-  
+
   // API配置
   static const String apiBaseUrl = 'http://localhost:8080/api';
   static const Duration apiTimeout = Duration(seconds: 30);
-  
+
   // 存储键名
   static const String themeKey = 'theme_mode';
   static const String languageKey = 'language';
   static const String readerSettingsKey = 'reader_settings';
   static const String librariesKey = 'libraries';
   static const String readingProgressKey = 'reading_progress';
-  
+
   // 缓存配置
   static const int imageCacheMaxSize = 100 * 1024 * 1024; // 100MB
   static const int imageCacheMaxObjects = 1000;
   static const Duration imageCacheDuration = Duration(days: 7);
-  
+
   // 阅读器配置
   static const double defaultZoomLevel = 1.0;
   static const double minZoomLevel = 0.5;
   static const double maxZoomLevel = 5.0;
   static const double zoomStep = 0.25;
-  
+
   // 网格配置
   static const int mobileGridColumns = 2;
   static const int tabletGridColumns = 3;
   static const int desktopGridColumns = 4;
   static const double gridAspectRatio = 0.7;
-  
+
   // 动画配置
   static const Duration defaultAnimationDuration = Duration(milliseconds: 300);
   static const Duration fastAnimationDuration = Duration(milliseconds: 150);
   static const Duration slowAnimationDuration = Duration(milliseconds: 500);
-  
+
   // 分页配置
   static const int defaultPageSize = 20;
   static const int maxPageSize = 100;
-  
+
   // 文件类型
   static const List<String> supportedImageFormats = [
     '.jpg',
@@ -50,7 +50,7 @@ class AppConstants {
     '.bmp',
     '.webp',
   ];
-  
+
   static const List<String> supportedArchiveFormats = [
     '.zip',
     '.rar',
@@ -58,14 +58,14 @@ class AppConstants {
     '.cbz',
     '.cbr',
   ];
-  
+
   // 错误消息
   static const String networkErrorMessage = '网络连接失败，请检查网络设置';
   static const String serverErrorMessage = '服务器错误，请稍后重试';
   static const String unknownErrorMessage = '未知错误，请稍后重试';
   static const String fileNotFoundMessage = '文件不存在或已被删除';
   static const String permissionDeniedMessage = '权限不足，无法访问文件';
-  
+
   // 成功消息
   static const String saveSuccessMessage = '保存成功';
   static const String deleteSuccessMessage = '删除成功';
@@ -78,7 +78,7 @@ enum ReadingMode {
   single('单页'),
   double('双页'),
   continuous('连续');
-  
+
   const ReadingMode(this.displayName);
   final String displayName;
 }
@@ -87,7 +87,7 @@ enum ReadingMode {
 enum ReadingDirection {
   leftToRight('从左到右'),
   rightToLeft('从右到左');
-  
+
   const ReadingDirection(this.displayName);
   final String displayName;
 }
@@ -98,7 +98,7 @@ enum ImageFitMode {
   fitHeight('适应高度'),
   fitScreen('适应屏幕'),
   originalSize('原始大小');
-  
+
   const ImageFitMode(this.displayName);
   final String displayName;
 }
@@ -110,7 +110,7 @@ enum LibraryType {
   ftp('FTP/SFTP'),
   webdav('WEBDAV'),
   nfs('NFS');
-  
+
   const LibraryType(this.displayName);
   final String displayName;
 }
@@ -125,7 +125,7 @@ enum SortOrder {
   updatedAtDesc('更新时间 ↓'),
   sizeAsc('大小 ↑'),
   sizeDesc('大小 ↓');
-  
+
   const SortOrder(this.displayName);
   final String displayName;
 }

@@ -36,7 +36,6 @@ class Manga {
   final String? subtitle;
   final String? author;
   final String? description;
-  final String? coverUrl;
   final String? coverPath; // 本地封面路径
   final String libraryId; // 所属漫画库ID
   final String path; // 文件或文件夹路径
@@ -56,7 +55,7 @@ class Manga {
   final bool isCompleted; // 是否已读完
   final Map<String, dynamic> metadata; // 元数据
   final ReadingProgress? readingProgress;
-  
+
   const Manga({
     required this.id,
     required this.title,
@@ -68,7 +67,6 @@ class Manga {
     this.subtitle,
     this.author,
     this.description,
-    this.coverUrl,
     this.coverPath,
     this.tags = const [],
     this.status = MangaStatus.unknown,
@@ -84,10 +82,10 @@ class Manga {
     this.metadata = const {},
     this.readingProgress,
   });
-  
+
   factory Manga.fromJson(Map<String, dynamic> json) => _$MangaFromJson(json);
   Map<String, dynamic> toJson() => _$MangaToJson(this);
-  
+
   Manga copyWith({
     String? id,
     String? title,
@@ -97,7 +95,6 @@ class Manga {
     String? subtitle,
     String? author,
     String? description,
-    String? coverUrl,
     String? coverPath,
     List<String>? tags,
     MangaStatus? status,
@@ -124,7 +121,6 @@ class Manga {
       subtitle: subtitle ?? this.subtitle,
       author: author ?? this.author,
       description: description ?? this.description,
-      coverUrl: coverUrl ?? this.coverUrl,
       coverPath: coverPath ?? this.coverPath,
       tags: tags ?? this.tags,
       status: status ?? this.status,
@@ -143,13 +139,13 @@ class Manga {
       readingProgress: readingProgress ?? this.readingProgress,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is Manga && other.id == id;
   }
-  
+
   @override
   int get hashCode => id.hashCode;
 }

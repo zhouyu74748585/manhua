@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:path/path.dart' as path;
@@ -11,7 +12,7 @@ class FileScannerService {
   // 支持的漫画文件格式
   static const List<String> supportedFormats = [
     '.cbz',
-    '.cbr', 
+    '.cbr',
     '.zip',
     '.rar',
     '.pdf',
@@ -28,7 +29,8 @@ class FileScannerService {
   ];
 
   /// 扫描漫画库，返回发现的漫画列表
-  static Future<Tuple2<List<Manga>,List<MangaPage>>> scanLibrary(MangaLibrary library) async {
+  static Future<Tuple2<List<Manga>, List<MangaPage>>> scanLibrary(
+      MangaLibrary library) async {
     final List<Manga> mangas = [];
     final List<MangaPage> mangaPages = [];
     final libraryDir = Directory(library.path);
@@ -38,37 +40,38 @@ class FileScannerService {
     }
 
     try {
-      await _scanDirectoryRecursive(libraryDir, library.id, mangas,mangaPages);
+      await _scanDirectoryRecursive(libraryDir, library.id, mangas, mangaPages);
     } catch (e) {
       throw Exception('扫描漫画库时发生错误: $e');
     }
 
-    return Tuple2(mangas,mangaPages);
+    return Tuple2(mangas, mangaPages);
   }
 
   /// 递归扫描目录
-  static Future<void> _scanDirectoryRecursive(Directory directory, String libraryId, List<Manga> mangas,List<MangaPage> mangaPages) async {
-
+  static Future<void> _scanDirectoryRecursive(Directory directory,
+      String libraryId, List<Manga> mangas, List<MangaPage> mangaPages) async {
     // 首先检查当前目录是否包含图片文件
     final hasImages = await _directoryContainsImages(directory);
-    
+
     if (hasImages) {
       // 如果包含图片，将整个目录作为一个漫画对象，不再下钻
-      await _createMangaFromImageDirectory(directory, libraryId,mangas,mangaPages);
+      await _createMangaFromImageDirectory(
+          directory, libraryId, mangas, mangaPages);
       return;
     }
-    
+
     // 如果不包含图片，检查是否包含单体漫画文件，并继续下钻扫描子目录
     await for (final entity in directory.list()) {
       if (entity is File) {
         final manga = await _scanMangaFile(entity, libraryId);
         if (manga != null) {
           mangas.add(manga);
-           print('扫描到漫画: ${manga.path}');
+          log('扫描到漫画: ${manga.path}');
         }
       } else if (entity is Directory) {
         // 递归扫描子目录
-        await _scanDirectoryRecursive(entity, libraryId, mangas,mangaPages);
+        await _scanDirectoryRecursive(entity, libraryId, mangas, mangaPages);
       }
     }
   }
@@ -92,10 +95,11 @@ class FileScannerService {
   }
 
   /// 从包含图片的目录创建漫画对象
-  static Future<void> _createMangaFromImageDirectory(Directory directory, String libraryId,List<Manga> mangas,List<MangaPage> mangaPages) async {
+  static Future<void> _createMangaFromImageDirectory(Directory directory,
+      String libraryId, List<Manga> mangas, List<MangaPage> mangaPages) async {
     try {
       final List<String> imageFiles = [];
-      
+
       // 收集所有图片文件
       await for (final entity in directory.list()) {
         if (entity is File) {
@@ -105,34 +109,36 @@ class FileScannerService {
           }
         }
       }
-      
+
       if (imageFiles.isEmpty) {
         return;
       }
-      
+
       // 按文件名排序
       imageFiles.sort();
-      
+
       final mangaId = _generateMangaId(directory.path);
       final title = path.basename(directory.path);
-      
+
       // 获取目录的修改时间
       final dirStats = await directory.stat();
-      
+
       // 提取并缓存封面
-      String? coverUrl;
+      String? coverPath;
       if (imageFiles.isNotEmpty) {
         // 尝试从缓存中获取封面，如果没有则提取并缓存
-        coverUrl = await CoverCacheService.extractAndCacheCoverFromDirectory(directory.path);
+        coverPath = await CoverCacheService.extractAndCacheCoverFromDirectory(
+            directory.path);
         // 如果缓存失败，使用原始路径
-        coverUrl ??= 'file://${imageFiles.first}';
+        coverPath ??= 'file://${imageFiles.first}';
       }
-      
-      
+
       // 创建初始化的阅读进度
       final totalPages = imageFiles.length;
-      final readingProgress = await ReadingProgressService.createInitialProgressForSingleFile(mangaId,totalPages);
-      Manga manga= Manga(
+      final readingProgress =
+          await ReadingProgressService.createInitialProgressForSingleFile(
+              mangaId, totalPages);
+      Manga manga = Manga(
         id: mangaId,
         libraryId: libraryId,
         title: title,
@@ -142,8 +148,7 @@ class FileScannerService {
         subtitle: null,
         author: null,
         description: null,
-        coverUrl: coverUrl,
-        coverPath: coverUrl,
+        coverPath: coverPath,
         tags: [],
         status: MangaStatus.completed,
         isFavorite: false,
@@ -151,7 +156,7 @@ class FileScannerService {
         updatedAt: dirStats.modified,
         readingProgress: readingProgress,
       );
-      List<MangaPage> pages=[];
+      List<MangaPage> pages = [];
       imageFiles.forEach((element) {
         pages.add(MangaPage(
           id: _generateMangaId(element),
@@ -160,11 +165,11 @@ class FileScannerService {
           localPath: element,
         ));
       });
-      mangas.add( manga);
+      mangas.add(manga);
       mangaPages.addAll(pages);
-      print('扫描到漫画: ${manga.path}');
+      log('扫描到漫画: ${manga.path}');
     } catch (e) {
-      print('从图片目录创建漫画失败: ${directory.path}, 错误: $e');
+      log('从图片目录创建漫画失败: ${directory.path}, 错误: $e');
       return null;
     }
   }
@@ -182,57 +187,57 @@ class FileScannerService {
     try {
       final fileStats = await file.stat();
       final mangaId = _generateMangaId(file.path);
-      
+
       // 提取漫画标题（从文件名）
       final title = _extractTitleFromFileName(fileName);
-      
+
       // 尝试提取封面
-      String? coverUrl;
+      String? coverPath;
       int pages = 0;
 
       // 创建初始化的阅读进度
-      final fileSize=await file.length()/1024;
+      final fileSize = await file.length() / 1024;
       final totalPages = pages;
-      final readingProgress = await ReadingProgressService.createInitialProgressForSingleFile(mangaId,totalPages);
+      final readingProgress =
+          await ReadingProgressService.createInitialProgressForSingleFile(
+              mangaId, totalPages);
 
       return Manga(
-        id: mangaId,
-        libraryId: libraryId,
-        title: title,
-        path: file.path,
-        type: fileExtension == '.pdf'?MangaType.pdf:MangaType.archive,
-        totalPages:totalPages,
-        subtitle: null,
-        author: null,
-        description: null,
-        coverUrl: coverUrl,
-        tags: [],
-        status: MangaStatus.completed,
-        isFavorite: false,
-        createdAt: DateTime.now(),
-        updatedAt: fileStats.modified,
-        readingProgress: readingProgress,
-        fileSize: fileSize.toInt()
-      );
+          id: mangaId,
+          libraryId: libraryId,
+          title: title,
+          path: file.path,
+          type: fileExtension == '.pdf' ? MangaType.pdf : MangaType.archive,
+          totalPages: totalPages,
+          subtitle: null,
+          author: null,
+          description: null,
+          coverPath: coverPath,
+          tags: [],
+          status: MangaStatus.completed,
+          isFavorite: false,
+          createdAt: DateTime.now(),
+          updatedAt: fileStats.modified,
+          readingProgress: readingProgress,
+          fileSize: fileSize.toInt());
     } catch (e) {
-      print('扫描文件失败: ${file.path}, 错误: $e');
+      log('扫描文件失败: ${file.path}, 错误: $e');
       return null;
     }
   }
-
 
   /// 从文件名提取漫画标题
   static String _extractTitleFromFileName(String fileName) {
     // 移除文件扩展名
     String title = path.basenameWithoutExtension(fileName);
-    
+
     // 移除常见的版本标识
     // title = title.replaceAll(RegExp(r'\[.*?\]'), ''); // 移除方括号内容
     // title = title.replaceAll(RegExp(r'\(.*?\)'), ''); // 移除圆括号内容
     // title = title.replaceAll(RegExp(r'_+'), ' '); // 下划线替换为空格
     // title = title.replaceAll(RegExp(r'-+'), ' '); // 连字符替换为空格
     // title = title.replaceAll(RegExp(r'\s+'), ' '); // 多个空格合并为一个
-    
+
     return title.trim();
   }
 
@@ -241,12 +246,11 @@ class FileScannerService {
     // 使用文件路径的哈希值作为ID
     return 'manga_${filePath.hashCode.abs()}';
   }
- 
 
   /// 获取文件的基本信息
   static Future<Map<String, dynamic>> getFileInfo(String filePath) async {
     final file = File(filePath);
-    
+
     if (!await file.exists()) {
       throw Exception('文件不存在: $filePath');
     }
@@ -254,7 +258,7 @@ class FileScannerService {
     final fileStats = await file.stat();
     final fileName = path.basename(filePath);
     final fileExtension = path.extension(filePath).toLowerCase();
-    
+
     return {
       'name': fileName,
       'path': filePath,
@@ -264,6 +268,4 @@ class FileScannerService {
       'isSupported': supportedFormats.contains(fileExtension),
     };
   }
-
-
 }

@@ -5,7 +5,7 @@ import '../../providers/theme_provider.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -17,21 +17,21 @@ class SettingsPage extends ConsumerWidget {
           // 外观设置
           _buildSectionHeader(context, '外观'),
           _buildThemeSettings(context, ref),
-          
+
           const Divider(),
-          
+
           // 阅读设置
           _buildSectionHeader(context, '阅读'),
           _buildReaderSettings(context, ref),
-          
+
           const Divider(),
-          
+
           // 存储设置
           _buildSectionHeader(context, '存储'),
           _buildStorageSettings(context, ref),
-          
+
           const Divider(),
-          
+
           // 关于
           _buildSectionHeader(context, '关于'),
           _buildAboutSettings(context, ref),
@@ -39,23 +39,23 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: Theme.of(context).primaryColor,
-          fontWeight: FontWeight.bold,
-        ),
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
-  
+
   Widget _buildThemeSettings(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeModeProvider);
-    
+
     return Column(
       children: [
         ListTile(
@@ -70,7 +70,7 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildReaderSettings(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
@@ -113,7 +113,7 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildStorageSettings(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
@@ -146,7 +146,7 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
-  
+
   Widget _buildAboutSettings(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
@@ -182,10 +182,10 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
-  
+
   void _showThemeDialog(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.read(themeModeProvider);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -215,7 +215,7 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showClearCacheDialog(BuildContext context) {
     showDialog(
       context: context,

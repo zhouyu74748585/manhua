@@ -7,16 +7,16 @@ import '../common/adaptive_scaffold.dart';
 
 class MainLayout extends ConsumerWidget {
   final Widget child;
-  
+
   const MainLayout({
     super.key,
     required this.child,
   });
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentLocation = GoRouterState.of(context).uri.path;
-    
+
     return AdaptiveScaffold(
       currentLocation: currentLocation,
       body: child,
@@ -27,7 +27,7 @@ class MainLayout extends ConsumerWidget {
       },
     );
   }
-  
+
   List<AppNavigationDestination> _getDestinations() {
     return [
       const AppNavigationDestination(
@@ -69,7 +69,7 @@ class AppNavigationDestination {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-  
+
   const AppNavigationDestination({
     required this.route,
     required this.icon,

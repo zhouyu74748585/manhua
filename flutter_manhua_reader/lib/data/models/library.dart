@@ -13,7 +13,7 @@ class MangaLibrary {
   final DateTime? lastScanAt;
   final int mangaCount;
   final Map<String, dynamic> settings;
-  
+
   const MangaLibrary({
     required this.id,
     required this.name,
@@ -25,10 +25,11 @@ class MangaLibrary {
     this.mangaCount = 0,
     this.settings = const {},
   });
-  
-  factory MangaLibrary.fromJson(Map<String, dynamic> json) => _$MangaLibraryFromJson(json);
+
+  factory MangaLibrary.fromJson(Map<String, dynamic> json) =>
+      _$MangaLibraryFromJson(json);
   Map<String, dynamic> toJson() => _$MangaLibraryToJson(this);
-  
+
   MangaLibrary copyWith({
     String? id,
     String? name,
@@ -52,13 +53,13 @@ class MangaLibrary {
       settings: settings ?? this.settings,
     );
   }
-  
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is MangaLibrary && other.id == id;
   }
-  
+
   @override
   int get hashCode => id.hashCode;
 }
@@ -83,7 +84,7 @@ extension LibraryTypeExtension on LibraryType {
         return '云端';
     }
   }
-  
+
   String get description {
     switch (this) {
       case LibraryType.local:
@@ -104,7 +105,7 @@ class LibrarySettings {
   final bool includeSubfolders;
   final String? coverPattern;
   final bool generateThumbnails;
-  
+
   const LibrarySettings({
     this.autoScan = false,
     this.scanInterval = const Duration(hours: 24),
@@ -113,10 +114,11 @@ class LibrarySettings {
     this.coverPattern,
     this.generateThumbnails = true,
   });
-  
-  factory LibrarySettings.fromJson(Map<String, dynamic> json) => _$LibrarySettingsFromJson(json);
+
+  factory LibrarySettings.fromJson(Map<String, dynamic> json) =>
+      _$LibrarySettingsFromJson(json);
   Map<String, dynamic> toJson() => _$LibrarySettingsToJson(this);
-  
+
   LibrarySettings copyWith({
     bool? autoScan,
     Duration? scanInterval,

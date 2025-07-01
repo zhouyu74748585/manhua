@@ -24,7 +24,8 @@ class ReadingProgress {
     required this.updatedAt,
   });
 
-  factory ReadingProgress.fromJson(Map<String, dynamic> json) => _$ReadingProgressFromJson(json);
+  factory ReadingProgress.fromJson(Map<String, dynamic> json) =>
+      _$ReadingProgressFromJson(json);
   Map<String, dynamic> toJson() => _$ReadingProgressToJson(this);
 
   // 从数据库Map创建ReadingProgress对象

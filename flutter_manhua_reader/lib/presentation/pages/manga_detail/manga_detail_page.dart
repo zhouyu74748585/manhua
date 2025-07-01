@@ -10,17 +10,17 @@ import '../reader/reader_page.dart';
 
 class MangaDetailPage extends ConsumerWidget {
   final String mangaId;
-  
+
   const MangaDetailPage({
     super.key,
     required this.mangaId,
   });
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mangaAsync = ref.watch(mangaDetailProvider(mangaId));
     final pages = ref.watch(mangaPagesProvider(mangaId)).value ?? [];
-   
+
     return Scaffold(
       body: mangaAsync.when(
         data: (manga) {
@@ -29,14 +29,14 @@ class MangaDetailPage extends ConsumerWidget {
               child: Text('漫画不存在'),
             );
           }
-          
+
           return CustomScrollView(
-             slivers: [
-               _buildSliverAppBar(context, ref, manga),
-               _buildMangaInfo(context, manga),
-               _buildPageGrid(context, manga, pages),
-             ],
-           );
+            slivers: [
+              _buildSliverAppBar(context, ref, manga),
+              _buildMangaInfo(context, manga),
+              _buildPageGrid(context, manga, pages),
+            ],
+          );
         },
         loading: () => const Scaffold(
           appBar: null,
@@ -69,7 +69,7 @@ class MangaDetailPage extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildSliverAppBar(BuildContext context, WidgetRef ref, Manga manga) {
     return SliverAppBar(
       expandedHeight: 300,
@@ -92,7 +92,7 @@ class MangaDetailPage extends ConsumerWidget {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            _buildCoverImage(manga.coverUrl),
+            _buildCoverImage(manga.coverPath),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -115,7 +115,8 @@ class MangaDetailPage extends ConsumerWidget {
             color: manga.isFavorite ? Colors.red : Colors.white,
           ),
           onPressed: () {
-            ref.read(mangaActionsProvider.notifier)
+            ref
+                .read(mangaActionsProvider.notifier)
                 .toggleFavorite(manga.id, !manga.isFavorite);
           },
         ),
@@ -131,9 +132,9 @@ class MangaDetailPage extends ConsumerWidget {
       ],
     );
   }
-  
-  Widget _buildCoverImage(String? coverUrl) {
-    if (coverUrl == null || coverUrl.isEmpty) {
+
+  Widget _buildCoverImage(String? coverPath) {
+    if (coverPath == null || coverPath.isEmpty) {
       return Container(
         color: Colors.grey[300],
         child: const Icon(
@@ -143,10 +144,10 @@ class MangaDetailPage extends ConsumerWidget {
         ),
       );
     }
-    
-    if (coverUrl.startsWith('http')) {
+
+    if (coverPath.startsWith('http')) {
       return CachedNetworkImage(
-        imageUrl: coverUrl,
+        imageUrl: coverPath,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
           color: Colors.grey[300],
@@ -164,7 +165,7 @@ class MangaDetailPage extends ConsumerWidget {
         ),
       );
     } else {
-      final file = File(coverUrl);
+      final file = File(coverPath);
       if (file.existsSync()) {
         return Image.file(
           file,
@@ -190,7 +191,7 @@ class MangaDetailPage extends ConsumerWidget {
       }
     }
   }
-  
+
   Widget _buildMangaInfo(BuildContext context, Manga manga) {
     return SliverToBoxAdapter(
       child: Padding(
@@ -244,32 +245,35 @@ class MangaDetailPage extends ConsumerWidget {
                   ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 标签
             if (manga.tags.isNotEmpty)
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: manga.tags.map((tag) => Chip(
-                  label: Text(
-                    tag,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                )).toList(),
+                children: manga.tags
+                    .map((tag) => Chip(
+                          label: Text(
+                            tag,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ))
+                    .toList(),
               ),
-            
+
             const SizedBox(height: 16),
-            
+
             // 简介
             if (manga.description != null && manga.description!.isNotEmpty) ...[
               Text(
                 '简介',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -283,11 +287,13 @@ class MangaDetailPage extends ConsumerWidget {
       ),
     );
   }
-  
-  Widget _buildPageGrid(BuildContext context, Manga manga, List<MangaPage> pages) {
+
+  Widget _buildPageGrid(
+      BuildContext context, Manga manga, List<MangaPage> pages) {
     // 新增 _buildPageThumbnail 方法
     Widget buildPageThumbnail(MangaPage page) {
-      if (page.largeThumbnail != null && File(page.largeThumbnail!).existsSync()) {
+      if (page.largeThumbnail != null &&
+          File(page.largeThumbnail!).existsSync()) {
         return Image.file(
           File(page.largeThumbnail!),
           fit: BoxFit.cover,
@@ -300,7 +306,7 @@ class MangaDetailPage extends ConsumerWidget {
             ),
           ),
         );
-      }else {
+      } else {
         return Container(
           color: Colors.grey[200],
           child: const Icon(
@@ -313,7 +319,7 @@ class MangaDetailPage extends ConsumerWidget {
     }
 
     final totalPages = manga.totalPages;
-    
+
     if (totalPages == 0) {
       return const SliverToBoxAdapter(
         child: Padding(
@@ -324,7 +330,7 @@ class MangaDetailPage extends ConsumerWidget {
         ),
       );
     }
-    
+
     return SliverPadding(
       padding: const EdgeInsets.all(16),
       sliver: SliverList(
@@ -336,12 +342,13 @@ class MangaDetailPage extends ConsumerWidget {
               Text(
                 '页面预览 ($totalPages 页)',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               TextButton.icon(
                 onPressed: () {
-                  _startReading(context, manga, manga.readingProgress?.currentPage ?? 1);
+                  _startReading(
+                      context, manga, manga.readingProgress?.currentPage ?? 1);
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('开始阅读'),
@@ -362,8 +369,9 @@ class MangaDetailPage extends ConsumerWidget {
             itemCount: totalPages,
             itemBuilder: (context, index) {
               final pageNumber = index + 1;
-              final isCurrentPage = manga.readingProgress?.currentPage == pageNumber;
-              
+              final isCurrentPage =
+                  manga.readingProgress?.currentPage == pageNumber;
+
               return GestureDetector(
                 onTap: () {
                   _startReading(context, manga, pageNumber);
@@ -371,7 +379,7 @@ class MangaDetailPage extends ConsumerWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isCurrentPage 
+                      color: isCurrentPage
                           ? Theme.of(context).primaryColor
                           : Colors.grey.withOpacity(0.3),
                       width: isCurrentPage ? 2 : 1,
@@ -438,7 +446,7 @@ class MangaDetailPage extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _startReading(BuildContext context, Manga manga, int startPage) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -449,7 +457,7 @@ class MangaDetailPage extends ConsumerWidget {
       ),
     );
   }
-  
+
   String _getStatusText(MangaStatus status) {
     switch (status) {
       case MangaStatus.ongoing:

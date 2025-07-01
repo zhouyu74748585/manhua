@@ -155,7 +155,7 @@ class Manga {
   final String? description;
   final String? author;
   final String? genre;
-  final String coverUrl;
+  final String coverPath;
   final int totalPages;
   final DateTime createdAt;
   

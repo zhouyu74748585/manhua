@@ -9,7 +9,7 @@ import '../../widgets/common/section_header.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
@@ -35,7 +35,7 @@ class HomePage extends ConsumerWidget {
 
 class _HomeContent extends ConsumerWidget {
   const _HomeContent();
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
@@ -57,7 +57,7 @@ class _HomeContent extends ConsumerWidget {
               child: _buildRecentlyRead(context, ref),
             ),
           ),
-          
+
           // 最新更新
           const SliverToBoxAdapter(
             child: SectionHeader(
@@ -66,7 +66,7 @@ class _HomeContent extends ConsumerWidget {
             ),
           ),
           _buildLatestUpdates(context, ref),
-          
+
           // 推荐漫画
           const SliverToBoxAdapter(
             child: SectionHeader(
@@ -75,7 +75,7 @@ class _HomeContent extends ConsumerWidget {
             ),
           ),
           _buildRecommended(context, ref),
-          
+
           // 底部间距
           const SliverToBoxAdapter(
             child: SizedBox(height: 80),
@@ -84,26 +84,28 @@ class _HomeContent extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildRecentlyRead(BuildContext context, WidgetRef ref) {
     // TODO: 从Provider获取最近阅读数据
     final recentlyRead = <Map<String, dynamic>>[
       {
         'id': '1',
         'title': '示例漫画 1',
-        'coverUrl': '',
+        'coverPath': '',
         'progress': 0.6,
+        'totalPages': 100,
         'lastReadChapter': '第 12 话',
       },
       {
         'id': '2',
         'title': '示例漫画 2',
-        'coverUrl': '',
+        'coverPath': '',
         'progress': 0.3,
+        'totalPages': 100,
         'lastReadChapter': '第 5 话',
       },
     ];
-    
+
     if (recentlyRead.isEmpty) {
       return const Center(
         child: Text(
@@ -112,7 +114,7 @@ class _HomeContent extends ConsumerWidget {
         ),
       );
     }
-    
+
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -124,9 +126,10 @@ class _HomeContent extends ConsumerWidget {
           margin: const EdgeInsets.only(right: 12),
           child: MangaCard(
             title: manga['title'],
-            coverUrl: manga['coverUrl'],
+            coverPath: manga['coverPath'],
             progress: manga['progress'],
-            subtitle: manga['lastReadChapter'],
+            subtitle: manga['title'],
+            totalPages: manga['totalPages'],
             onTap: () {
               context.go('/manga/${manga['id']}');
             },
@@ -135,26 +138,28 @@ class _HomeContent extends ConsumerWidget {
       },
     );
   }
-  
+
   Widget _buildLatestUpdates(BuildContext context, WidgetRef ref) {
     // TODO: 从Provider获取最新更新数据
     final latestUpdates = <Map<String, dynamic>>[
       {
         'id': '3',
         'title': '最新漫画 1',
-        'coverUrl': '',
+        'coverPath': '',
+        'totalPages': 100,
         'updateTime': '2小时前',
         'newChapter': '第 25 话',
       },
       {
         'id': '4',
         'title': '最新漫画 2',
-        'coverUrl': '',
+        'coverPath': '',
+        'totalPages': 100,
         'updateTime': '5小时前',
         'newChapter': '第 18 话',
       },
     ];
-    
+
     if (latestUpdates.isEmpty) {
       return const SliverToBoxAdapter(
         child: Center(
@@ -168,14 +173,15 @@ class _HomeContent extends ConsumerWidget {
         ),
       );
     }
-    
+
     return ResponsiveGrid(
       items: latestUpdates,
       itemBuilder: (context, manga) {
         return MangaCard(
           title: manga['title'],
-          coverUrl: manga['coverUrl'],
+          coverPath: manga['coverPath'],
           subtitle: '${manga['newChapter']} • ${manga['updateTime']}',
+          totalPages: manga['totalPages'],
           onTap: () {
             context.go('/manga/${manga['id']}');
           },
@@ -183,26 +189,28 @@ class _HomeContent extends ConsumerWidget {
       },
     );
   }
-  
+
   Widget _buildRecommended(BuildContext context, WidgetRef ref) {
     // TODO: 从Provider获取推荐数据
     final recommended = <Map<String, dynamic>>[
       {
         'id': '5',
         'title': '推荐漫画 1',
-        'coverUrl': '',
+        'coverPath': '',
         'rating': 4.5,
+        'totalPages': 100,
         'tags': ['冒险', '热血'],
       },
       {
         'id': '6',
         'title': '推荐漫画 2',
-        'coverUrl': '',
+        'coverPath': '',
         'rating': 4.2,
+        'totalPages': 100,
         'tags': ['恋爱', '校园'],
       },
     ];
-    
+
     if (recommended.isEmpty) {
       return const SliverToBoxAdapter(
         child: Center(
@@ -216,14 +224,15 @@ class _HomeContent extends ConsumerWidget {
         ),
       );
     }
-    
+
     return ResponsiveGrid(
       items: recommended,
       itemBuilder: (context, manga) {
         return MangaCard(
           title: manga['title'],
-          coverUrl: manga['coverUrl'],
+          coverPath: manga['coverPath'],
           subtitle: '评分: ${manga['rating']} • ${manga['tags'].join(', ')}',
+          totalPages: manga['totalPages'],
           onTap: () {
             context.go('/manga/${manga['id']}');
           },

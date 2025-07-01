@@ -11,7 +11,7 @@ class ResponsiveGrid<T> extends StatelessWidget {
   final double? mainAxisSpacing;
   final double? crossAxisSpacing;
   final int? maxItems;
-  
+
   const ResponsiveGrid({
     super.key,
     required this.items,
@@ -22,25 +22,25 @@ class ResponsiveGrid<T> extends StatelessWidget {
     this.crossAxisSpacing,
     this.maxItems,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
-    final displayItems = maxItems != null 
-        ? items.take(maxItems!).toList() 
-        : items;
-    
+    final displayItems =
+        maxItems != null ? items.take(maxItems!).toList() : items;
+
     if (displayItems.isEmpty) {
       return const SliverToBoxAdapter(
         child: SizedBox.shrink(),
       );
     }
-    
+
     return SliverPadding(
-      padding: padding ?? EdgeInsets.all(
-        PlatformUtils.getResponsivePadding(screenWidth),
-      ),
+      padding: padding ??
+          EdgeInsets.all(
+            PlatformUtils.getResponsivePadding(screenWidth),
+          ),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
@@ -71,7 +71,7 @@ class ResponsiveGridView<T> extends StatelessWidget {
   final int? maxItems;
   final ScrollPhysics? physics;
   final bool shrinkWrap;
-  
+
   const ResponsiveGridView({
     super.key,
     required this.items,
@@ -84,23 +84,23 @@ class ResponsiveGridView<T> extends StatelessWidget {
     this.physics,
     this.shrinkWrap = false,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
-    final displayItems = maxItems != null 
-        ? items.take(maxItems!).toList() 
-        : items;
-    
+    final displayItems =
+        maxItems != null ? items.take(maxItems!).toList() : items;
+
     if (displayItems.isEmpty) {
       return const SizedBox.shrink();
     }
-    
+
     return GridView.builder(
-      padding: padding ?? EdgeInsets.all(
-        PlatformUtils.getResponsivePadding(screenWidth),
-      ),
+      padding: padding ??
+          EdgeInsets.all(
+            PlatformUtils.getResponsivePadding(screenWidth),
+          ),
       physics: physics,
       shrinkWrap: shrinkWrap,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -125,7 +125,7 @@ class ResponsiveStaggeredGrid<T> extends StatelessWidget {
   final double? mainAxisSpacing;
   final double? crossAxisSpacing;
   final int? maxItems;
-  
+
   const ResponsiveStaggeredGrid({
     super.key,
     required this.items,
@@ -135,26 +135,26 @@ class ResponsiveStaggeredGrid<T> extends StatelessWidget {
     this.crossAxisSpacing,
     this.maxItems,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
-    final displayItems = maxItems != null 
-        ? items.take(maxItems!).toList() 
-        : items;
-    
+    final displayItems =
+        maxItems != null ? items.take(maxItems!).toList() : items;
+
     if (displayItems.isEmpty) {
       return const SliverToBoxAdapter(
         child: SizedBox.shrink(),
       );
     }
-    
+
     // 简化的瀑布流实现，使用普通网格
     return SliverPadding(
-      padding: padding ?? EdgeInsets.all(
-        PlatformUtils.getResponsivePadding(screenWidth),
-      ),
+      padding: padding ??
+          EdgeInsets.all(
+            PlatformUtils.getResponsivePadding(screenWidth),
+          ),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,

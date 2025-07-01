@@ -28,7 +28,7 @@ class DatabaseService {
   static Future<Database> _initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, _databaseName);
-    
+
     return await openDatabase(
       path,
       version: _databaseVersion,
@@ -62,7 +62,7 @@ class DatabaseService {
         subtitle TEXT,
         author TEXT,
         description TEXT,
-        cover_url TEXT,
+        cover_path TEXT,
         cover_path TEXT,
         tags TEXT,
         status TEXT,
@@ -85,8 +85,6 @@ class DatabaseService {
       )
     ''');
 
-
-
     // 创建页面表
     await db.execute('''
       CREATE TABLE $_pageTable (
@@ -102,7 +100,7 @@ class DatabaseService {
     ''');
 
     // 创建阅读进度表
-     await db.execute('''
+    await db.execute('''
        CREATE TABLE $_readingProgressTable (
          id TEXT PRIMARY KEY,
          manga_id TEXT NOT NULL,
@@ -120,14 +118,19 @@ class DatabaseService {
      ''');
 
     // 创建索引
-    await db.execute('CREATE INDEX idx_manga_library_id ON $_mangaTable (library_id)');
+    await db.execute(
+        'CREATE INDEX idx_manga_library_id ON $_mangaTable (library_id)');
     await db.execute('CREATE INDEX idx_manga_title ON $_mangaTable (title)');
-    await db.execute('CREATE INDEX idx_manga_is_favorite ON $_mangaTable (is_favorite)');
-    await db.execute('CREATE INDEX idx_page_manga_id ON $_pageTable (manga_id)');
-    await db.execute('CREATE INDEX idx_reading_progress_manga_id ON $_readingProgressTable (manga_id)');
+    await db.execute(
+        'CREATE INDEX idx_manga_is_favorite ON $_mangaTable (is_favorite)');
+    await db
+        .execute('CREATE INDEX idx_page_manga_id ON $_pageTable (manga_id)');
+    await db.execute(
+        'CREATE INDEX idx_reading_progress_manga_id ON $_readingProgressTable (manga_id)');
   }
 
-  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _onUpgrade(
+      Database db, int oldVersion, int newVersion) async {
     // 数据库升级逻辑
     if (oldVersion < newVersion) {
       // 根据版本进行相应的升级操作
@@ -157,10 +160,11 @@ class DatabaseService {
   static Future<List<MangaLibrary>> getAllLibraries() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(_libraryTable);
-    
+
     return List.generate(maps.length, (i) {
       Map<String, dynamic> settings = {};
-      if (maps[i]['settings'] != null && maps[i]['settings'].toString().isNotEmpty) {
+      if (maps[i]['settings'] != null &&
+          maps[i]['settings'].toString().isNotEmpty) {
         try {
           settings = Map<String, dynamic>.from(jsonDecode(maps[i]['settings']));
         } catch (e) {
@@ -168,7 +172,7 @@ class DatabaseService {
           settings = {};
         }
       }
-      
+
       return MangaLibrary(
         id: maps[i]['id'],
         name: maps[i]['name'],
@@ -195,9 +199,9 @@ class DatabaseService {
       where: 'id = ?',
       whereArgs: [id],
     );
-    
+
     if (maps.isEmpty) return null;
-    
+
     final map = maps.first;
     Map<String, dynamic> settings = {};
     if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
@@ -208,7 +212,7 @@ class DatabaseService {
         settings = {};
       }
     }
-    
+
     return MangaLibrary(
       id: map['id'],
       name: map['name'],
@@ -266,7 +270,6 @@ class DatabaseService {
         'subtitle': manga.subtitle,
         'author': manga.author,
         'description': manga.description,
-        'cover_url': manga.coverUrl,
         'cover_path': manga.coverPath,
         'tags': manga.tags.join(','),
         'status': manga.status.name,
@@ -279,9 +282,12 @@ class DatabaseService {
         'source': manga.source,
         'source_url': manga.sourceUrl,
         'last_read_at': manga.lastReadAt?.toIso8601String(),
-        'created_at': manga.createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
+        'created_at': manga.createdAt?.millisecondsSinceEpoch ??
+            DateTime.now().millisecondsSinceEpoch,
         'updated_at': manga.updatedAt?.millisecondsSinceEpoch,
-        'reading_progress': manga.readingProgress != null ? jsonEncode(manga.readingProgress!.toJson()) : null,
+        'reading_progress': manga.readingProgress != null
+            ? jsonEncode(manga.readingProgress!.toJson())
+            : null,
         'file_path': manga.path,
         'file_size': manga.fileSize,
         'metadata': jsonEncode(manga.metadata),
@@ -298,7 +304,7 @@ class DatabaseService {
       INNER JOIN $_libraryTable l ON m.library_id = l.id
       WHERE l.is_enabled = 1
     ''');
-    
+
     return List.generate(maps.length, (i) {
       return _mapToManga(maps[i]);
     });
@@ -311,7 +317,7 @@ class DatabaseService {
       where: 'library_id = ?',
       whereArgs: [libraryId],
     );
-    
+
     return List.generate(maps.length, (i) {
       return _mapToManga(maps[i]);
     });
@@ -324,7 +330,7 @@ class DatabaseService {
       where: 'id = ?',
       whereArgs: [id],
     );
-    
+
     if (maps.isEmpty) return null;
     return _mapToManga(maps.first);
   }
@@ -339,7 +345,6 @@ class DatabaseService {
         'subtitle': manga.subtitle,
         'author': manga.author,
         'description': manga.description,
-        'cover_url': manga.coverUrl,
         'cover_path': manga.coverPath,
         'tags': manga.tags.join(','),
         'status': manga.status.name,
@@ -353,7 +358,9 @@ class DatabaseService {
         'source_url': manga.sourceUrl,
         'last_read_at': manga.lastReadAt?.toIso8601String(),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
-        'reading_progress': manga.readingProgress != null ? jsonEncode(manga.readingProgress!.toJson()) : null,
+        'reading_progress': manga.readingProgress != null
+            ? jsonEncode(manga.readingProgress!.toJson())
+            : null,
         'file_path': manga.path,
         'metadata': jsonEncode(manga.metadata),
       },
@@ -388,9 +395,12 @@ class DatabaseService {
       subtitle: map['subtitle'],
       author: map['author'],
       description: map['description'],
-      coverUrl: map['cover_url'],
       coverPath: map['cover_path'],
-      tags: map['tags']?.split(',').where((tag) => tag.toString().isNotEmpty).toList() ?? [],
+      tags: map['tags']
+              ?.split(',')
+              .where((tag) => tag.toString().isNotEmpty)
+              .toList() ??
+          [],
       status: map['status'] != null
           ? MangaStatus.values.firstWhere(
               (e) => e.name == map['status'],
@@ -402,8 +412,10 @@ class DatabaseService {
       rating: map['rating'] != null ? (map['rating'] as num).toDouble() : null,
       source: map['source'],
       sourceUrl: map['source_url'],
-      lastReadAt: map['last_read_at'] != null ? DateTime.parse(map['last_read_at']) : null,
-      createdAt: map['created_at'] != null 
+      lastReadAt: map['last_read_at'] != null
+          ? DateTime.parse(map['last_read_at'])
+          : null,
+      createdAt: map['created_at'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['created_at'])
           : DateTime.now(),
       updatedAt: map['updated_at'] != null
@@ -437,7 +449,7 @@ class DatabaseService {
   }
 
   static Future<void> updatePage(MangaPage page) async {
-  final db = await database;
+    final db = await database;
     await db.update(
       _pageTable,
       {
@@ -450,51 +462,51 @@ class DatabaseService {
       where: 'id = ?',
       whereArgs: [page.id],
     );
-
   }
 
-
   // 阅读进度操作
-   static Future<void> insertOrUpdateReadingProgress(ReadingProgress progress) async {
-     final db = await database;
-     await db.insert(
-       _readingProgressTable,
-       {
-         'id': progress.id,
-         'manga_id': progress.mangaId,
-         'current_page': progress.currentPage,
-         'total_pages': progress.totalPages,
-         'progress_percentage': progress.progressPercentage,
-         'last_read_at': progress.lastReadAt.millisecondsSinceEpoch,
-         'created_at': progress.createdAt.millisecondsSinceEpoch,
-         'updated_at': progress.updatedAt.millisecondsSinceEpoch,
-       },
-       conflictAlgorithm: ConflictAlgorithm.replace,
-     );
-   }
- 
-   static Future<ReadingProgress?> getReadingProgressByMangaId(String mangaId) async {
-     final db = await database;
-     final List<Map<String, dynamic>> maps = await db.query(
-       _readingProgressTable,
-       where: 'manga_id = ?',
-       whereArgs: [mangaId],
-     );
-     
-     if (maps.isEmpty) return null;
-     
-     final map = maps.first;
-     return ReadingProgress(
-       id: map['id'],
-       mangaId: map['manga_id'],
-       currentPage: map['current_page'],
-       totalPages: map['total_pages'],
-       progressPercentage: (map['progress_percentage'] as num).toDouble(),
-       lastReadAt: DateTime.fromMillisecondsSinceEpoch(map['last_read_at']),
-       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
-       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
-     );
-   }
+  static Future<void> insertOrUpdateReadingProgress(
+      ReadingProgress progress) async {
+    final db = await database;
+    await db.insert(
+      _readingProgressTable,
+      {
+        'id': progress.id,
+        'manga_id': progress.mangaId,
+        'current_page': progress.currentPage,
+        'total_pages': progress.totalPages,
+        'progress_percentage': progress.progressPercentage,
+        'last_read_at': progress.lastReadAt.millisecondsSinceEpoch,
+        'created_at': progress.createdAt.millisecondsSinceEpoch,
+        'updated_at': progress.updatedAt.millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<ReadingProgress?> getReadingProgressByMangaId(
+      String mangaId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      _readingProgressTable,
+      where: 'manga_id = ?',
+      whereArgs: [mangaId],
+    );
+
+    if (maps.isEmpty) return null;
+
+    final map = maps.first;
+    return ReadingProgress(
+      id: map['id'],
+      mangaId: map['manga_id'],
+      currentPage: map['current_page'],
+      totalPages: map['total_pages'],
+      progressPercentage: (map['progress_percentage'] as num).toDouble(),
+      lastReadAt: DateTime.fromMillisecondsSinceEpoch(map['last_read_at']),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
+    );
+  }
 
   static Future<void> deleteReadingProgress(String mangaId) async {
     final db = await database;
@@ -516,7 +528,7 @@ class DatabaseService {
 
   static ReadingProgress? _parseReadingProgress(String? jsonString) {
     if (jsonString == null || jsonString.isEmpty) return null;
-    
+
     try {
       final Map<String, dynamic> json = jsonDecode(jsonString);
       return ReadingProgress.fromJson(json);
@@ -533,6 +545,4 @@ class DatabaseService {
       _database = null;
     }
   }
-
-  
 }

@@ -21,19 +21,19 @@ class AppSettingsNotifier extends _$AppSettingsNotifier {
     final repository = ref.watch(settingsRepositoryProvider);
     return repository.getAppSettings();
   }
-  
+
   Future<void> updateSettings(AppSettings settings) async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveAppSettings(settings);
     ref.invalidateSelf();
   }
-  
+
   Future<void> updateThemeMode(ThemeMode themeMode) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(themeMode: themeMode);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateLocale(Locale locale) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(locale: locale);
@@ -49,37 +49,37 @@ class ReaderSettingsNotifier extends _$ReaderSettingsNotifier {
     final repository = ref.watch(settingsRepositoryProvider);
     return repository.getReaderSettings();
   }
-  
+
   Future<void> updateSettings(ReaderSettings settings) async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveReaderSettings(settings);
     ref.invalidateSelf();
   }
-  
+
   Future<void> updateReadingMode(ReadingMode mode) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(readingMode: mode);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateReadingDirection(ReadingDirection direction) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(readingDirection: direction);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateFullscreen(bool fullscreen) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(fullscreen: fullscreen);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateKeepScreenOn(bool keepScreenOn) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(keepScreenOn: keepScreenOn);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateBrightness(double brightness) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(brightness: brightness);
@@ -95,25 +95,25 @@ class LibraryViewSettingsNotifier extends _$LibraryViewSettingsNotifier {
     final repository = ref.watch(settingsRepositoryProvider);
     return repository.getLibraryViewSettings();
   }
-  
+
   Future<void> updateSettings(LibraryViewSettings settings) async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveLibraryViewSettings(settings);
     ref.invalidateSelf();
   }
-  
+
   Future<void> updateViewMode(ViewMode viewMode) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(viewMode: viewMode);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateSortAscending(bool sortAscending) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(sortAscending: sortAscending);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateGridColumns(int gridColumns) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(gridColumns: gridColumns);
@@ -129,25 +129,27 @@ class DownloadSettingsNotifier extends _$DownloadSettingsNotifier {
     final repository = ref.watch(settingsRepositoryProvider);
     return repository.getDownloadSettings();
   }
-  
+
   Future<void> updateSettings(DownloadSettings settings) async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveDownloadSettings(settings);
     ref.invalidateSelf();
   }
-  
+
   Future<void> updateDownloadOnlyOnWifi(bool downloadOnlyOnWifi) async {
     final currentSettings = await future;
-    final newSettings = currentSettings.copyWith(downloadOnlyOnWifi: downloadOnlyOnWifi);
+    final newSettings =
+        currentSettings.copyWith(downloadOnlyOnWifi: downloadOnlyOnWifi);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateMaxConcurrentDownloads(int maxConcurrentDownloads) async {
     final currentSettings = await future;
-    final newSettings = currentSettings.copyWith(maxConcurrentDownloads: maxConcurrentDownloads);
+    final newSettings = currentSettings.copyWith(
+        maxConcurrentDownloads: maxConcurrentDownloads);
     await updateSettings(newSettings);
   }
-  
+
   Future<void> updateDownloadPath(String downloadPath) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(downloadPath: downloadPath);
@@ -160,45 +162,45 @@ class DownloadSettingsNotifier extends _$DownloadSettingsNotifier {
 class SettingsActions extends _$SettingsActions {
   @override
   void build() {}
-  
+
   Future<void> resetAllSettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.resetToDefaults();
-    
+
     // 刷新所有设置提供者
     ref.invalidate(appSettingsNotifierProvider);
     ref.invalidate(readerSettingsNotifierProvider);
     ref.invalidate(libraryViewSettingsNotifierProvider);
     ref.invalidate(downloadSettingsNotifierProvider);
   }
-  
+
   Future<void> resetReaderSettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.resetReaderSettings();
     ref.invalidate(readerSettingsNotifierProvider);
   }
-  
+
   Future<void> resetLibrarySettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.resetLibrarySettings();
     ref.invalidate(libraryViewSettingsNotifierProvider);
   }
-  
+
   Future<void> resetDownloadSettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.resetDownloadSettings();
     ref.invalidate(downloadSettingsNotifierProvider);
   }
-  
+
   Future<Map<String, dynamic>> exportSettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     return repository.exportSettings();
   }
-  
+
   Future<void> importSettings(Map<String, dynamic> data) async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.importSettings(data);
-    
+
     // 刷新所有设置提供者
     ref.invalidate(appSettingsNotifierProvider);
     ref.invalidate(readerSettingsNotifierProvider);

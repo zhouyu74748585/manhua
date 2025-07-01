@@ -54,13 +54,11 @@ Future<List<MangaPage>> mangaPages(MangaPagesRef ref, String mangaId) async {
   return repository.getPageByMangaId(mangaId);
 }
 
-
-
 // 搜索结果提供者
 @riverpod
 Future<List<Manga>> searchManga(SearchMangaRef ref, String query) async {
   if (query.isEmpty) return [];
-  
+
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.searchManga(query);
 }
@@ -70,39 +68,38 @@ Future<List<Manga>> searchManga(SearchMangaRef ref, String query) async {
 class MangaActions extends _$MangaActions {
   @override
   void build() {}
-  
+
   Future<void> toggleFavorite(String mangaId, bool isFavorite) async {
     final repository = ref.read(mangaRepositoryProvider);
     await repository.updateMangaFavoriteStatus(mangaId, isFavorite);
-    
+
     // 刷新相关提供者
     ref.invalidate(allMangaProvider);
     ref.invalidate(favoriteMangaProvider);
     ref.invalidate(mangaDetailProvider(mangaId));
   }
-  
-  Future<void> updateReadingProgress(String mangaId, ReadingProgress progress) async {
+
+  Future<void> updateReadingProgress(
+      String mangaId, ReadingProgress progress) async {
     final repository = ref.read(mangaRepositoryProvider);
     await repository.updateReadingProgress(mangaId, progress);
-    
+
     // 刷新相关提供者
     ref.invalidate(recentlyReadMangaProvider);
     ref.invalidate(mangaDetailProvider(mangaId));
   }
-  
 
-  
   Future<void> deleteManga(String mangaId) async {
     final repository = ref.read(mangaRepositoryProvider);
     await repository.deleteManga(mangaId);
-    
+
     // 刷新所有相关提供者
     ref.invalidate(allMangaProvider);
     ref.invalidate(favoriteMangaProvider);
     ref.invalidate(recentlyReadMangaProvider);
     ref.invalidate(recentlyUpdatedMangaProvider);
   }
-  
+
   Future<void> refreshMangaData() async {
     // 刷新所有漫画相关数据
     ref.invalidate(allMangaProvider);

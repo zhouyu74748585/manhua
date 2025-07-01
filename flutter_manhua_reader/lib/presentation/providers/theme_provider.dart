@@ -13,12 +13,12 @@ class ThemeModeNotifier extends _$ThemeModeNotifier {
     final savedTheme = StorageService.getThemeMode();
     return _parseThemeMode(savedTheme);
   }
-  
+
   Future<void> setThemeMode(ThemeMode themeMode) async {
     state = themeMode;
     await StorageService.setThemeMode(_themeToString(themeMode));
   }
-  
+
   ThemeMode _parseThemeMode(String themeString) {
     switch (themeString) {
       case 'light':
@@ -30,7 +30,7 @@ class ThemeModeNotifier extends _$ThemeModeNotifier {
         return ThemeMode.system;
     }
   }
-  
+
   String _themeToString(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:
@@ -49,7 +49,7 @@ final themeModeProvider = themeModeNotifierProvider;
 // 当前是否为深色模式的Provider
 final isDarkModeProvider = Provider<bool>((ref) {
   final themeMode = ref.watch(themeModeProvider);
-  
+
   switch (themeMode) {
     case ThemeMode.light:
       return false;
@@ -57,7 +57,8 @@ final isDarkModeProvider = Provider<bool>((ref) {
       return true;
     case ThemeMode.system:
       // 获取系统主题
-      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      final brightness =
+          WidgetsBinding.instance.platformDispatcher.platformBrightness;
       return brightness == Brightness.dark;
   }
 });
@@ -67,7 +68,7 @@ class ThemeHelper {
   static void toggleTheme(WidgetRef ref) {
     final currentTheme = ref.read(themeModeProvider);
     final notifier = ref.read(themeModeProvider.notifier);
-    
+
     switch (currentTheme) {
       case ThemeMode.light:
         notifier.setThemeMode(ThemeMode.dark);
@@ -80,7 +81,7 @@ class ThemeHelper {
         break;
     }
   }
-  
+
   static String getThemeDisplayName(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:
@@ -91,7 +92,7 @@ class ThemeHelper {
         return '跟随系统';
     }
   }
-  
+
   static IconData getThemeIcon(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:

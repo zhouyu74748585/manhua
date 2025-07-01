@@ -7,7 +7,7 @@ class AppTheme {
   static const Color primaryVariant = Color(0xFF1976D2);
   static const Color secondaryColor = Color(0xFFFF9800);
   static const Color secondaryVariant = Color(0xFFF57C00);
-  
+
   // 浅色主题
   static ThemeData get lightTheme {
     const colorScheme = ColorScheme.light(
@@ -24,12 +24,12 @@ class AppTheme {
       onBackground: Color(0xFF212121),
       onError: Colors.white,
     );
-    
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.light,
-      
+
       // AppBar主题
       appBarTheme: const AppBarTheme(
         elevation: 0,
@@ -43,7 +43,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-      
+
       // 卡片主题
       cardTheme: const CardThemeData(
         elevation: 2,
@@ -52,7 +52,7 @@ class AppTheme {
         ),
         color: Colors.white,
       ),
-      
+
       // 按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -63,7 +63,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // 输入框主题
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
@@ -80,9 +80,10 @@ class AppTheme {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      
+
       // 底部导航栏主题
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
@@ -91,24 +92,24 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      
+
       // 抽屉主题
       drawerTheme: const DrawerThemeData(
         backgroundColor: Colors.white,
         elevation: 16,
       ),
-      
+
       // 分割线主题
       dividerTheme: const DividerThemeData(
         color: Color(0xFFE0E0E0),
         thickness: 1,
       ),
-      
+
       // 文本主题
       textTheme: _buildTextTheme(Brightness.light),
     );
   }
-  
+
   // 深色主题
   static ThemeData get darkTheme {
     const colorScheme = ColorScheme.dark(
@@ -125,12 +126,12 @@ class AppTheme {
       onBackground: Colors.white,
       onError: Colors.black,
     );
-    
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       brightness: Brightness.dark,
-      
+
       // AppBar主题
       appBarTheme: const AppBarTheme(
         elevation: 0,
@@ -144,7 +145,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
       ),
-      
+
       // 卡片主题
       cardTheme: const CardThemeData(
         elevation: 4,
@@ -153,7 +154,7 @@ class AppTheme {
         ),
         color: Color(0xFF1E1E1E),
       ),
-      
+
       // 按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -164,7 +165,7 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // 输入框主题
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
@@ -181,9 +182,10 @@ class AppTheme {
         ),
         filled: true,
         fillColor: const Color(0xFF1E1E1E),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      
+
       // 底部导航栏主题
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Color(0xFF1E1E1E),
@@ -192,30 +194,29 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      
+
       // 抽屉主题
       drawerTheme: const DrawerThemeData(
         backgroundColor: Color(0xFF1E1E1E),
         elevation: 16,
       ),
-      
+
       // 分割线主题
       dividerTheme: const DividerThemeData(
         color: Color(0xFF424242),
         thickness: 1,
       ),
-      
+
       // 文本主题
       textTheme: _buildTextTheme(Brightness.dark),
     );
   }
-  
+
   // 构建文本主题
   static TextTheme _buildTextTheme(Brightness brightness) {
-    final baseColor = brightness == Brightness.light 
-        ? const Color(0xFF212121) 
-        : Colors.white;
-    
+    final baseColor =
+        brightness == Brightness.light ? const Color(0xFF212121) : Colors.white;
+
     return TextTheme(
       displayLarge: TextStyle(
         fontSize: 32,

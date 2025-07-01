@@ -8,7 +8,7 @@ class AdaptiveScaffold extends StatelessWidget {
   final Widget body;
   final List<AppNavigationDestination> destinations;
   final Function(int) onDestinationSelected;
-  
+
   const AdaptiveScaffold({
     super.key,
     required this.currentLocation,
@@ -16,12 +16,12 @@ class AdaptiveScaffold extends StatelessWidget {
     required this.destinations,
     required this.onDestinationSelected,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final selectedIndex = _getSelectedIndex();
-    
+
     // 桌面端使用侧边栏导航
     if (PlatformUtils.shouldShowSidebar(screenWidth)) {
       return Scaffold(
@@ -45,7 +45,7 @@ class AdaptiveScaffold extends StatelessWidget {
         ),
       );
     }
-    
+
     // 移动端使用底部导航栏
     return Scaffold(
       body: body,
@@ -62,7 +62,7 @@ class AdaptiveScaffold extends StatelessWidget {
       ),
     );
   }
-  
+
   int _getSelectedIndex() {
     for (int i = 0; i < destinations.length; i++) {
       if (currentLocation.startsWith(destinations[i].route)) {

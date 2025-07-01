@@ -42,28 +42,28 @@ GoRouter appRouter(AppRouterRef ref) {
             name: 'home',
             builder: (context, state) => const HomePage(),
           ),
-          
+
           // 漫画库
           GoRoute(
             path: AppRoutes.library,
             name: 'library',
             builder: (context, state) => const LibraryPage(),
           ),
-          
+
           // 书架
           GoRoute(
             path: AppRoutes.bookshelf,
             name: 'bookshelf',
             builder: (context, state) => const BookshelfPage(),
           ),
-          
+
           // 设置
           GoRoute(
             path: AppRoutes.settings,
             name: 'settings',
             builder: (context, state) => const SettingsPage(),
           ),
-          
+
           // 搜索
           GoRoute(
             path: AppRoutes.search,
@@ -73,7 +73,7 @@ GoRouter appRouter(AppRouterRef ref) {
               return SearchPage(initialQuery: query);
             },
           ),
-          
+
           // 漫画详情
           GoRoute(
             path: AppRoutes.mangaDetail,
@@ -85,7 +85,7 @@ GoRouter appRouter(AppRouterRef ref) {
           ),
         ],
       ),
-      
+
       // 阅读器（全屏）
       GoRoute(
         path: AppRoutes.reader,
@@ -93,9 +93,10 @@ GoRouter appRouter(AppRouterRef ref) {
         builder: (context, state) {
           final mangaId = state.pathParameters['mangaId']!;
           final pageIndex = int.tryParse(
-            state.uri.queryParameters['page'] ?? '0',
-          ) ?? 0;
-          
+                state.uri.queryParameters['page'] ?? '0',
+              ) ??
+              0;
+
           return ReaderPage(
             mangaId: mangaId,
             initialPage: pageIndex,
@@ -103,7 +104,7 @@ GoRouter appRouter(AppRouterRef ref) {
         },
       ),
     ],
-    
+
     // 错误页面
     errorBuilder: (context, state) {
       return Scaffold(
@@ -128,8 +129,8 @@ GoRouter appRouter(AppRouterRef ref) {
               Text(
                 '请求的页面不存在或已被移除',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
+                      color: Colors.grey,
+                    ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -149,15 +150,15 @@ extension AppRouterExtension on GoRouter {
   void goToMangaDetail(String mangaId) {
     go('/manga/$mangaId');
   }
-  
+
   void goToReader(String mangaId, {int? page}) {
     final queryParams = <String, String>{};
     if (page != null) queryParams['page'] = page.toString();
-    
+
     final uri = Uri(path: '/reader/$mangaId', queryParameters: queryParams);
     go(uri.toString());
   }
-  
+
   void goToSearch({String? query}) {
     final queryParams = query != null ? {'q': query} : <String, String>{};
     final uri = Uri(path: AppRoutes.search, queryParameters: queryParams);
@@ -170,7 +171,7 @@ class NavigationHelper {
   static void goToMangaDetail(BuildContext context, String mangaId) {
     context.go('/manga/$mangaId');
   }
-  
+
   static void goToReader(
     BuildContext context,
     String mangaId, {
@@ -178,17 +179,17 @@ class NavigationHelper {
   }) {
     final queryParams = <String, String>{};
     if (page != null) queryParams['page'] = page.toString();
-    
+
     final uri = Uri(path: '/reader/$mangaId', queryParameters: queryParams);
     context.go(uri.toString());
   }
-  
+
   static void goToSearch(BuildContext context, {String? query}) {
     final queryParams = query != null ? {'q': query} : <String, String>{};
     final uri = Uri(path: AppRoutes.search, queryParameters: queryParams);
     context.go(uri.toString());
   }
-  
+
   static void goBack(BuildContext context) {
     if (context.canPop()) {
       context.pop();

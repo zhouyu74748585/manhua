@@ -7,13 +7,13 @@ import 'network_config_dialog.dart';
 class AddLibraryDialog extends StatefulWidget {
   final MangaLibrary? library; // 如果不为null，则为编辑模式
   final Function(MangaLibrary) onAdd;
-  
+
   const AddLibraryDialog({
     super.key,
     this.library,
     required this.onAdd,
   });
-  
+
   @override
   State<AddLibraryDialog> createState() => _AddLibraryDialogState();
 }
@@ -22,15 +22,15 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _pathController = TextEditingController();
-  
+
   LibraryType _selectedType = LibraryType.local;
   bool _isEnabled = true;
   NetworkConfig? _networkConfig;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // 如果是编辑模式，填充现有数据
     if (widget.library != null) {
       _nameController.text = widget.library!.name;
@@ -38,23 +38,25 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       _selectedType = widget.library!.type;
       _isEnabled = widget.library!.isEnabled;
       // 如果是网络类型，尝试解析网络配置
-      if (_selectedType == LibraryType.network && widget.library!.path.isNotEmpty) {
-        _networkConfig = NetworkConfig.fromConnectionString(widget.library!.path);
+      if (_selectedType == LibraryType.network &&
+          widget.library!.path.isNotEmpty) {
+        _networkConfig =
+            NetworkConfig.fromConnectionString(widget.library!.path);
       }
     }
   }
-  
+
   @override
   void dispose() {
     _nameController.dispose();
     _pathController.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.library != null;
-    
+
     return AlertDialog(
       title: Text(isEditing ? '编辑漫画库' : '添加漫画库'),
       content: SizedBox(
@@ -81,7 +83,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // 类型选择
               const Text(
                 '漫画库类型',
@@ -114,7 +116,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // 路径输入
               if (_selectedType == LibraryType.network)
                 Column(
@@ -137,14 +139,17 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
                                       ? '${_networkConfig!.protocol.displayName}: ${_networkConfig!.connectionUrl}'
                                       : '未配置网络连接',
                                   style: TextStyle(
-                                    color: _networkConfig != null ? Colors.black87 : Colors.grey[600],
+                                    color: _networkConfig != null
+                                        ? Colors.black87
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ),
                               TextButton.icon(
                                 onPressed: _configureNetwork,
                                 icon: const Icon(Icons.settings),
-                                label: Text(_networkConfig != null ? '修改配置' : '配置网络'),
+                                label: Text(
+                                    _networkConfig != null ? '修改配置' : '配置网络'),
                               ),
                             ],
                           ),
@@ -198,7 +203,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
                   },
                 ),
               const SizedBox(height: 16),
-              
+
               // 启用开关
               SwitchListTile(
                 title: const Text('启用漫画库'),
@@ -226,7 +231,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       ],
     );
   }
-  
+
   String _getPathLabel() {
     switch (_selectedType) {
       case LibraryType.local:
@@ -237,7 +242,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
         return '云端地址';
     }
   }
-  
+
   String _getPathHint() {
     switch (_selectedType) {
       case LibraryType.local:
@@ -248,7 +253,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
         return '例如: https://cloud.example.com/manga';
     }
   }
-  
+
   IconData _getPathIcon() {
     switch (_selectedType) {
       case LibraryType.local:
@@ -259,7 +264,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
         return Icons.cloud;
     }
   }
-  
+
   Future<void> _selectFolder() async {
     try {
       final result = await FilePicker.platform.getDirectoryPath();
@@ -276,14 +281,14 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       }
     }
   }
-  
+
   void _saveLibrary() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     String finalPath = _pathController.text.trim();
-    
+
     // 验证网络配置
     if (_selectedType == LibraryType.network) {
       if (_networkConfig == null || !_networkConfig!.isValid) {
@@ -294,9 +299,10 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       }
       finalPath = _networkConfig!.connectionUrl;
     }
-    
+
     final library = MangaLibrary(
-      id: widget.library?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.library?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
       path: finalPath,
       type: _selectedType,
@@ -306,10 +312,10 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       mangaCount: widget.library?.mangaCount ?? 0,
       settings: widget.library?.settings ?? {},
     );
-    
+
     widget.onAdd(library);
     Navigator.of(context).pop();
-    
+
     // 显示成功消息
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -317,7 +323,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       ),
     );
   }
-  
+
   void _configureNetwork() {
     showDialog(
       context: context,
