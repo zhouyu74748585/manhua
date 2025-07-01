@@ -500,13 +500,13 @@ class DatabaseService {
     );
   }
 
-  static Future getAllMangaReadingProgress() async {
+  static Future<List<ReadingProgress>> getAllMangaReadingProgress() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       _readingProgressTable,
     );
 
-    if (maps.isEmpty) return null;
+    if (maps.isEmpty) return [];
 
     return List.generate(maps.length, (i) {
       Map map = maps[i];

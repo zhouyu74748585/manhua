@@ -278,7 +278,7 @@ class FileScannerService {
       //为当前漫画创建目录
       final mangaDir = Directory(path.join(appDir.path, "thumbnails/${manga.id}/pages"));
       if (!await mangaDir.exists()) {
-        await mangaDir.create();
+        await mangaDir.create(recursive: true);
       }
 
       final inputStream = InputFileStream(manga.path);
@@ -316,8 +316,8 @@ class FileScannerService {
         pages[i].pageIndex = i+1;
       }
       return pages;
-    } catch (e) {
-      log('从ZIP文件解压缩失败: ${manga.title}, 错误: $e');
+    } catch (e,stackTrace) {
+      log('从ZIP文件解压缩失败: ${manga.title}, 错误: $e, 堆栈: $stackTrace');
       return [];
     }
   }

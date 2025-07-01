@@ -61,8 +61,8 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DatabaseService.getAllMangaReadingProgress();
       return dbManga;
-    } catch (e) {
-      log('查询漫画进度失败: $e');
+    } catch (e,stackTrace) {
+      log('查询漫画进度失败: $e,$stackTrace');
       return List.empty();
     }
   }
@@ -72,8 +72,8 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DatabaseService.getReadingProgressByMangaId(id);
       return dbManga;
-    } catch (e) {
-      log('查询漫画进度失败: $e');
+    } catch (e,stackTrace) {
+      log('查询漫画进度失败: $e,$stackTrace');
       return null;
     }
   }
@@ -105,20 +105,18 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> generatePageAndThumbnails(Manga manga) async {
      List<MangaPage> pages = await getPageByMangaId(manga.id);
     if (manga.type != MangaType.folder) {
-      if (manga.coverPath == null && manga.coverPath == null) {
-        if (manga.type == MangaType.archive) {
-          List<MangaPage> pages = await FileScannerService.extractFileToDisk(manga);
-          String? thumbnailPath = pages[0].largeThumbnail?.split("large").first;
-          manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-          manga.metadata
-              .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
-          if (thumbnailPath != null) {
-            await updateManga(manga);
-            await savePageList(pages);
-          }
-          log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
-        } else if (manga.type == MangaType.pdf) {}
-      }
+      if (manga.type == MangaType.archive) {
+        List<MangaPage> pages = await FileScannerService.extractFileToDisk(manga);
+        String? thumbnailPath = pages[0].largeThumbnail?.split("large").first;
+        manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
+        manga.metadata
+            .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
+        if (thumbnailPath != null) {
+          await updateManga(manga);
+          await savePageList(pages);
+        }
+        log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
+      } else if (manga.type == MangaType.pdf) {}
     } else {
       String? thumbnailPath;
       for (MangaPage page in pages) {
