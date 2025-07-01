@@ -111,8 +111,7 @@ class DatabaseService {
          last_read_at INTEGER NOT NULL,
          created_at INTEGER NOT NULL,
          updated_at INTEGER NOT NULL,
-         FOREIGN KEY (manga_id) REFERENCES $_mangaTable (id) ON DELETE CASCADE,
-         FOREIGN KEY (current_page_id) REFERENCES $_pageTable (id) ON DELETE SET NULL
+         FOREIGN KEY (manga_id) REFERENCES $_mangaTable (id) ON DELETE CASCADE
        )
      ''');
 

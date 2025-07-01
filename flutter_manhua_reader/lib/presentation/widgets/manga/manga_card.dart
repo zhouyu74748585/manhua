@@ -75,7 +75,7 @@ class _MangaCardState extends State<MangaCard> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.info_outline, color: Colors.white),
-                                      onPressed: widget.onTap,
+                                      onPressed: widget.onLongPress,
                                       tooltip: '查看详情',
                                     ),
                                   ],

@@ -251,7 +251,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           currentPage: progress?.currentPage ?? 0,
           progress: progress?.progressPercentage,
           onTap: () => _startReading(manga,progress),
-          onLongPress: () => _toggleFavorite(manga),
+          onLongPress: () => _openMangaDetail(manga),
         );
       },
     );

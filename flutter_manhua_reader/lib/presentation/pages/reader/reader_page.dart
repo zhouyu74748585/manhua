@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 
 import '../../../data/models/reading_progress.dart';
@@ -64,7 +65,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _enterFullscreen() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     setState(() {});
   }
 
@@ -77,6 +78,13 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
     setState(() {
       _showControls = !_showControls;
     });
+    
+    // 根据控制条状态切换全屏模式
+    if (_showControls) {
+      _exitFullscreen();
+    } else {
+      _enterFullscreen();
+    }
   }
 
   void _onPageChanged(int index) {
@@ -97,7 +105,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             libraryId: manga.libraryId,
             currentPage: _currentPageIndex + 1, // 转换为1基索引
             totalPages: manga.totalPages,
-            progressPercentage: (_currentPageIndex + 1) / manga.totalPages,
+            progressPercentage: ((_currentPageIndex + 1) / manga.totalPages).clamp(0.0, 1.0),
             lastReadAt: DateTime.now(),
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
@@ -513,10 +521,9 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 IconButton(
                   icon: const Icon(Icons.library_books),
                   onPressed: () {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/bookshelf',
-                      (route) => false,
-                    );
+                    // 刷新进度数据
+                    ref.invalidate(allMangaProgressProvider);
+                    context.go('/bookshelf');
                   },
                   tooltip: '书架',
                 ),
@@ -583,7 +590,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                 GestureDetector(
                   onTap: _toggleControls,
                   onTapDown: (details) => _handleTapNavigation(details, context),
-                  onSecondaryTap: () => Navigator.of(context).pop(), // 右键返回
+                  onSecondaryTap: () {
+              // 刷新进度数据
+              ref.invalidate(allMangaProgressProvider);
+              context.go('/bookshelf');
+            }, // 右键返回
                   child: _buildReaderView(pages),
                 ),
                 // 放大的导航按钮
@@ -600,7 +611,11 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                        // 刷新进度数据
+                        ref.invalidate(allMangaProgressProvider);
+                        context.go('/bookshelf');
+                      },
                         tooltip: '返回',
                       ),
                     ),
@@ -610,7 +625,22 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 16),
+              Text(
+                '正在加载漫画页面...',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '首次访问压缩包漫画需要解压，请稍候',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+            ],
+          ),
         ),
         error: (error, stackTrace) => Center(
           child: Column(
@@ -702,8 +732,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                                       ),
                                       Slider(
                                         value: manga.totalPages > 1
-                                            ? _currentPageIndex /
-                                                (manga.totalPages - 1)
+                                            ? (_currentPageIndex / (manga.totalPages - 1)).clamp(0.0, 1.0)
                                             : 0,
                                         onChanged: (value) {
                                           final pageIndex =
