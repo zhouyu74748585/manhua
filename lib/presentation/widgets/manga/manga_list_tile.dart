@@ -63,7 +63,7 @@ class MangaListTile extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: LinearProgressIndicator(
                           value: progress!,
-                          backgroundColor: Colors.grey.withOpacity(0.3),
+                          backgroundColor: Colors.grey.withValues(alpha:0.3),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             Theme.of(context).colorScheme.primary,
                           ),

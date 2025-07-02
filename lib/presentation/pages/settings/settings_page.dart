@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/theme_provider.dart';
+import 'privacy_settings_page.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -23,6 +24,12 @@ class SettingsPage extends ConsumerWidget {
           // 阅读设置
           _buildSectionHeader(context, '阅读'),
           _buildReaderSettings(context, ref),
+
+          const Divider(),
+
+          // 隐私设置
+          _buildSectionHeader(context, '隐私'),
+          _buildPrivacySettings(context, ref),
 
           const Divider(),
 
@@ -108,6 +115,26 @@ class SettingsPage extends ConsumerWidget {
           value: true,
           onChanged: (value) {
             // TODO: 屏幕常亮设置
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrivacySettings(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.security),
+          title: const Text('隐私模式'),
+          subtitle: const Text('设置密码和生物识别'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const PrivacySettingsPage(),
+              ),
+            );
           },
         ),
       ],

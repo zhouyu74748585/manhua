@@ -276,7 +276,7 @@ class AppTheme {
       bodySmall: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.normal,
-        color: baseColor.withOpacity(0.7),
+        color: baseColor.withValues(alpha:0.7),
       ),
       labelLarge: TextStyle(
         fontSize: 14,
@@ -291,7 +291,7 @@ class AppTheme {
       labelSmall: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w500,
-        color: baseColor.withOpacity(0.7),
+        color: baseColor.withValues(alpha:0.7),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'routes/app_router.dart';
 import 'themes/app_theme.dart';
 import '../presentation/providers/theme_provider.dart';
+import '../presentation/widgets/privacy/privacy_app_wrapper.dart';
 import '../core/constants/app_constants.dart';
 
 class App extends ConsumerWidget {
@@ -47,7 +48,9 @@ class App extends ConsumerWidget {
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.noScaling,
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: PrivacyAppWrapper(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

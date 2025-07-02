@@ -42,6 +42,12 @@ abstract class LibraryRepository {
   Future<Map<String, int>> getLibraryStats(String libraryId);
   Future<int> getTotalMangaCount();
   Future<int> getTotalLibraryCount();
+  
+  // 隐私模式管理
+  Future<void> setLibraryPrivate(String libraryId, bool isPrivate);
+  Future<void> updateLibraryPrivateActivation(String libraryId, bool isActivated);
+  Future<List<MangaLibrary>> getPrivateLibraries();
+  Future<List<MangaLibrary>> getActivatedPrivateLibraries();
 }
 
 class LocalLibraryRepository implements LibraryRepository {
@@ -406,6 +412,85 @@ class LocalLibraryRepository implements LibraryRepository {
     } catch (e) {
       log('获取漫画库总数失败: $e');
       return 0;
+    }
+  }
+  
+  @override
+  Future<void> setLibraryPrivate(String libraryId, bool isPrivate) async {
+    try {
+      final library = await DatabaseService.getLibraryById(libraryId);
+      if (library == null) {
+        throw Exception('漫画库不存在: $libraryId');
+      }
+      
+      final updatedLibrary = library.copyWith(
+        isPrivate: isPrivate,
+        isPrivateActivated: false, // 设置隐私模式时重置激活状态
+      );
+      
+      await DatabaseService.updateLibrary(updatedLibrary);
+      
+      // 清除缓存
+      _cachedLibraries = null;
+      _lastCacheTime = null;
+      
+      log('已${isPrivate ? "启用" : "禁用"}漫画库隐私模式: ${library.name}');
+    } catch (e) {
+      log('设置漫画库隐私模式失败: $libraryId, 错误: $e');
+      rethrow;
+    }
+  }
+  
+  @override
+  Future<void> updateLibraryPrivateActivation(String libraryId, bool isActivated) async {
+    try {
+      final library = await DatabaseService.getLibraryById(libraryId);
+      if (library == null) {
+        throw Exception('漫画库不存在: $libraryId');
+      }
+      
+      if (!library.isPrivate) {
+        throw Exception('该漫画库未启用隐私模式: ${library.name}');
+      }
+      
+      final updatedLibrary = library.copyWith(
+        isPrivateActivated: isActivated,
+      );
+      
+      await DatabaseService.updateLibrary(updatedLibrary);
+      
+      // 清除缓存
+      _cachedLibraries = null;
+      _lastCacheTime = null;
+      
+      log('已${isActivated ? "激活" : "取消激活"}隐私漫画库: ${library.name}');
+    } catch (e) {
+      log('更新漫画库隐私激活状态失败: $libraryId, 错误: $e');
+      rethrow;
+    }
+  }
+  
+  @override
+  Future<List<MangaLibrary>> getPrivateLibraries() async {
+    try {
+      final allLibraries = await getAllLibraries();
+      return allLibraries.where((library) => library.isPrivate).toList();
+    } catch (e) {
+      log('获取隐私漫画库列表失败: $e');
+      return [];
+    }
+  }
+  
+  @override
+  Future<List<MangaLibrary>> getActivatedPrivateLibraries() async {
+    try {
+      final allLibraries = await getAllLibraries();
+      return allLibraries.where((library) => 
+        library.isPrivate && library.isPrivateActivated
+      ).toList();
+    } catch (e) {
+      log('获取已激活的隐私漫画库列表失败: $e');
+      return [];
     }
   }
 }

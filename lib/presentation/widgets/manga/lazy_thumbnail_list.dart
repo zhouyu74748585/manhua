@@ -288,7 +288,7 @@ class _LazyThumbnailListState extends State<LazyThumbnailList> {
                     boxShadow: isPreviewPage
                         ? [
                             BoxShadow(
-                              color: Colors.blue.withOpacity(0.8), // 预览页蓝色阴影
+                              color: Colors.blue.withValues(alpha:0.8), // 预览页蓝色阴影
                               blurRadius: 16,
                               spreadRadius: 4,
                               offset: const Offset(0, 3),
@@ -298,7 +298,7 @@ class _LazyThumbnailListState extends State<LazyThumbnailList> {
                             ? [
                                 BoxShadow(
                                   color:
-                                      Colors.amber.withOpacity(0.6), // 当前页金色阴影
+                                      Colors.amber.withValues(alpha:0.6), // 当前页金色阴影
                                   blurRadius: 12,
                                   spreadRadius: 3,
                                   offset: const Offset(0, 2),
@@ -306,7 +306,7 @@ class _LazyThumbnailListState extends State<LazyThumbnailList> {
                               ]
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha:0.3),
                                   blurRadius: 4,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 1),

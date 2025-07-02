@@ -224,7 +224,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -240,7 +240,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -273,7 +273,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -294,7 +294,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha:0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -392,7 +392,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
       backgroundColor: Colors.black,
       appBar: _showControls
           ? AppBar(
-              backgroundColor: Colors.black.withOpacity(0.7),
+              backgroundColor: Colors.black.withValues(alpha:0.7),
               foregroundColor: Colors.white,
               title: mangaAsync.when(
                 data: (manga) => Text(manga?.title ?? '漫画阅读'),
@@ -502,7 +502,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                       left: 16,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha:0.5),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: IconButton(
@@ -521,7 +521,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                     right: 16,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
+                        color: Colors.black.withValues(alpha:0.7),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: IconButton(
@@ -585,7 +585,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           ? mangaAsync.when(
               data: (manga) => manga != null && manga.totalPages > 0
                   ? Container(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha:0.7),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -649,7 +649,7 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                                         },
                                         activeColor: Colors.white,
                                         inactiveColor:
-                                            Colors.white.withOpacity(0.3),
+                                            Colors.white.withValues(alpha:0.3),
                                       ),
                                     ],
                                   ),

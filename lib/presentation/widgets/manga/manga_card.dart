@@ -64,10 +64,10 @@ class _MangaCardState extends State<MangaCard> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.7),
+                                Colors.black.withValues(alpha:0.7),
                                 Colors.transparent,
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.8),
+                                Colors.black.withValues(alpha:0.8),
                               ],
                             ),
                           ),
@@ -113,7 +113,7 @@ class _MangaCardState extends State<MangaCard> {
                                         LinearProgressIndicator(
                                           value: widget.progress!,
                                           backgroundColor:
-                                              Colors.white.withOpacity(0.3),
+                                              Colors.white.withValues(alpha:0.3),
                                           valueColor:
                                               const AlwaysStoppedAnimation<
                                                   Color>(Colors.white),
@@ -130,7 +130,7 @@ class _MangaCardState extends State<MangaCard> {
                         Center(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
+                              color: Colors.black.withValues(alpha:0.7),
                               borderRadius: BorderRadius.circular(30),
                             ),
                             child: IconButton(
