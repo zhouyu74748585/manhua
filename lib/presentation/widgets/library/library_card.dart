@@ -8,6 +8,7 @@ class LibraryCard extends StatelessWidget {
   final VoidCallback onScan;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onSettings;
 
   const LibraryCard({
     super.key,
@@ -17,6 +18,7 @@ class LibraryCard extends StatelessWidget {
     required this.onScan,
     required this.onEdit,
     required this.onDelete,
+    this.onSettings,
   });
 
   @override
@@ -116,6 +118,15 @@ class LibraryCard extends StatelessWidget {
                   icon: const Icon(Icons.edit, size: 16),
                   label: const Text('编辑'),
                 ),
+                const SizedBox(width: 8),
+
+                // 设置按钮
+                if (onSettings != null)
+                  OutlinedButton.icon(
+                    onPressed: onSettings,
+                    icon: const Icon(Icons.settings, size: 16),
+                    label: const Text('设置'),
+                  ),
                 const Spacer(),
 
                 // 删除按钮

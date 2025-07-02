@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../data/models/library.dart';
 
 class MangaListTile extends StatelessWidget {
   final String title;
@@ -7,6 +8,7 @@ class MangaListTile extends StatelessWidget {
   final double? progress;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final CoverDisplayMode coverDisplayMode;
 
   const MangaListTile({
     super.key,
@@ -16,6 +18,7 @@ class MangaListTile extends StatelessWidget {
     this.progress,
     this.onTap,
     this.onLongPress,
+    this.coverDisplayMode = CoverDisplayMode.defaultMode,
   });
 
   @override
@@ -79,18 +82,53 @@ class MangaListTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(4.0),
-        image: coverPath != null && coverPath!.isNotEmpty
-            ? DecorationImage(
-                image: NetworkImage(coverPath!),
-                fit: BoxFit.cover,
-              )
-            : null,
       ),
-      child: coverPath == null || coverPath!.isEmpty
-          ? const Center(
-              child: Icon(Icons.image_not_supported, color: Colors.grey),
+      child: coverPath != null && coverPath!.isNotEmpty
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(4.0),
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: _getCoverAlignment(),
+                  child: Image.network(
+                    coverPath!,
+                    fit: BoxFit.cover,
+                    width: _getCoverWidth(),
+                    height: double.infinity,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(Icons.image_not_supported, color: Colors.grey),
+                      );
+                    },
+                  ),
+                ),
+              ),
             )
-          : null,
+          : const Center(
+              child: Icon(Icons.image_not_supported, color: Colors.grey),
+            ),
     );
+  }
+
+  Alignment _getCoverAlignment() {
+    switch (coverDisplayMode) {
+      case CoverDisplayMode.leftHalf:
+        return Alignment.centerLeft;
+      case CoverDisplayMode.rightHalf:
+        return Alignment.centerRight;
+      case CoverDisplayMode.defaultMode:
+      default:
+        return Alignment.center;
+    }
+  }
+
+  double _getCoverWidth() {
+    switch (coverDisplayMode) {
+      case CoverDisplayMode.leftHalf:
+      case CoverDisplayMode.rightHalf:
+        return 160.0; // 80 * 2，放大2倍以显示一半
+      case CoverDisplayMode.defaultMode:
+      default:
+        return 80.0;
+    }
   }
 }

@@ -160,14 +160,14 @@ class DatabaseService {
     final List<Map<String, dynamic>> maps = await db.query(_libraryTable);
 
     return List.generate(maps.length, (i) {
-      Map<String, dynamic> settings = {};
+      LibrarySettings settings = const LibrarySettings();
       if (maps[i]['settings'] != null &&
           maps[i]['settings'].toString().isNotEmpty) {
         try {
-          settings = Map<String, dynamic>.from(jsonDecode(maps[i]['settings']));
+          settings = jsonDecode(maps[i]['settings']);
         } catch (e) {
           // 如果解析失败，使用空的设置
-          settings = {};
+          settings = const LibrarySettings();
         }
       }
 
@@ -201,13 +201,13 @@ class DatabaseService {
     if (maps.isEmpty) return null;
 
     final map = maps.first;
-    Map<String, dynamic> settings = {};
+    LibrarySettings settings=const LibrarySettings();
     if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
       try {
-        settings = Map<String, dynamic>.from(jsonDecode(map['settings']));
+        settings = jsonDecode(map['settings']);
       } catch (e) {
         // 如果解析失败，使用空的设置
-        settings = {};
+        settings = const LibrarySettings();
       }
     }
 

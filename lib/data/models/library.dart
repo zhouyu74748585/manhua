@@ -12,7 +12,7 @@ class MangaLibrary {
   final DateTime createdAt;
   final DateTime? lastScanAt;
   final int mangaCount;
-  final Map<String, dynamic> settings;
+  final LibrarySettings settings;
 
   const MangaLibrary({
     required this.id,
@@ -23,7 +23,7 @@ class MangaLibrary {
     required this.createdAt,
     this.lastScanAt,
     this.mangaCount = 0,
-    this.settings = const {},
+    this.settings = const LibrarySettings(),
   });
 
   factory MangaLibrary.fromJson(Map<String, dynamic> json) =>
@@ -39,7 +39,7 @@ class MangaLibrary {
     DateTime? createdAt,
     DateTime? lastScanAt,
     int? mangaCount,
-    Map<String, dynamic>? settings,
+    LibrarySettings? settings,
   }) {
     return MangaLibrary(
       id: id ?? this.id,
@@ -62,6 +62,7 @@ class MangaLibrary {
 
   @override
   int get hashCode => id.hashCode;
+
 }
 
 enum LibraryType {
@@ -105,6 +106,7 @@ class LibrarySettings {
   final bool includeSubfolders;
   final String? coverPattern;
   final bool generateThumbnails;
+  final CoverDisplayMode coverDisplayMode;
 
   const LibrarySettings({
     this.autoScan = false,
@@ -113,6 +115,7 @@ class LibrarySettings {
     this.includeSubfolders = true,
     this.coverPattern,
     this.generateThumbnails = true,
+    this.coverDisplayMode = CoverDisplayMode.defaultMode,
   });
 
   factory LibrarySettings.fromJson(Map<String, dynamic> json) =>
@@ -126,6 +129,7 @@ class LibrarySettings {
     bool? includeSubfolders,
     String? coverPattern,
     bool? generateThumbnails,
+    CoverDisplayMode? coverDisplayMode,
   }) {
     return LibrarySettings(
       autoScan: autoScan ?? this.autoScan,
@@ -134,6 +138,40 @@ class LibrarySettings {
       includeSubfolders: includeSubfolders ?? this.includeSubfolders,
       coverPattern: coverPattern ?? this.coverPattern,
       generateThumbnails: generateThumbnails ?? this.generateThumbnails,
+      coverDisplayMode: coverDisplayMode ?? this.coverDisplayMode,
     );
+  }
+}
+
+enum CoverDisplayMode {
+  @JsonValue('default')
+  defaultMode,
+  @JsonValue('left_half')
+  leftHalf,
+  @JsonValue('right_half')
+  rightHalf,
+}
+
+extension CoverDisplayModeExtension on CoverDisplayMode {
+  String get displayName {
+    switch (this) {
+      case CoverDisplayMode.defaultMode:
+        return '默认';
+      case CoverDisplayMode.leftHalf:
+        return '左半';
+      case CoverDisplayMode.rightHalf:
+        return '右半';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case CoverDisplayMode.defaultMode:
+        return '显示完整封面图片';
+      case CoverDisplayMode.leftHalf:
+        return '只显示封面图片的左半部分';
+      case CoverDisplayMode.rightHalf:
+        return '只显示封面图片的右半部分';
+    }
   }
 }

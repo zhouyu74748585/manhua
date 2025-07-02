@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../../data/models/library.dart';
 
 class MangaCard extends StatefulWidget {
   final String title;
@@ -10,6 +11,7 @@ class MangaCard extends StatefulWidget {
   final int? currentPage;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final CoverDisplayMode coverDisplayMode;
 
   const MangaCard({
     super.key,
@@ -21,6 +23,7 @@ class MangaCard extends StatefulWidget {
     this.progress,
     this.onTap,
     this.onLongPress,
+    this.coverDisplayMode = CoverDisplayMode.defaultMode,
   });
 
   @override
@@ -158,21 +161,51 @@ class _MangaCardState extends State<MangaCard> {
   }
 
   Widget _buildCoverImage() {
-    return widget.coverPath != null && widget.coverPath!.isNotEmpty
-        ? Image.file(
-            File(widget.coverPath!),
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (context, error, stackTrace) {
-              return const Center(child: Icon(Icons.broken_image));
-            },
-          )
-        : Container(
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.image_not_supported, color: Colors.grey),
-            ),
-          );
+    if (widget.coverPath == null || widget.coverPath!.isEmpty) {
+      return Container(
+        color: Colors.grey[300],
+        child: const Center(
+          child: Icon(Icons.image_not_supported, color: Colors.grey),
+        ),
+      );
+    }
+
+    return ClipRect(
+      child: OverflowBox(
+        alignment: _getCoverAlignment(),
+        child: Image.file(
+          File(widget.coverPath!),
+          fit: BoxFit.cover,
+          width: _getCoverWidth(),
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(child: Icon(Icons.broken_image));
+          },
+        ),
+      ),
+    );
+  }
+
+  Alignment _getCoverAlignment() {
+    switch (widget.coverDisplayMode) {
+      case CoverDisplayMode.leftHalf:
+        return Alignment.centerLeft;
+      case CoverDisplayMode.rightHalf:
+        return Alignment.centerRight;
+      case CoverDisplayMode.defaultMode:
+      default:
+        return Alignment.center;
+    }
+  }
+
+  double? _getCoverWidth() {
+    switch (widget.coverDisplayMode) {
+      case CoverDisplayMode.leftHalf:
+      case CoverDisplayMode.rightHalf:
+        return double.infinity * 2; // 放大2倍以显示一半
+      case CoverDisplayMode.defaultMode:
+      default:
+        return double.infinity;
+    }
   }
 }

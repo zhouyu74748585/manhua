@@ -17,7 +17,9 @@ MangaLibrary _$MangaLibraryFromJson(Map<String, dynamic> json) => MangaLibrary(
           ? null
           : DateTime.parse(json['lastScanAt'] as String),
       mangaCount: (json['mangaCount'] as num?)?.toInt() ?? 0,
-      settings: json['settings'] as Map<String, dynamic>? ?? const {},
+      settings: json['settings'] == null
+          ? const LibrarySettings()
+          : LibrarySettings.fromJson(json['settings'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$MangaLibraryToJson(MangaLibrary instance) =>
@@ -52,6 +54,9 @@ LibrarySettings _$LibrarySettingsFromJson(Map<String, dynamic> json) =>
       includeSubfolders: json['includeSubfolders'] as bool? ?? true,
       coverPattern: json['coverPattern'] as String?,
       generateThumbnails: json['generateThumbnails'] as bool? ?? true,
+      coverDisplayMode: $enumDecodeNullable(
+              _$CoverDisplayModeEnumMap, json['coverDisplayMode']) ??
+          CoverDisplayMode.defaultMode,
     );
 
 Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
@@ -62,4 +67,11 @@ Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
       'includeSubfolders': instance.includeSubfolders,
       'coverPattern': instance.coverPattern,
       'generateThumbnails': instance.generateThumbnails,
+      'coverDisplayMode': _$CoverDisplayModeEnumMap[instance.coverDisplayMode]!,
     };
+
+const _$CoverDisplayModeEnumMap = {
+  CoverDisplayMode.defaultMode: 'default',
+  CoverDisplayMode.leftHalf: 'left_half',
+  CoverDisplayMode.rightHalf: 'right_half',
+};

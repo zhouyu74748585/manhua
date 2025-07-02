@@ -6,6 +6,7 @@ import '../../providers/manga_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/manga/manga_card.dart';
 import '../../../data/models/manga.dart';
+import '../../../data/models/library.dart';
 import '../manga_detail/manga_detail_page.dart';
 import '../reader/reader_page.dart';
 
@@ -230,6 +231,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   Widget _buildGridView(List<Manga> mangaList,
       Map<String, ReadingProgress> readingProcessMapAsync) {
     final gridConfig = _getGridConfig(_gridSize);
+    final librariesAsync = ref.watch(allLibrariesProvider);
 
     return GridView.builder(
       padding: const EdgeInsets.all(16),
@@ -243,6 +245,20 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       itemBuilder: (context, index) {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
+        
+        // 获取漫画所属库的封面展示模式
+        final coverDisplayMode = librariesAsync.when(
+          data: (libraries) {
+            final library = libraries.firstWhere(
+              (lib) => lib.id == manga.libraryId,
+              orElse: () => libraries.first,
+            );
+            return library.settings.coverDisplayMode;
+          },
+          loading: () => CoverDisplayMode.defaultMode,
+          error: (_, __) => CoverDisplayMode.defaultMode,
+        );
+        
         return MangaCard(
           title: manga.title,
           coverPath: manga.coverPath,
@@ -250,6 +266,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           totalPages: manga.totalPages,
           currentPage: progress?.currentPage ?? 0,
           progress: progress?.progressPercentage,
+          coverDisplayMode: coverDisplayMode,
           onTap: () => _startReading(manga,progress),
           onLongPress: () => _openMangaDetail(manga),
         );
@@ -292,17 +309,34 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
 
   Widget _buildListView(List<Manga> mangaList,
       Map<String, ReadingProgress> readingProcessMapAsync) {
+    final librariesAsync = ref.watch(allLibrariesProvider);
+    
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: mangaList.length,
       itemBuilder: (context, index) {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
+        
+        // 获取漫画所属库的封面展示模式
+        final coverDisplayMode = librariesAsync.when(
+          data: (libraries) {
+            final library = libraries.firstWhere(
+              (lib) => lib.id == manga.libraryId,
+              orElse: () => libraries.first,
+            );
+            return library.settings.coverDisplayMode;
+          },
+          loading: () => CoverDisplayMode.defaultMode,
+          error: (_, __) => CoverDisplayMode.defaultMode,
+        );
+        
         return MangaListTile(
           title: manga.title,
           coverPath: manga.coverPath,
           subtitle: manga.author,
           progress: progress?.progressPercentage,
+          coverDisplayMode: coverDisplayMode,
           onTap: () => _openMangaDetail(manga),
           onLongPress: () => _toggleFavorite(manga),
         );

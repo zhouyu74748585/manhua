@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/library_provider.dart';
 import '../../widgets/library/library_card.dart';
 import '../../widgets/library/add_library_dialog.dart';
+import '../../widgets/library/library_settings_dialog.dart';
 import '../../../data/models/library.dart';
 
 class LibraryPage extends ConsumerWidget {
@@ -147,6 +148,7 @@ class LibraryPage extends ConsumerWidget {
           onScan: () => _scanLibrary(context, ref, library.id),
           onEdit: () => _editLibrary(context, ref, library),
           onDelete: () => _deleteLibrary(context, ref, library),
+          onSettings: () => _showLibrarySettings(context, ref, library),
         );
       },
     );
@@ -201,6 +203,23 @@ class LibraryPage extends ConsumerWidget {
         onAdd: (updatedLibrary) => ref
             .read(libraryActionsProvider.notifier)
             .updateLibrary(updatedLibrary),
+      ),
+    );
+  }
+
+  void _showLibrarySettings(
+      BuildContext context, WidgetRef ref, MangaLibrary library) {
+    showDialog(
+      context: context,
+      builder: (context) => LibrarySettingsDialog(
+        library: library,
+        onSave: (settings) {
+          final updatedLibrary = library.copyWith(settings: settings);
+          ref.read(libraryActionsProvider.notifier).updateLibrary(updatedLibrary);
+          ScaffoldMessenger.of(context).showSnackBar( 
+            SnackBar(content: Text('已保存漫画库 "${library.name}" 的设置')),
+          );
+        },
       ),
     );
   }

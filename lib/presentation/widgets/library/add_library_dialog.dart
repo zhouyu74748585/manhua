@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+// import 'package:file_picker/file_picker.dart'; // 暂时注释掉以解决编译问题
 import '../../../data/models/library.dart';
 import '../../../data/models/network_config.dart';
 import 'network_config_dialog.dart';
@@ -266,20 +266,26 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
   }
 
   Future<void> _selectFolder() async {
-    try {
-      final result = await FilePicker.platform.getDirectoryPath();
-      if (result != null) {
-        setState(() {
-          _pathController.text = result;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('选择文件夹失败: $e')),
-        );
-      }
+    // 暂时禁用文件选择功能以解决编译问题
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('文件选择功能暂时不可用，请手动输入路径')),
+      );
     }
+    // try {
+    //   final result = await FilePicker.platform.getDirectoryPath();
+    //   if (result != null) {
+    //     setState(() {
+    //       _pathController.text = result;
+    //     });
+    //   }
+    // } catch (e) {
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('选择文件夹失败: $e')),
+    //     );
+    //   }
+    // }
   }
 
   void _saveLibrary() {
@@ -310,7 +316,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       createdAt: widget.library?.createdAt ?? DateTime.now(),
       lastScanAt: widget.library?.lastScanAt,
       mangaCount: widget.library?.mangaCount ?? 0,
-      settings: widget.library?.settings ?? {},
+      settings: widget.library?.settings ?? const LibrarySettings(),
     );
 
     widget.onAdd(library);

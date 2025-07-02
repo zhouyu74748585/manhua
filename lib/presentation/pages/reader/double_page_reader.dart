@@ -199,12 +199,14 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
     final tapPosition = details.globalPosition;
     
     if (_readingDirection == ReadingDirection.topToBottom) {
+      // 垂直阅读：点击上半部分上一页，下半部分下一页
       if (tapPosition.dy < screenSize.height / 2) {
         _goToPreviousPage();
       } else {
         _goToNextPage();
       }
     } else {
+      // 水平阅读：点击左右两边换页
       if (_readingDirection == ReadingDirection.leftToRight) {
         if (tapPosition.dx < screenSize.width / 2) {
           _goToPreviousPage();
@@ -212,6 +214,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
           _goToNextPage();
         }
       } else {
+        // 从右到左
         if (tapPosition.dx < screenSize.width / 2) {
           _goToNextPage();
         } else {
@@ -223,6 +226,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
   Widget _buildNavigationButtons(BuildContext context) {
     if (_readingDirection == ReadingDirection.topToBottom) {
+      // 垂直阅读：上下按钮
       return Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -261,6 +265,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
         ],
       );
     } else {
+      // 水平阅读：左右按钮
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
