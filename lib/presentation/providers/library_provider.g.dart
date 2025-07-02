@@ -454,7 +454,7 @@ final totalStatsProvider = AutoDisposeFutureProvider<Map<String, int>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalStatsRef = AutoDisposeFutureProviderRef<Map<String, int>>;
-String _$libraryActionsHash() => r'7f5b7c6f67de0f34e839375b00c9d037c4db31f6';
+String _$libraryActionsHash() => r'759b58ccc2f367dc884e1dabc94cdf9775e00337';
 
 /// See also [LibraryActions].
 @ProviderFor(LibraryActions)
@@ -470,12 +470,12 @@ final libraryActionsProvider =
 );
 
 typedef _$LibraryActions = AutoDisposeNotifier<void>;
-String _$libraryScanStateHash() => r'9277fd2379ffc0fe1451bd74652e7acf0de812bd';
+String _$libraryScanStateHash() => r'588b6994e41a10c1941744a40fff75e09b2d7cf6';
 
 /// See also [LibraryScanState].
 @ProviderFor(LibraryScanState)
-final libraryScanStateProvider =
-    AutoDisposeNotifierProvider<LibraryScanState, Map<String, bool>>.internal(
+final libraryScanStateProvider = AutoDisposeAsyncNotifierProvider<
+    LibraryScanState, Map<String, bool>>.internal(
   LibraryScanState.new,
   name: r'libraryScanStateProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -485,6 +485,6 @@ final libraryScanStateProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$LibraryScanState = AutoDisposeNotifier<Map<String, bool>>;
+typedef _$LibraryScanState = AutoDisposeAsyncNotifier<Map<String, bool>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

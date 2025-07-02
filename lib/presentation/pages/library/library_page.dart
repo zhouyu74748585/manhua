@@ -4,6 +4,7 @@ import '../../providers/library_provider.dart';
 import '../../widgets/library/library_card.dart';
 import '../../widgets/library/add_library_dialog.dart';
 import '../../widgets/library/library_settings_dialog.dart';
+import '../../widgets/library/privacy_dialog.dart';
 import '../../../data/models/library.dart';
 
 class LibraryPage extends ConsumerWidget {
@@ -105,7 +106,7 @@ class LibraryPage extends ConsumerWidget {
   }
 
   Widget _buildLibraryList(BuildContext context, List<MangaLibrary> libraries,
-      Map<String, bool> scanState, WidgetRef ref) {
+      AsyncValue<Map<String, bool>> scanStateAsync, WidgetRef ref) {
     if (libraries.isEmpty) {
       return Center(
         child: Column(
@@ -138,17 +139,27 @@ class LibraryPage extends ConsumerWidget {
       itemCount: libraries.length,
       itemBuilder: (context, index) {
         final library = libraries[index];
-        final isScanning = scanState[library.id] ?? false;
+        final scanState = scanStateAsync.valueOrNull ?? {};
+        final isScanning = library.isScanning || (scanState[library.id] ?? false);
 
         return LibraryCard(
           library: library,
           isScanning: isScanning,
+          onTap: () {
+            // TODO: 导航到漫画库详情页面
+            print('点击漫画库: ${library.name}');
+          },
+          onAccessGranted: () {
+            // 隐私验证通过后的回调
+            print('隐私验证通过，允许访问: ${library.name}');
+          },
           onToggleEnabled: (enabled) =>
               _toggleLibraryEnabled(ref, library, enabled),
           onScan: () => _scanLibrary(context, ref, library.id),
           onEdit: () => _editLibrary(context, ref, library),
           onDelete: () => _deleteLibrary(context, ref, library),
           onSettings: () => _showLibrarySettings(context, ref, library),
+          onPrivacySettings: () => _showPrivacySettings(context, ref, library),
         );
       },
     );
@@ -172,11 +183,9 @@ class LibraryPage extends ConsumerWidget {
 
   void _scanLibrary(
       BuildContext context, WidgetRef ref, String libraryId) async {
-    final scanStateNotifier = ref.read(libraryScanStateProvider.notifier);
     final libraryActions = ref.read(libraryActionsProvider.notifier);
 
     try {
-      scanStateNotifier.setScanningState(libraryId, true);
       await libraryActions.scanLibrary(libraryId);
 
       if (context.mounted) {
@@ -187,11 +196,9 @@ class LibraryPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('扫描失败: $e')),
+          SnackBar(content: Text('$e')),
         );
       }
-    } finally {
-      scanStateNotifier.setScanningState(libraryId, false);
     }
   }
 
@@ -253,6 +260,48 @@ class LibraryPage extends ConsumerWidget {
             child: const Text('删除'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPrivacySettings(
+      BuildContext context, WidgetRef ref, MangaLibrary library) {
+    showDialog(
+      context: context,
+      builder: (context) => PrivacyDialog(
+        libraryId: library.id,
+        libraryName: library.name,
+        isPrivate: library.isPrivate,
+        onPasswordSet: () {
+          final updatedLibrary = library.copyWith(isPrivate: true);
+          ref
+              .read(libraryActionsProvider.notifier)
+              .updateLibrary(updatedLibrary);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已为漫画库 "${library.name}" 启用密码保护')),
+          );
+        },
+        onBiometricSet: () {
+          final updatedLibrary = library.copyWith(isPrivate: true);
+          ref
+              .read(libraryActionsProvider.notifier)
+              .updateLibrary(updatedLibrary);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已为漫画库 "${library.name}" 启用生物识别保护')),
+          );
+        },
+        onPrivacyDisabled: () {
+          final updatedLibrary = library.copyWith(
+            isPrivate: false,
+            isPrivateActivated: false,
+          );
+          ref
+              .read(libraryActionsProvider.notifier)
+              .updateLibrary(updatedLibrary);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已关闭漫画库 "${library.name}" 的隐私保护')),
+          );
+        },
       ),
     );
   }

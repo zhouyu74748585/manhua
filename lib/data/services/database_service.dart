@@ -12,7 +12,7 @@ import '../models/reading_progress.dart';
 class DatabaseService {
   static Database? _database;
   static const String _databaseName = 'manhua_reader.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
 
   // 表名
   static const String _mangaTable = 'manga';
@@ -50,7 +50,10 @@ class DatabaseService {
         created_at INTEGER NOT NULL,
         last_scan_at INTEGER,
         manga_count INTEGER NOT NULL DEFAULT 0,
-        settings TEXT
+        settings TEXT,
+        is_scanning INTEGER NOT NULL DEFAULT 0,
+        is_private INTEGER NOT NULL DEFAULT 0,
+        is_private_activated INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -105,7 +108,6 @@ class DatabaseService {
          id TEXT PRIMARY KEY,
          manga_id TEXT NOT NULL,
          library_id TEXT NOT NULL,
-         current_apeg INTEGER NOT NULL DEFAULT 1,
          current_page INTEGER NOT NULL DEFAULT 1,
          total_pages INTEGER NOT NULL DEFAULT 1,
          progress_percentage REAL NOT NULL DEFAULT 0.0,
@@ -131,8 +133,11 @@ class DatabaseService {
   static Future<void> _onUpgrade(
       Database db, int oldVersion, int newVersion) async {
     // 数据库升级逻辑
-    if (oldVersion < newVersion) {
-      // 根据版本进行相应的升级操作
+    if (oldVersion < 2 && newVersion >= 2) {
+      // 添加新的字段到漫画库表
+      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_scanning INTEGER NOT NULL DEFAULT 0');
+      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0');
+      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_private_activated INTEGER NOT NULL DEFAULT 0');
     }
   }
 
@@ -188,6 +193,9 @@ class DatabaseService {
             : null,
         mangaCount: maps[i]['manga_count'],
         settings: settings,
+        isScanning: maps[i]['is_scanning'] == 1,
+        isPrivate: maps[i]['is_private'] == 1,
+        isPrivateActivated: maps[i]['is_private_activated'] == 1,
       );
     });
   }
@@ -228,6 +236,9 @@ class DatabaseService {
           : null,
       mangaCount: map['manga_count'],
       settings: settings,
+      isScanning: map['is_scanning'] == 1,
+      isPrivate: map['is_private'] == 1,
+      isPrivateActivated: map['is_private_activated'] == 1,
     );
   }
 
@@ -243,6 +254,9 @@ class DatabaseService {
         'last_scan_at': library.lastScanAt?.millisecondsSinceEpoch,
         'manga_count': library.mangaCount,
         'settings': jsonEncode(library.settings),
+        'is_scanning': library.isScanning ? 1 : 0,
+        'is_private': library.isPrivate ? 1 : 0,
+        'is_private_activated': library.isPrivateActivated ? 1 : 0,
       },
       where: 'id = ?',
       whereArgs: [library.id],

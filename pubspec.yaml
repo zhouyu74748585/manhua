@@ -41,6 +41,7 @@ dependencies:
   pdfx: ^2.9.2
   pdf_render: ^1.4.11
   tuple: ^2.0.0
+  local_auth: ^2.1.6
  
 
 dev_dependencies:

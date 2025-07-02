@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/library.dart';
+import 'privacy_access_handler.dart';
 
 class LibraryCard extends StatelessWidget {
   final MangaLibrary library;
@@ -9,6 +10,9 @@ class LibraryCard extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback? onSettings;
+  final VoidCallback? onPrivacySettings;
+  final VoidCallback? onTap;
+  final VoidCallback? onAccessGranted;
 
   const LibraryCard({
     super.key,
@@ -19,14 +23,33 @@ class LibraryCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
     this.onSettings,
+    this.onPrivacySettings,
+    this.onTap,
+    this.onAccessGranted,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: InkWell(
+        onTap: () async {
+          if (library.isPrivate) {
+            // 检查隐私访问权限
+            await PrivacyAccessHandler.checkLibraryAccess(
+              context: context,
+              library: library,
+              onAccessGranted: () {
+                onAccessGranted?.call();
+                onTap?.call();
+              },
+            );
+          } else {
+            onTap?.call();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -81,6 +104,13 @@ class LibraryCard extends StatelessWidget {
                   color: Colors.blue,
                 ),
                 const SizedBox(width: 8),
+                if (library.isPrivate)
+                  _buildInfoChip(
+                    icon: Icons.lock,
+                    label: '隐私保护',
+                    color: Colors.red,
+                  ),
+                const SizedBox(width: 8),
                 if (library.lastScanAt != null)
                   _buildInfoChip(
                     icon: Icons.access_time,
@@ -127,6 +157,21 @@ class LibraryCard extends StatelessWidget {
                     icon: const Icon(Icons.settings, size: 16),
                     label: const Text('设置'),
                   ),
+                const SizedBox(width: 8),
+
+                // 隐私设置按钮
+                if (onPrivacySettings != null)
+                  OutlinedButton.icon(
+                    onPressed: onPrivacySettings,
+                    icon: Icon(
+                      library.isPrivate ? Icons.lock : Icons.lock_open,
+                      size: 16,
+                    ),
+                    label: const Text('隐私'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: library.isPrivate ? Colors.red : null,
+                    ),
+                  ),
                 const Spacer(),
 
                 // 删除按钮
@@ -139,6 +184,7 @@ class LibraryCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

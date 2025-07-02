@@ -316,7 +316,9 @@ class FileScannerService {
         for (final file in batch) {
           //生成文件
           final imageData = file.content;
-          final pageFile = File(path.join(mangaDir.path, file.name));
+          //处理文件名中的特殊符号
+          String fileName=file.name.replaceAll("/", "_").replaceAll("\\", "_");
+          final pageFile = File(path.join(mangaDir.path, fileName));
           await pageFile.writeAsBytes(imageData);
 
           Map<String, String> thumbnailMap =
