@@ -110,10 +110,12 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   }
 
   void _toggleControls() {
-    if (mounted) {
-      setState(() {
-        _showControls = !_showControls;
-      });
+     if(Platform.isAndroid || Platform.isIOS){
+       if (mounted) {
+        setState(() {
+          _showControls = !_showControls;
+        });
+      }
     }
   }
 
@@ -488,27 +490,88 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
         data: (pages) {
           _initializeDoublePageGroups(pages.length);
           
-          return Stack(
-            children: [
-              GestureDetector(
-                onTapDown: (details) => _handleTapNavigation(details, context),
-                onTap: _toggleControls,
-                child: _buildDoublePageView(pages),
-              ),
-              if (!_showControls) _buildNavigationButtons(context),
-              if (_showControls)
+         return Listener(
+            onPointerSignal: (pointerSignal) {
+              if (pointerSignal is PointerScrollEvent) {
+                // 根据阅读方向处理鼠标滚动
+                if (_readingDirection == ReadingDirection.topToBottom) {
+                  // 垂直滚动
+                  if (pointerSignal.scrollDelta.dy > 0) {
+                    _goToNextPage();
+                  } else if (pointerSignal.scrollDelta.dy < 0) {
+                    _goToPreviousPage();
+                  }
+                } else {
+                  // 水平滚动
+                  if (pointerSignal.scrollDelta.dy > 0) {
+                    if (_readingDirection == ReadingDirection.leftToRight) {
+                      _goToNextPage();
+                    } else {
+                      _goToPreviousPage();
+                    }
+                  } else if (pointerSignal.scrollDelta.dy < 0) {
+                    if (_readingDirection == ReadingDirection.leftToRight) {
+                      _goToPreviousPage();
+                    } else {
+                      _goToNextPage();
+                    }
+                  }
+                }
+              }
+            },
+          child: Stack(
+              children: [
+                GestureDetector(
+                  onTap: _toggleControls,
+                  onTapDown: (details) => _handleTapNavigation(details, context),
+                  onSecondaryTap: () {
+                    context.go('/bookshelf');
+                  }, // 右键返回
+                  child: _buildDoublePageView(pages),
+                ),
+                // 放大的导航按钮
+                if (!_showControls) _buildNavigationButtons(context),
+                // 全屏模式下的返回按钮
+                if (!_showControls)
+                  Positioned(
+                    top: 40,
+                    left: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () {
+                        context.go('/bookshelf');
+                      },
+                        tooltip: '返回',
+                      ),
+                    ),
+                  ),
+                // 统一的全屏/取消全屏按钮（右下方缩略图上方）
                 Positioned(
-                  bottom: 20,
-                  right: 20,
-                  child: FloatingActionButton(
-                    mini: true,
-                    backgroundColor: Colors.black.withOpacity(0.7),
-                    onPressed: _toggleFullscreen,
-                    child: const Icon(Icons.fullscreen, color: Colors.white),
+                  bottom: _showControls ? 140 : 20, // 根据控制条显示状态调整位置
+                  right: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        _showControls ? Icons.fullscreen : Icons.fullscreen_exit,
+                        color: Colors.white,
+                      ),
+                      onPressed: _toggleFullscreen,
+                      tooltip: _showControls ? '全屏' : '退出全屏',
+                    ),
                   ),
                 ),
-            ],
-          );
+              ],
+            ),
+         );
         },
         loading: () => const Center(
           child: Column(

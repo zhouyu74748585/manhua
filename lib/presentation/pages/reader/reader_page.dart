@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,10 +79,12 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
   }
 
   void _toggleControls() {
-    if (mounted) {
-      setState(() {
-        _showControls = !_showControls;
-      });
+    if(Platform.isAndroid || Platform.isIOS){
+       if (mounted) {
+        setState(() {
+          _showControls = !_showControls;
+        });
+      }
     }
   }
 
@@ -439,14 +442,14 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
           : null,
       body: pageAsync.when(
         data: (pages) {
-          if (pages.isEmpty) {
-            return const Center(
-              child: Text(
-                '该漫画暂无页面',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
-          }
+          // if (pages.isEmpty) {
+          //   return const Center(
+          //     child: Text(
+          //       '该漫画暂无页面',
+          //       style: TextStyle(color: Colors.white),
+          //     ),
+          //   );
+          // }
 
           return Listener(
             onPointerSignal: (pointerSignal) {
@@ -483,8 +486,8 @@ class _ReaderPageState extends ConsumerState<ReaderPage> {
                   onTap: _toggleControls,
                   onTapDown: (details) => _handleTapNavigation(details, context),
                   onSecondaryTap: () {
-              context.go('/bookshelf');
-            }, // 右键返回
+                    context.go('/bookshelf');
+                  }, // 右键返回
                   child: _buildReaderView(pages),
                 ),
                 // 放大的导航按钮
