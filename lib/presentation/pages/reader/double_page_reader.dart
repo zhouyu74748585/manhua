@@ -11,7 +11,7 @@ import 'dart:io';
 
 import '../../../data/models/reading_progress.dart';
 import '../../providers/manga_provider.dart';
-import '../../widgets/double_page_thumbnail_list.dart';
+import '../../widgets/manga/double_page_thumbnail_list.dart';
 import 'reader_page.dart';
 
 class DoublePageReader extends ConsumerStatefulWidget {
@@ -34,7 +34,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   int _currentPageIndex = 0;
   ReadingDirection _readingDirection = ReadingDirection.leftToRight;
   bool _isLoading = true;
-  
+ final FocusNode _focusNode = FocusNode();
   // 双页模式专用状态
   int _currentGroupIndex = 0; // 当前双页组索引
   List<List<int>> _doublePageGroups = []; // 双页分组
@@ -43,20 +43,20 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   void initState() {
     super.initState();
     _currentPageIndex = widget.initialPage;
-    
+
     // 双页模式：计算初始组索引
     _currentGroupIndex = (_currentPageIndex / 2).floor();
     _pageController = PageController(initialPage: _currentGroupIndex);
-    
+
     // 设置全屏模式
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     _isLoading = false;
   }
-  
+
   // 初始化双页分组
   void _initializeDoublePageGroups(int totalPages) {
     _doublePageGroups.clear();
-    
+
     for (int i = 0; i < totalPages; i += 2) {
       if (i + 1 < totalPages) {
         _doublePageGroups.add([i, i + 1]);
@@ -79,7 +79,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
       }
     }
   }
-  
+
   // 从双页组索引获取第一页索引
   int _getPageIndexFromGroupIndex(int groupIndex) {
     if (groupIndex < _doublePageGroups.length) {
@@ -110,8 +110,8 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   }
 
   void _toggleControls() {
-     if(Platform.isAndroid || Platform.isIOS){
-       if (mounted) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      if (mounted) {
         setState(() {
           _showControls = !_showControls;
         });
@@ -124,7 +124,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
       setState(() {
         _showControls = !_showControls;
       });
-      
+
       if (_showControls) {
         _exitFullscreen();
       } else {
@@ -145,19 +145,20 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
   void _saveReadingProgress() async {
     if (!mounted) return;
-    
+
     final mangaAsync = ref.read(mangaDetailProvider(widget.mangaId));
     mangaAsync.when(
       data: (manga) async {
         if (!mounted || manga == null) return;
-        
+
         final progress = ReadingProgress(
           id: '${widget.mangaId}_progress',
           mangaId: widget.mangaId,
           libraryId: manga.libraryId,
           currentPage: _currentPageIndex + 1,
           totalPages: manga.totalPages,
-          progressPercentage: ((_currentPageIndex + 1) / manga.totalPages).clamp(0.0, 1.0),
+          progressPercentage:
+              ((_currentPageIndex + 1) / manga.totalPages).clamp(0.0, 1.0),
           lastReadAt: DateTime.now(),
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -176,7 +177,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
   void _goToPreviousPage() {
     if (!_pageController.hasClients) return;
-    
+
     if (_currentGroupIndex > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
@@ -187,7 +188,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
   void _goToNextPage() {
     if (!_pageController.hasClients) return;
-    
+
     if (_currentGroupIndex < _doublePageGroups.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -199,7 +200,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   void _handleTapNavigation(TapDownDetails details, BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final tapPosition = details.globalPosition;
-    
+
     if (_readingDirection == ReadingDirection.topToBottom) {
       // 垂直阅读：点击上半部分上一页，下半部分下一页
       if (tapPosition.dy < screenSize.height / 2) {
@@ -259,8 +260,11 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
               ),
               child: IconButton(
                 iconSize: 40,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                onPressed: _currentGroupIndex < _doublePageGroups.length - 1 ? _goToNextPage : null,
+                icon:
+                    const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                onPressed: _currentGroupIndex < _doublePageGroups.length - 1
+                    ? _goToNextPage
+                    : null,
               ),
             ),
           ),
@@ -309,7 +313,9 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                       : Icons.keyboard_arrow_left,
                   color: Colors.white,
                 ),
-                onPressed: _currentGroupIndex < _doublePageGroups.length - 1 ? _goToNextPage : null,
+                onPressed: _currentGroupIndex < _doublePageGroups.length - 1
+                    ? _goToNextPage
+                    : null,
               ),
             ),
           ),
@@ -320,17 +326,18 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
   Widget _buildDoublePageView(List<MangaPage> pages) {
     final doublePageCount = (pages.length / 2).ceil();
-    
+
     return PhotoViewGallery.builder(
       pageController: _pageController,
       itemCount: doublePageCount,
       builder: (context, index) {
         final leftPageIndex = index * 2;
         final rightPageIndex = leftPageIndex + 1;
-        
+
         if (rightPageIndex < pages.length) {
           return PhotoViewGalleryPageOptions.customChild(
-            child: _buildDoublePageWidget(pages[leftPageIndex], pages[rightPageIndex]),
+            child: _buildDoublePageWidget(
+                pages[leftPageIndex], pages[rightPageIndex]),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 2.0,
             initialScale: PhotoViewComputedScale.contained,
@@ -338,7 +345,8 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
         } else {
           return PhotoViewGalleryPageOptions(
             imageProvider: pages[leftPageIndex].localPath.startsWith('http')
-                ? CachedNetworkImageProvider(pages[leftPageIndex].localPath) as ImageProvider
+                ? CachedNetworkImageProvider(pages[leftPageIndex].localPath)
+                    as ImageProvider
                 : FileImage(File(pages[leftPageIndex].localPath)),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 3.0,
@@ -357,7 +365,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxPageWidth = constraints.maxWidth / 2;
-        
+
         return Flex(
           direction: Axis.horizontal,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -489,89 +497,104 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
       body: pageAsync.when(
         data: (pages) {
           _initializeDoublePageGroups(pages.length);
-          
-         return Listener(
-            onPointerSignal: (pointerSignal) {
-              if (pointerSignal is PointerScrollEvent) {
-                // 根据阅读方向处理鼠标滚动
-                if (_readingDirection == ReadingDirection.topToBottom) {
-                  // 垂直滚动
-                  if (pointerSignal.scrollDelta.dy > 0) {
-                    _goToNextPage();
-                  } else if (pointerSignal.scrollDelta.dy < 0) {
-                    _goToPreviousPage();
-                  }
-                } else {
-                  // 水平滚动
-                  if (pointerSignal.scrollDelta.dy > 0) {
-                    if (_readingDirection == ReadingDirection.leftToRight) {
-                      _goToNextPage();
-                    } else {
-                      _goToPreviousPage();
-                    }
-                  } else if (pointerSignal.scrollDelta.dy < 0) {
-                    if (_readingDirection == ReadingDirection.leftToRight) {
-                      _goToPreviousPage();
-                    } else {
-                      _goToNextPage();
-                    }
-                  }
+          return KeyboardListener(
+            focusNode: _focusNode,
+            onKeyEvent: (event) {
+              if (event is KeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                  _goToPreviousPage();
+                } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                  _goToNextPage();
                 }
               }
             },
-          child: Stack(
-              children: [
-                GestureDetector(
-                  onTap: _toggleControls,
-                  onTapDown: (details) => _handleTapNavigation(details, context),
-                  onSecondaryTap: () {
-                    context.go('/bookshelf');
-                  }, // 右键返回
-                  child: _buildDoublePageView(pages),
-                ),
-                // 放大的导航按钮
-                if (!_showControls) _buildNavigationButtons(context),
-                // 全屏模式下的返回按钮
-                if (!_showControls)
+            child: Listener(
+              onPointerSignal: (pointerSignal) {
+                if (pointerSignal is PointerScrollEvent) {
+                  // 根据阅读方向处理鼠标滚动
+                  if (_readingDirection == ReadingDirection.topToBottom) {
+                    // 垂直滚动
+                    if (pointerSignal.scrollDelta.dy > 0) {
+                      _goToNextPage();
+                    } else if (pointerSignal.scrollDelta.dy < 0) {
+                      _goToPreviousPage();
+                    }
+                  } else {
+                    // 水平滚动
+                    if (pointerSignal.scrollDelta.dy > 0) {
+                      if (_readingDirection == ReadingDirection.leftToRight) {
+                        _goToNextPage();
+                      } else {
+                        _goToPreviousPage();
+                      }
+                    } else if (pointerSignal.scrollDelta.dy < 0) {
+                      if (_readingDirection == ReadingDirection.leftToRight) {
+                        _goToPreviousPage();
+                      } else {
+                        _goToNextPage();
+                      }
+                    }
+                  }
+                }
+              },
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _toggleControls,
+                    onTapDown: (details) =>
+                        _handleTapNavigation(details, context),
+                    onSecondaryTap: () {
+                      context.go('/bookshelf');
+                    }, // 右键返回
+                    child: _buildDoublePageView(pages),
+                  ),
+                  // 放大的导航按钮
+                  if (!_showControls) _buildNavigationButtons(context),
+                  // 全屏模式下的返回按钮
+                  if (!_showControls)
+                    Positioned(
+                      top: 40,
+                      left: 16,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () {
+                            context.go('/bookshelf');
+                          },
+                          tooltip: '返回',
+                        ),
+                      ),
+                    ),
+                  // 统一的全屏/取消全屏按钮（右下方缩略图上方）
                   Positioned(
-                    top: 40,
-                    left: 16,
+                    bottom: _showControls ? 140 : 20, // 根据控制条显示状态调整位置
+                    right: 16,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withOpacity(0.7),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () {
-                        context.go('/bookshelf');
-                      },
-                        tooltip: '返回',
+                        icon: Icon(
+                          _showControls
+                              ? Icons.fullscreen
+                              : Icons.fullscreen_exit,
+                          color: Colors.white,
+                        ),
+                        onPressed: _toggleFullscreen,
+                        tooltip: _showControls ? '全屏' : '退出全屏',
                       ),
                     ),
                   ),
-                // 统一的全屏/取消全屏按钮（右下方缩略图上方）
-                Positioned(
-                  bottom: _showControls ? 140 : 20, // 根据控制条显示状态调整位置
-                  right: 16,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        _showControls ? Icons.fullscreen : Icons.fullscreen_exit,
-                        color: Colors.white,
-                      ),
-                      onPressed: _toggleFullscreen,
-                      tooltip: _showControls ? '全屏' : '退出全屏',
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-         );
+          );
         },
         loading: () => const Center(
           child: Column(
@@ -668,17 +691,24 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                                             color: Colors.white, fontSize: 12),
                                       ),
                                       Slider(
-                                        value: _doublePageGroups.isNotEmpty 
-                                            ? (_currentGroupIndex / (_doublePageGroups.length - 1)).clamp(0.0, 1.0) 
+                                        value: _doublePageGroups.isNotEmpty
+                                            ? (_currentGroupIndex /
+                                                    (_doublePageGroups.length -
+                                                        1))
+                                                .clamp(0.0, 1.0)
                                             : 0,
                                         onChanged: (value) {
                                           if (_doublePageGroups.isNotEmpty) {
-                                            final targetGroupIndex = (value * (_doublePageGroups.length - 1)).round();
+                                            final targetGroupIndex = (value *
+                                                    (_doublePageGroups.length -
+                                                        1))
+                                                .round();
                                             _onGroupTap(targetGroupIndex);
                                           }
                                         },
                                         activeColor: Colors.white,
-                                        inactiveColor: Colors.white.withOpacity(0.3),
+                                        inactiveColor:
+                                            Colors.white.withOpacity(0.3),
                                       ),
                                     ],
                                   ),
@@ -686,7 +716,8 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                                 IconButton(
                                   icon: const Icon(Icons.skip_next,
                                       color: Colors.white),
-                                  onPressed: _currentGroupIndex < _doublePageGroups.length - 1
+                                  onPressed: _currentGroupIndex <
+                                          _doublePageGroups.length - 1
                                       ? _goToNextPage
                                       : null,
                                 ),

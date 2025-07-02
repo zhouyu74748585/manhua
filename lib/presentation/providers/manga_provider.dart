@@ -21,12 +21,13 @@ Future<List<Manga>> allManga(AllMangaRef ref) async {
 }
 
 @riverpod
-Future<Map<String,ReadingProgress>> allMangaProgress(AllMangaProgressRef ref) async {
+Future<Map<String, ReadingProgress>> allMangaProgress(
+    AllMangaProgressRef ref) async {
   final repository = ref.watch(mangaRepositoryProvider);
-  List<ReadingProgress> list=await repository.getAllMangaReadingProgress();
-  Map<String,ReadingProgress> result={};
+  List<ReadingProgress> list = await repository.getAllMangaReadingProgress();
+  Map<String, ReadingProgress> result = {};
   for (var element in list) {
-      result[element.mangaId]=element;
+    result[element.mangaId] = element;
   }
   return result;
 }
@@ -61,9 +62,10 @@ Future<Manga?> mangaDetail(MangaDetailRef ref, String mangaId) async {
 
 // 带回调的漫画详情提供者
 @riverpod
-Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String mangaId) async {
+Future<Manga?> mangaDetailWithCallback(
+    MangaDetailWithCallbackRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
-  
+
   // 创建一个安全的回调函数
   void safeCallback() {
     // 使用scheduleMicrotask确保在安全的上下文中执行
@@ -78,7 +80,7 @@ Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String ma
       }
     });
   }
-  
+
   // 创建分批处理回调函数
   void safeBatchCallback(List<MangaPage> batchPages) {
     scheduleMicrotask(() {
@@ -90,7 +92,7 @@ Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String ma
       }
     });
   }
-  
+
   return repository.getMangaByIdWithCallback(
     mangaId,
     onThumbnailGenerated: safeCallback,
@@ -99,7 +101,8 @@ Future<Manga?> mangaDetailWithCallback(MangaDetailWithCallbackRef ref, String ma
 }
 
 @riverpod
-Future<ReadingProgress?> mangaProgress(MangaProgressRef ref, String mangaId) async {
+Future<ReadingProgress?> mangaProgress(
+    MangaProgressRef ref, String mangaId) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getReadingProgressById(mangaId);
 }

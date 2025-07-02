@@ -215,8 +215,10 @@ class LibraryPage extends ConsumerWidget {
         library: library,
         onSave: (settings) {
           final updatedLibrary = library.copyWith(settings: settings);
-          ref.read(libraryActionsProvider.notifier).updateLibrary(updatedLibrary);
-          ScaffoldMessenger.of(context).showSnackBar( 
+          ref
+              .read(libraryActionsProvider.notifier)
+              .updateLibrary(updatedLibrary);
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('已保存漫画库 "${library.name}" 的设置')),
           );
         },

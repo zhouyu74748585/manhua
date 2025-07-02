@@ -85,7 +85,7 @@ class LibraryActions extends _$LibraryActions {
     ref.invalidate(libraryDetailProvider(library.id));
     ref.invalidate(totalStatsProvider);
     ref.invalidate(libraryStatsProvider(library.id));
-    
+
     // 刷新漫画相关数据，确保书架显示最新内容
     ref.invalidate(allMangaProvider);
     ref.invalidate(favoriteMangaProvider);

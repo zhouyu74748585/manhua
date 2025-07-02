@@ -8,7 +8,7 @@ import 'dart:io';
 
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
-import '../../widgets/lazy_thumbnail_grid.dart';
+import '../../widgets/manga/lazy_thumbnail_grid.dart';
 import '../reader/reader_page.dart';
 
 class MangaDetailPage extends ConsumerWidget {
@@ -36,8 +36,8 @@ class MangaDetailPage extends ConsumerWidget {
           return CustomScrollView(
             slivers: [
               _buildSliverAppBar(context, ref, manga),
-              _buildMangaInfo(context, manga,progress),
-              _buildPageGrid(context, manga, progress,pages),
+              _buildMangaInfo(context, manga, progress),
+              _buildPageGrid(context, manga, progress, pages),
             ],
           );
         },
@@ -203,7 +203,8 @@ class MangaDetailPage extends ConsumerWidget {
     }
   }
 
-  Widget _buildMangaInfo(BuildContext context, Manga manga,ReadingProgress? progress) {
+  Widget _buildMangaInfo(
+      BuildContext context, Manga manga, ReadingProgress? progress) {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -299,8 +300,8 @@ class MangaDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildPageGrid(
-      BuildContext context, Manga manga, ReadingProgress? progress, List<MangaPage> pages) {
+  Widget _buildPageGrid(BuildContext context, Manga manga,
+      ReadingProgress? progress, List<MangaPage> pages) {
     final totalPages = manga.totalPages;
 
     if (totalPages == 0) {
@@ -330,8 +331,7 @@ class MangaDetailPage extends ConsumerWidget {
               ),
               TextButton.icon(
                 onPressed: () {
-                  _startReading(
-                      context, manga, progress?.currentPage ?? 1);
+                  _startReading(context, manga, progress?.currentPage ?? 1);
                 },
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('开始阅读'),

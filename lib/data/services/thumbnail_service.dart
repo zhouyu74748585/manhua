@@ -91,8 +91,7 @@ class ThumbnailService {
   }
 
   static Future<Map<String, String>> generateThumbnailsByData(
-    String mangaId, String originalImgPath,Uint8List data) async {
-
+      String mangaId, String originalImgPath, Uint8List data) async {
     final image = img.decodeImage(data);
     if (image == null) {
       log('解码图片失败');

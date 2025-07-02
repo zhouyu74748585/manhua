@@ -165,8 +165,8 @@ class DatabaseService {
       if (maps[i]['settings'] != null &&
           maps[i]['settings'].toString().isNotEmpty) {
         try {
-           settings = LibrarySettings.fromJson(jsonDecode(maps[i]['settings']));
-        } catch (e,stack) {
+          settings = LibrarySettings.fromJson(jsonDecode(maps[i]['settings']));
+        } catch (e, stack) {
           log('从数据库获取漫画库失败: $e $stack');
           // 如果解析失败，使用空的设置
           settings = const LibrarySettings();
@@ -203,7 +203,7 @@ class DatabaseService {
     if (maps.isEmpty) return null;
 
     final map = maps.first;
-    LibrarySettings settings=const LibrarySettings();
+    LibrarySettings settings = const LibrarySettings();
     if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
       try {
         settings = LibrarySettings.fromJson(jsonDecode(map['settings']));

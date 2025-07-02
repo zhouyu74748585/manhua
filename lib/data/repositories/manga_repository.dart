@@ -16,7 +16,9 @@ abstract class MangaRepository {
   Future<List<Manga>> getAllManga();
   Future<List<ReadingProgress>> getAllMangaReadingProgress();
   Future<Manga?> getMangaById(String id);
-  Future<Manga?> getMangaByIdWithCallback(String id, {VoidCallback? onThumbnailGenerated, Function(List<MangaPage>)? onBatchProcessed});
+  Future<Manga?> getMangaByIdWithCallback(String id,
+      {VoidCallback? onThumbnailGenerated,
+      Function(List<MangaPage>)? onBatchProcessed});
   Future<ReadingProgress?> getReadingProgressById(String id);
   Future<List<Manga>> searchManga(String query);
   Future<List<Manga>> getMangaByCategory(String category);
@@ -63,7 +65,7 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DatabaseService.getAllMangaReadingProgress();
       return dbManga;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('查询漫画进度失败: $e,$stackTrace');
       return List.empty();
     }
@@ -74,7 +76,7 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DatabaseService.getReadingProgressByMangaId(id);
       return dbManga;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('查询漫画进度失败: $e,$stackTrace');
       return null;
     }
@@ -90,8 +92,11 @@ class LocalMangaRepository implements MangaRepository {
       return null;
     }
   }
+
   @override
-  Future<Manga?> getMangaByIdWithCallback(String id, {VoidCallback? onThumbnailGenerated, Function(List<MangaPage>)? onBatchProcessed}) async {
+  Future<Manga?> getMangaByIdWithCallback(String id,
+      {VoidCallback? onThumbnailGenerated,
+      Function(List<MangaPage>)? onBatchProcessed}) async {
     try {
       Manga? manga = await DatabaseService.getMangaById(id);
       if (manga != null) {
@@ -104,7 +109,9 @@ class LocalMangaRepository implements MangaRepository {
           }
         }
         if (!hasThumbnail) {
-          generatePageAndThumbnails(manga, onComplete: onThumbnailGenerated, onBatchProcessed: onBatchProcessed);
+          generatePageAndThumbnails(manga,
+              onComplete: onThumbnailGenerated,
+              onBatchProcessed: onBatchProcessed);
         }
       }
       return manga;
@@ -114,9 +121,11 @@ class LocalMangaRepository implements MangaRepository {
     }
   }
 
-  Future<void> generatePageAndThumbnails(Manga manga, {VoidCallback? onComplete, Function(List<MangaPage>)? onBatchProcessed}) async {
-     log('开始生成漫画[${manga.title}]的缩略图');
-     List<MangaPage> pages = await getPageByMangaId(manga.id);
+  Future<void> generatePageAndThumbnails(Manga manga,
+      {VoidCallback? onComplete,
+      Function(List<MangaPage>)? onBatchProcessed}) async {
+    log('开始生成漫画[${manga.title}]的缩略图');
+    List<MangaPage> pages = await getPageByMangaId(manga.id);
     if (manga.type != MangaType.folder) {
       if (manga.type == MangaType.archive) {
         List<MangaPage> pages = await FileScannerService.extractFileToDisk(
@@ -131,10 +140,12 @@ class LocalMangaRepository implements MangaRepository {
             }
           },
         );
-        String? thumbnailPath = pages.isNotEmpty ? pages[0].largeThumbnail?.split("large").first : null;
+        String? thumbnailPath = pages.isNotEmpty
+            ? pages[0].largeThumbnail?.split("large").first
+            : null;
         manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-        manga.metadata
-            .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
+        manga.metadata.putIfAbsent(
+            "thumbnailGenerteDate", () => DateTime.now().toString());
         if (thumbnailPath != null) {
           await updateManga(manga);
           // 最终保存所有页面（确保完整性）
@@ -147,24 +158,25 @@ class LocalMangaRepository implements MangaRepository {
       String? thumbnailPath;
       const int batchSize = 10;
       List<MangaPage> updatedPages = [];
-      
+
       for (int i = 0; i < pages.length; i += batchSize) {
         int endIndex = (i + batchSize).clamp(0, pages.length);
         List<MangaPage> batch = pages.sublist(i, endIndex);
         List<MangaPage> batchUpdatedPages = [];
-        
+
         for (MangaPage page in batch) {
           String localPath = page.localPath;
           Map<String, String> thumbnailMap =
-              await ThumbnailService.generateThumbnails(page.mangaId, localPath);
+              await ThumbnailService.generateThumbnails(
+                  page.mangaId, localPath);
           String? smallThumbnail = thumbnailMap["small"];
           String? mediumThumbnail = thumbnailMap["medium"];
           String? largeThumbnail = thumbnailMap["large"];
-          
+
           if (thumbnailPath == null && largeThumbnail != null) {
             thumbnailPath = largeThumbnail.split("large").first;
           }
-          
+
           final updatePages = page.copyWith(
             smallThumbnail: smallThumbnail,
             mediumThumbnail: mediumThumbnail,
@@ -173,19 +185,19 @@ class LocalMangaRepository implements MangaRepository {
           await updatePage(updatePages);
           batchUpdatedPages.add(updatePages);
         }
-        
+
         updatedPages.addAll(batchUpdatedPages);
-        
+
         // 每批处理完成后触发回调
         if (onBatchProcessed != null) {
           onBatchProcessed(batchUpdatedPages);
           log("生成[${manga.title}]的${batchUpdatedPages.length}页的缩略图");
         }
-        
+
         // 添加小延迟避免阻塞UI
         await Future.delayed(const Duration(milliseconds: 50));
       }
-      
+
       manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
       manga.metadata
           .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
@@ -194,7 +206,7 @@ class LocalMangaRepository implements MangaRepository {
       }
       log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
     }
-    
+
     // 缩略图生成完成后安全地调用回调
     if (onComplete != null) {
       try {

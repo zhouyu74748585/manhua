@@ -49,24 +49,26 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 12),
-              
+
               // 封面展示模式选项
-              ...CoverDisplayMode.values.map((mode) => RadioListTile<CoverDisplayMode>(
-                title: Text(mode.displayName),
-                subtitle: Text(mode.description),
-                value: mode,
-                groupValue: _settings.coverDisplayMode,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _settings = _settings.copyWith(coverDisplayMode: value);
-                    });
-                  }
-                },
-              )),
-              
+              ...CoverDisplayMode.values
+                  .map((mode) => RadioListTile<CoverDisplayMode>(
+                        title: Text(mode.displayName),
+                        subtitle: Text(mode.description),
+                        value: mode,
+                        groupValue: _settings.coverDisplayMode,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _settings =
+                                  _settings.copyWith(coverDisplayMode: value);
+                            });
+                          }
+                        },
+                      )),
+
               // 左半/右半模式的额外设置
-              if (_settings.coverDisplayMode == CoverDisplayMode.leftHalf || 
+              if (_settings.coverDisplayMode == CoverDisplayMode.leftHalf ||
                   _settings.coverDisplayMode == CoverDisplayMode.rightHalf) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -86,12 +88,13 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      
+
                       // 缩放比例设置
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('缩放比例'),
-                        subtitle: Text('当前值: ${_settings.coverScale.toStringAsFixed(1)}'),
+                        subtitle: Text(
+                            '当前值: ${_settings.coverScale.toStringAsFixed(1)}'),
                         trailing: SizedBox(
                           width: 120,
                           child: Slider(
@@ -102,18 +105,20 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                             label: _settings.coverScale.toStringAsFixed(1),
                             onChanged: (value) {
                               setState(() {
-                                _settings = _settings.copyWith(coverScale: value);
+                                _settings =
+                                    _settings.copyWith(coverScale: value);
                               });
                             },
                           ),
                         ),
                       ),
-                      
+
                       // 偏移量设置
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('偏移量'),
-                        subtitle: Text('当前值: ${_settings.coverOffsetX.toStringAsFixed(2)}'),
+                        subtitle: Text(
+                            '当前值: ${_settings.coverOffsetX.toStringAsFixed(2)}'),
                         trailing: SizedBox(
                           width: 120,
                           child: Slider(
@@ -124,7 +129,8 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                             label: _settings.coverOffsetX.toStringAsFixed(2),
                             onChanged: (value) {
                               setState(() {
-                                _settings = _settings.copyWith(coverOffsetX: value);
+                                _settings =
+                                    _settings.copyWith(coverOffsetX: value);
                               });
                             },
                           ),
@@ -134,11 +140,11 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
-              
+
               // 其他设置
               SwitchListTile(
                 title: const Text('自动扫描'),
@@ -150,7 +156,7 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                   });
                 },
               ),
-              
+
               SwitchListTile(
                 title: const Text('包含子文件夹'),
                 subtitle: const Text('扫描时包含子文件夹中的漫画'),
@@ -161,7 +167,7 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                   });
                 },
               ),
-              
+
               SwitchListTile(
                 title: const Text('生成缩略图'),
                 subtitle: const Text('为漫画页面生成缩略图以提高浏览速度'),
@@ -172,9 +178,9 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                   });
                 },
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // 扫描间隔设置
               ListTile(
                 title: const Text('扫描间隔'),
@@ -189,7 +195,8 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                     label: '${_settings.scanInterval.inHours} 小时',
                     onChanged: (value) {
                       setState(() {
-                        _settings = _settings.copyWith(scanInterval: Duration(hours: value.round()));
+                        _settings = _settings.copyWith(
+                            scanInterval: Duration(hours: value.round()));
                       });
                     },
                   ),

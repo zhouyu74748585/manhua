@@ -73,12 +73,11 @@ class FileScannerService {
         }
       } else if (entity is Directory) {
         // 递归扫描子目录
-        try{
+        try {
           await _scanDirectoryRecursive(entity, libraryId, mangas, mangaPages);
-        }catch(e, stackTrace){
+        } catch (e, stackTrace) {
           log('扫描子目录时出错: $e, 栈跟踪: $stackTrace');
         }
-       
       }
     }
   }
@@ -170,7 +169,7 @@ class FileScannerService {
       }
       pages.sort((a, b) => b.localPath.compareTo(a.localPath));
       for (int i = 0; i < pages.length; i++) {
-        pages[i].pageIndex = i+1;
+        pages[i].pageIndex = i + 1;
       }
 
       mangas.add(manga);
@@ -277,72 +276,78 @@ class FileScannerService {
     };
   }
 
-  static Future<List<MangaPage>> extractFileToDisk(Manga manga, {Function(List<MangaPage>)? onBatchProcessed}) async {
+  static Future<List<MangaPage>> extractFileToDisk(Manga manga,
+      {Function(List<MangaPage>)? onBatchProcessed}) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
       //为当前漫画创建目录
-      final mangaDir = Directory(path.join(appDir.path, "thumbnails/${manga.id}/pages"));
+      final mangaDir =
+          Directory(path.join(appDir.path, "thumbnails/${manga.id}/pages"));
       if (!await mangaDir.exists()) {
         await mangaDir.create(recursive: true);
       }
 
       final inputStream = InputFileStream(manga.path);
       final archive = ZipDecoder().decodeStream(inputStream);
-      
+
       // 过滤出有效的图片文件
       final validFiles = archive.where((file) {
-        return file.isFile && 
-               !file.name.startsWith('__MACOSX') &&
-               supportedImageFormats.contains(path.extension(file.name).toLowerCase());
+        return file.isFile &&
+            !file.name.startsWith('__MACOSX') &&
+            supportedImageFormats
+                .contains(path.extension(file.name).toLowerCase());
       }).toList();
-      
+
       // 按文件名排序
       validFiles.sort((a, b) => a.name.compareTo(b.name));
-      
+
       List<MangaPage> allPages = [];
       const int batchSize = 10;
-      
+
       // 分批处理文件
       for (int i = 0; i < validFiles.length; i += batchSize) {
-        final endIndex = (i + batchSize < validFiles.length) ? i + batchSize : validFiles.length;
+        final endIndex = (i + batchSize < validFiles.length)
+            ? i + batchSize
+            : validFiles.length;
         final batch = validFiles.sublist(i, endIndex);
-        
+
         List<MangaPage> batchPages = [];
-        
+
         for (final file in batch) {
           //生成文件
           final imageData = file.content;
           final pageFile = File(path.join(mangaDir.path, file.name));
           await pageFile.writeAsBytes(imageData);
-          
-          Map<String, String> thumbnailMap = await ThumbnailService.generateThumbnailsByData(manga.id, file.name, imageData);
+
+          Map<String, String> thumbnailMap =
+              await ThumbnailService.generateThumbnailsByData(
+                  manga.id, file.name, imageData);
           String? smallThumbnail = thumbnailMap["small"];
           String? mediumThumbnail = thumbnailMap["medium"];
           String? largeThumbnail = thumbnailMap["large"];
-          
+
           MangaPage page = MangaPage(
-            id: generatePageId(file.name),
-            mangaId: manga.id,
-            pageIndex: allPages.length + batchPages.length + 1, // 设置正确的页码
-            localPath: pageFile.path,
-            largeThumbnail: largeThumbnail,
-            mediumThumbnail: mediumThumbnail,
-            smallThumbnail: smallThumbnail
-          );
+              id: generatePageId(file.name),
+              mangaId: manga.id,
+              pageIndex: allPages.length + batchPages.length + 1, // 设置正确的页码
+              localPath: pageFile.path,
+              largeThumbnail: largeThumbnail,
+              mediumThumbnail: mediumThumbnail,
+              smallThumbnail: smallThumbnail);
           batchPages.add(page);
         }
-        
+
         allPages.addAll(batchPages);
-        
+
         // 触发批次处理完成回调
         if (onBatchProcessed != null) {
           onBatchProcessed(List.from(allPages)); // 传递当前所有已处理的页面
         }
-        
+
         // 添加小延迟，避免阻塞UI
         await Future.delayed(const Duration(milliseconds: 50));
       }
-      
+
       return allPages;
     } catch (e, stackTrace) {
       log('从ZIP文件解压缩失败: ${manga.title}, 错误: $e, 堆栈: $stackTrace');

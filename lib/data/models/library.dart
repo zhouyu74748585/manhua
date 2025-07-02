@@ -62,7 +62,6 @@ class MangaLibrary {
 
   @override
   int get hashCode => id.hashCode;
-
 }
 
 enum LibraryType {

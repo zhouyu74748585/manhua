@@ -133,7 +133,7 @@ class LocalLibraryRepository implements LibraryRepository {
     try {
       // 获取该库下的所有漫画
       final libraryMangas = await DatabaseService.getMangaByLibraryId(id);
-      
+
       // 删除每个漫画的相关数据
       for (final manga in libraryMangas) {
         try {
@@ -154,14 +154,14 @@ class LocalLibraryRepository implements LibraryRepository {
           log('删除漫画数据失败: ${manga.title}, 错误: $e');
         }
       }
-      
+
       // 从数据库删除漫画库
       await DatabaseService.deleteLibrary(id);
 
       // 清除缓存
       _cachedLibraries = null;
       _lastCacheTime = null;
-      
+
       log('成功删除漫画库及其所有相关数据: $id');
     } catch (e) {
       log('删除漫画库失败: $id, 错误: $e');

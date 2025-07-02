@@ -54,7 +54,7 @@ class CoverCacheService {
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
       ArchiveFile? coverFile;
-      int pageCount=0;
+      int pageCount = 0;
       for (final file in archive) {
         if (!file.isFile || file.name.startsWith('__MACOSX')) {
           continue;

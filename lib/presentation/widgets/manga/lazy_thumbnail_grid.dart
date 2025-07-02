@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 
-import '../../data/models/manga_page.dart';
+import '../../../data/models/manga_page.dart';
 
 class LazyThumbnailGrid extends StatefulWidget {
   final List<MangaPage> pages;
@@ -40,7 +40,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    
+
     // 初始加载可见范围内的图片
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateVisibleItems();
@@ -60,42 +60,51 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
 
   void _updateVisibleItems() {
     if (!mounted) return;
-    
+
     final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final viewportHeight = renderBox.size.height;
     final scrollOffset = _scrollController.offset;
-    
+
     // 估算每行的高度（基于网格布局）
-    final itemWidth = (renderBox.size.width - (widget.crossAxisCount - 1) * widget.spacing) / widget.crossAxisCount;
+    final itemWidth =
+        (renderBox.size.width - (widget.crossAxisCount - 1) * widget.spacing) /
+            widget.crossAxisCount;
     final itemHeight = itemWidth * 1.4; // 假设图片比例为1:1.4
     final rowHeight = itemHeight + widget.spacing;
-    
+
     // 计算可见范围
-    final startRow = (scrollOffset / rowHeight).floor().clamp(0, (widget.totalPages / widget.crossAxisCount).ceil() - 1);
-    final endRow = ((scrollOffset + viewportHeight) / rowHeight).ceil().clamp(0, (widget.totalPages / widget.crossAxisCount).ceil() - 1);
-    
+    final startRow = (scrollOffset / rowHeight)
+        .floor()
+        .clamp(0, (widget.totalPages / widget.crossAxisCount).ceil() - 1);
+    final endRow = ((scrollOffset + viewportHeight) / rowHeight)
+        .ceil()
+        .clamp(0, (widget.totalPages / widget.crossAxisCount).ceil() - 1);
+
     final startIndex = startRow * widget.crossAxisCount;
-    final endIndex = ((endRow + 1) * widget.crossAxisCount).clamp(0, widget.totalPages);
-    
+    final endIndex =
+        ((endRow + 1) * widget.crossAxisCount).clamp(0, widget.totalPages);
+
     // 加载可见范围内的图片
     for (int i = startIndex; i < endIndex; i++) {
       if (!_loadedIndices.contains(i)) {
         _loadedIndices.add(i);
       }
     }
-    
+
     // 预加载前后的图片
-    final preloadStart = (startIndex - widget.preloadCount).clamp(0, widget.totalPages);
-    final preloadEnd = (endIndex + widget.preloadCount).clamp(0, widget.totalPages);
-    
+    final preloadStart =
+        (startIndex - widget.preloadCount).clamp(0, widget.totalPages);
+    final preloadEnd =
+        (endIndex + widget.preloadCount).clamp(0, widget.totalPages);
+
     for (int i = preloadStart; i < preloadEnd; i++) {
       if (!_preloadedIndices.contains(i)) {
         _preloadedIndices.add(i);
       }
     }
-    
+
     if (mounted) {
       setState(() {});
     }
@@ -104,8 +113,9 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
   Widget _buildThumbnail(int index) {
     final pageIndex = index + 1;
     final isCurrentPage = widget.currentPage == pageIndex;
-    final shouldLoad = _loadedIndices.contains(index) || _preloadedIndices.contains(index);
-    
+    final shouldLoad =
+        _loadedIndices.contains(index) || _preloadedIndices.contains(index);
+
     return GestureDetector(
       onTap: () => widget.onPageTap(index),
       child: Container(
@@ -123,7 +133,9 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
             // 缩略图内容
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: shouldLoad && widget.pages.isNotEmpty && index < widget.pages.length
+              child: shouldLoad &&
+                      widget.pages.isNotEmpty &&
+                      index < widget.pages.length
                   ? _buildPageThumbnail(widget.pages[index])
                   : _buildPlaceholder(pageIndex),
             ),
@@ -134,7 +146,8 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
                 left: 4,
                 right: 4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(4),
@@ -177,7 +190,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
   Widget _buildPageThumbnail(MangaPage page) {
     // 安全检查页面索引
     final pageNumber = page.pageIndex;
-    
+
     try {
       if (page.largeThumbnail != null && page.largeThumbnail!.isNotEmpty) {
         final thumbnailFile = File(page.largeThumbnail!);
@@ -187,11 +200,12 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
             fit: BoxFit.cover,
             width: double.infinity,
             height: double.infinity,
-            errorBuilder: (context, error, stackTrace) => _buildPlaceholder(pageNumber),
+            errorBuilder: (context, error, stackTrace) =>
+                _buildPlaceholder(pageNumber),
           );
         }
       }
-      
+
       if (page.localPath.isNotEmpty && page.localPath.startsWith('http')) {
         return CachedNetworkImage(
           imageUrl: page.localPath,
@@ -202,7 +216,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
           errorWidget: (context, url, error) => _buildPlaceholder(pageNumber),
         );
       }
-      
+
       return _buildPlaceholder(pageNumber);
     } catch (e) {
       // 捕获任何异常并返回占位符

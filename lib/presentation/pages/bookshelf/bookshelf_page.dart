@@ -245,7 +245,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
       itemBuilder: (context, index) {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
-        
+
         // 获取漫画所属库的设置
         final librarySettings = librariesAsync.when(
           data: (libraries) {
@@ -258,7 +258,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           loading: () => null,
           error: (_, __) => null,
         );
-        
+
         return MangaCard(
           title: manga.title,
           coverPath: manga.coverPath,
@@ -266,10 +266,11 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           totalPages: manga.totalPages,
           currentPage: progress?.currentPage ?? 0,
           progress: progress?.progressPercentage,
-          coverDisplayMode: librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
+          coverDisplayMode:
+              librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
           coverScale: librarySettings?.coverScale ?? 3.0,
           coverOffsetX: librarySettings?.coverOffsetX ?? 0.4,
-          onTap: () => _startReading(manga,progress),
+          onTap: () => _startReading(manga, progress),
           onLongPress: () => _openMangaDetail(manga),
         );
       },
@@ -312,14 +313,14 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   Widget _buildListView(List<Manga> mangaList,
       Map<String, ReadingProgress> readingProcessMapAsync) {
     final librariesAsync = ref.watch(allLibrariesProvider);
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: mangaList.length,
       itemBuilder: (context, index) {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
-        
+
         // 获取漫画所属库的设置
         final librarySettings = librariesAsync.when(
           data: (libraries) {
@@ -332,13 +333,14 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           loading: () => null,
           error: (_, __) => null,
         );
-        
+
         return MangaListTile(
           title: manga.title,
           coverPath: manga.coverPath,
           subtitle: manga.author,
           progress: progress?.progressPercentage,
-          coverDisplayMode: librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
+          coverDisplayMode:
+              librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
           coverScale: librarySettings?.coverScale ?? 3.0,
           coverOffsetX: librarySettings?.coverOffsetX ?? 0.4,
           onTap: () => _openMangaDetail(manga),
@@ -424,10 +426,10 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
 
   void _startReading(Manga manga, ReadingProgress? progress) {
     final startPage = progress?.currentPage ?? 1;
-    
+
     // 触发缩略图生成（如果需要的话）
     ref.read(mangaDetailWithCallbackProvider(manga.id));
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ReaderPage(

@@ -154,6 +154,4 @@ class MangaListTile extends StatelessWidget {
         );
     }
   }
-
-
 }
