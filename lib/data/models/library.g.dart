@@ -57,6 +57,8 @@ LibrarySettings _$LibrarySettingsFromJson(Map<String, dynamic> json) =>
       coverDisplayMode: $enumDecodeNullable(
               _$CoverDisplayModeEnumMap, json['coverDisplayMode']) ??
           CoverDisplayMode.defaultMode,
+      coverScale: (json['coverScale'] as num?)?.toDouble() ?? 3.0,
+      coverOffsetX: (json['coverOffsetX'] as num?)?.toDouble() ?? 0.4,
     );
 
 Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
@@ -68,6 +70,8 @@ Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
       'coverPattern': instance.coverPattern,
       'generateThumbnails': instance.generateThumbnails,
       'coverDisplayMode': _$CoverDisplayModeEnumMap[instance.coverDisplayMode]!,
+      'coverScale': instance.coverScale,
+      'coverOffsetX': instance.coverOffsetX,
     };
 
 const _$CoverDisplayModeEnumMap = {

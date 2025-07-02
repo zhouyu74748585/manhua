@@ -12,6 +12,8 @@ class MangaCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final CoverDisplayMode coverDisplayMode;
+  final double coverScale;
+  final double coverOffsetX;
 
   const MangaCard({
     super.key,
@@ -24,6 +26,8 @@ class MangaCard extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.coverDisplayMode = CoverDisplayMode.defaultMode,
+    this.coverScale = 3.0,
+    this.coverOffsetX = 0.4,
   });
 
   @override
@@ -179,11 +183,11 @@ class _MangaCardState extends State<MangaCard> {
             alignment: Alignment.centerLeft,
             widthFactor: 1,
             child: Transform.scale(
-              scale: 3,
-              alignment: const Alignment(-0.4, 0),
+              scale: widget.coverScale,
+              alignment: Alignment(-widget.coverOffsetX, 0),
               child: Image.file(
                 File(widget.coverPath!),
-                fit: BoxFit.cover,
+                fit: BoxFit.fitHeight,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(child: Icon(Icons.broken_image));
                 },
@@ -198,11 +202,11 @@ class _MangaCardState extends State<MangaCard> {
             alignment: Alignment.centerRight,
             widthFactor: 1,
             child: Transform.scale(
-              scale: 3,
-              alignment: const Alignment(0.4,0),
+              scale: widget.coverScale,
+              alignment: Alignment(widget.coverOffsetX, 0),
               child: Image.file(
                 File(widget.coverPath!),
-                fit: BoxFit.cover,
+                fit: BoxFit.fitHeight,
                 errorBuilder: (context, error, stackTrace) {
                   return const Center(child: Icon(Icons.broken_image));
                 },

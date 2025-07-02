@@ -9,6 +9,8 @@ class MangaListTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final CoverDisplayMode coverDisplayMode;
+  final double coverScale;
+  final double coverOffsetX;
 
   const MangaListTile({
     super.key,
@@ -19,6 +21,8 @@ class MangaListTile extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.coverDisplayMode = CoverDisplayMode.defaultMode,
+    this.coverScale = 3.0,
+    this.coverOffsetX = 0.4,
   });
 
   @override
@@ -86,22 +90,7 @@ class MangaListTile extends StatelessWidget {
       child: coverPath != null && coverPath!.isNotEmpty
           ? ClipRRect(
               borderRadius: BorderRadius.circular(4.0),
-              child: ClipRect(
-                child: OverflowBox(
-                  alignment: _getCoverAlignment(),
-                  child: Image.network(
-                    coverPath!,
-                    fit: BoxFit.cover,
-                    width: _getCoverWidth(),
-                    height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Center(
-                        child: Icon(Icons.image_not_supported, color: Colors.grey),
-                      );
-                    },
-                  ),
-                ),
-              ),
+              child: _buildCoverImageContent(),
             )
           : const Center(
               child: Icon(Icons.image_not_supported, color: Colors.grey),
@@ -109,24 +98,62 @@ class MangaListTile extends StatelessWidget {
     );
   }
 
-  Alignment _getCoverAlignment() {
+  Widget _buildCoverImageContent() {
     switch (coverDisplayMode) {
       case CoverDisplayMode.leftHalf:
-        return Alignment.centerLeft;
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: coverScale,
+              alignment: Alignment(-coverOffsetX, 0),
+              child: Image.network(
+                coverPath!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(Icons.image_not_supported, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
       case CoverDisplayMode.rightHalf:
-        return Alignment.centerRight;
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerRight,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: coverScale,
+              alignment: Alignment(coverOffsetX, 0),
+              child: Image.network(
+                coverPath!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Icon(Icons.image_not_supported, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
       case CoverDisplayMode.defaultMode:
-      return Alignment.center;
+        return Image.network(
+          coverPath!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.image_not_supported, color: Colors.grey),
+            );
+          },
+        );
     }
   }
 
-  double _getCoverWidth() {
-    switch (coverDisplayMode) {
-      case CoverDisplayMode.leftHalf:
-      case CoverDisplayMode.rightHalf:
-        return 160.0; // 80 * 2，放大2倍以显示一半
-      case CoverDisplayMode.defaultMode:
-      return 80.0;
-    }
-  }
+
 }

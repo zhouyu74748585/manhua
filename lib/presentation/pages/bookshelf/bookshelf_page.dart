@@ -246,17 +246,17 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
         
-        // 获取漫画所属库的封面展示模式
-        final coverDisplayMode = librariesAsync.when(
+        // 获取漫画所属库的设置
+        final librarySettings = librariesAsync.when(
           data: (libraries) {
             final library = libraries.firstWhere(
               (lib) => lib.id == manga.libraryId,
               orElse: () => libraries.first,
             );
-            return library.settings.coverDisplayMode;
+            return library.settings;
           },
-          loading: () => CoverDisplayMode.defaultMode,
-          error: (_, __) => CoverDisplayMode.defaultMode,
+          loading: () => null,
+          error: (_, __) => null,
         );
         
         return MangaCard(
@@ -266,7 +266,9 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           totalPages: manga.totalPages,
           currentPage: progress?.currentPage ?? 0,
           progress: progress?.progressPercentage,
-          coverDisplayMode: coverDisplayMode,
+          coverDisplayMode: librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
+          coverScale: librarySettings?.coverScale ?? 3.0,
+          coverOffsetX: librarySettings?.coverOffsetX ?? 0.4,
           onTap: () => _startReading(manga,progress),
           onLongPress: () => _openMangaDetail(manga),
         );
@@ -318,17 +320,17 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         final manga = mangaList[index];
         final progress = readingProcessMapAsync[manga.id];
         
-        // 获取漫画所属库的封面展示模式
-        final coverDisplayMode = librariesAsync.when(
+        // 获取漫画所属库的设置
+        final librarySettings = librariesAsync.when(
           data: (libraries) {
             final library = libraries.firstWhere(
               (lib) => lib.id == manga.libraryId,
               orElse: () => libraries.first,
             );
-            return library.settings.coverDisplayMode;
+            return library.settings;
           },
-          loading: () => CoverDisplayMode.defaultMode,
-          error: (_, __) => CoverDisplayMode.defaultMode,
+          loading: () => null,
+          error: (_, __) => null,
         );
         
         return MangaListTile(
@@ -336,7 +338,9 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
           coverPath: manga.coverPath,
           subtitle: manga.author,
           progress: progress?.progressPercentage,
-          coverDisplayMode: coverDisplayMode,
+          coverDisplayMode: librarySettings?.coverDisplayMode ?? CoverDisplayMode.defaultMode,
+          coverScale: librarySettings?.coverScale ?? 3.0,
+          coverOffsetX: librarySettings?.coverOffsetX ?? 0.4,
           onTap: () => _openMangaDetail(manga),
           onLongPress: () => _toggleFavorite(manga),
         );

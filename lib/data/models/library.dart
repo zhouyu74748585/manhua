@@ -107,6 +107,8 @@ class LibrarySettings {
   final String? coverPattern;
   final bool generateThumbnails;
   final CoverDisplayMode coverDisplayMode;
+  final double coverScale; // 封面缩放比例（宽高比）
+  final double coverOffsetX; // 封面X轴偏移量
 
   const LibrarySettings({
     this.autoScan = false,
@@ -116,6 +118,8 @@ class LibrarySettings {
     this.coverPattern,
     this.generateThumbnails = true,
     this.coverDisplayMode = CoverDisplayMode.defaultMode,
+    this.coverScale = 3.0,
+    this.coverOffsetX = 0.4,
   });
 
   factory LibrarySettings.fromJson(Map<String, dynamic> json) =>
@@ -130,6 +134,8 @@ class LibrarySettings {
     String? coverPattern,
     bool? generateThumbnails,
     CoverDisplayMode? coverDisplayMode,
+    double? coverScale,
+    double? coverOffsetX,
   }) {
     return LibrarySettings(
       autoScan: autoScan ?? this.autoScan,
@@ -139,6 +145,8 @@ class LibrarySettings {
       coverPattern: coverPattern ?? this.coverPattern,
       generateThumbnails: generateThumbnails ?? this.generateThumbnails,
       coverDisplayMode: coverDisplayMode ?? this.coverDisplayMode,
+      coverScale: coverScale ?? this.coverScale,
+      coverOffsetX: coverOffsetX ?? this.coverOffsetX,
     );
   }
 }

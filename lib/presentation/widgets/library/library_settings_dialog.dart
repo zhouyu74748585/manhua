@@ -65,6 +65,76 @@ class _LibrarySettingsDialogState extends State<LibrarySettingsDialog> {
                 },
               )),
               
+              // 左半/右半模式的额外设置
+              if (_settings.coverDisplayMode == CoverDisplayMode.leftHalf || 
+                  _settings.coverDisplayMode == CoverDisplayMode.rightHalf) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${_settings.coverDisplayMode.displayName}模式设置',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      // 缩放比例设置
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('缩放比例'),
+                        subtitle: Text('当前值: ${_settings.coverScale.toStringAsFixed(1)}'),
+                        trailing: SizedBox(
+                          width: 120,
+                          child: Slider(
+                            value: _settings.coverScale,
+                            min: 1.0,
+                            max: 5.0,
+                            divisions: 40,
+                            label: _settings.coverScale.toStringAsFixed(1),
+                            onChanged: (value) {
+                              setState(() {
+                                _settings = _settings.copyWith(coverScale: value);
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      
+                      // 偏移量设置
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('偏移量'),
+                        subtitle: Text('当前值: ${_settings.coverOffsetX.toStringAsFixed(2)}'),
+                        trailing: SizedBox(
+                          width: 120,
+                          child: Slider(
+                            value: _settings.coverOffsetX,
+                            min: -1.0,
+                            max: 1.0,
+                            divisions: 40,
+                            label: _settings.coverOffsetX.toStringAsFixed(2),
+                            onChanged: (value) {
+                              setState(() {
+                                _settings = _settings.copyWith(coverOffsetX: value);
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
