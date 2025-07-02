@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
@@ -11,6 +10,7 @@ import '../services/database_service.dart';
 import '../services/cover_cache_service.dart';
 import 'manga_repository.dart';
 import '../../presentation/providers/manga_provider.dart';
+import 'package:manhua_reader_flutter/core/services/cover_isolate_service.dart';
 
 part 'library_repository.g.dart';
 
@@ -284,35 +284,24 @@ class LocalLibraryRepository implements LibraryRepository {
   }
 
   Future<void> getCovers(List<Manga> mangas) async {
-    for (final m in mangas) {
-      if (m.type != MangaType.folder) {
-        if (m.coverPath == null && m.coverPath == null) {
-          if (m.type == MangaType.archive) {
-            File zipFile = File(m.path);
-            final result = await CoverCacheService.extractAndCacheCoverFromZip(
-                zipFile, m.id);
-            if (result != null) {
-              final updateManga = m.copyWith(
-                coverPath: result['cover'],
-                totalPages: result['pages'] ?? 0,
-              );
-              await _mangaRepository.updateManga(updateManga);
-            } else if (m.type == MangaType.pdf) {
-              File pdfFile = File(m.path);
-              final result =
-                  await CoverCacheService.extractAndCacheCoverFromPdf(pdfFile);
-              if (result != null) {
-                final updateManga = m.copyWith(
-                  coverPath: result['cover'],
-                  totalPages: result['pages'] ?? 0,
-                );
-                await _mangaRepository.updateManga(updateManga);
-              }
-            }
-          }
-        }
-      }
-    }
+    // 过滤需要生成封面的漫画
+    final mangasNeedingCovers = mangas.where((m) => 
+      m.type != MangaType.folder && 
+      (m.coverPath == null || m.coverPath!.isEmpty)
+    ).toList();
+    
+    if (mangasNeedingCovers.isEmpty) return;
+    
+    // 使用 Isolate 处理封面提取
+    await CoverIsolateService.generateCoversInIsolate(
+      mangasNeedingCovers,
+      onComplete: (updatedManga) {
+        log('封面生成完成: ${updatedManga.title}');
+      },
+      onProgress: (current, total) {
+        log('封面生成进度: $current/$total');
+      },
+    );
   }
 
   @override

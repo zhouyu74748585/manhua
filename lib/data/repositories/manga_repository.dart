@@ -3,8 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
-import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
+import 'package:manhua_reader_flutter/core/services/thumbnail_isolate_service.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/manga.dart';
 import '../models/manga_page.dart';
@@ -124,100 +123,32 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> generatePageAndThumbnails(Manga manga,
       {VoidCallback? onComplete,
       Function(List<MangaPage>)? onBatchProcessed}) async {
-    log('开始生成漫画[${manga.title}]的缩略图');
-    List<MangaPage> pages = await getPageByMangaId(manga.id);
-    if (manga.type != MangaType.folder) {
-      if (manga.type == MangaType.archive) {
-        List<MangaPage> pages = await FileScannerService.extractFileToDisk(
-          manga,
-          onBatchProcessed: (batchPages) {
-            // 保存当前批次的页面到数据库
-            savePageList(batchPages);
-            log("生成[${manga.title}]的${batchPages.length}页的缩略图");
-            // 触发外部回调
-            if (onBatchProcessed != null) {
-              onBatchProcessed(batchPages);
-            }
-          },
-        );
-        String? thumbnailPath = pages.isNotEmpty
-            ? pages[0].largeThumbnail?.split("large").first
-            : null;
-        manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-        manga.metadata.putIfAbsent(
-            "thumbnailGenerteDate", () => DateTime.now().toString());
-        if (thumbnailPath != null) {
-          await updateManga(manga);
-          // 最终保存所有页面（确保完整性）
-          await savePageList(pages);
-        }
-        log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
-      } else if (manga.type == MangaType.pdf) {}
-    } else {
-      // 目录类型漫画的分批处理
-      String? thumbnailPath;
-      const int batchSize = 10;
-      List<MangaPage> updatedPages = [];
-
-      for (int i = 0; i < pages.length; i += batchSize) {
-        int endIndex = (i + batchSize).clamp(0, pages.length);
-        List<MangaPage> batch = pages.sublist(i, endIndex);
-        List<MangaPage> batchUpdatedPages = [];
-
-        for (MangaPage page in batch) {
-          String localPath = page.localPath;
-          Map<String, String> thumbnailMap =
-              await ThumbnailService.generateThumbnails(
-                  page.mangaId, localPath);
-          String? smallThumbnail = thumbnailMap["small"];
-          String? mediumThumbnail = thumbnailMap["medium"];
-          String? largeThumbnail = thumbnailMap["large"];
-
-          if (thumbnailPath == null && largeThumbnail != null) {
-            thumbnailPath = largeThumbnail.split("large").first;
+    log('开始使用Isolate生成漫画[${manga.title}]的缩略图');
+    
+    // 使用Isolate处理缩略图生成
+    await ThumbnailIsolateService.generateThumbnailsInIsolate(
+      manga,
+      onComplete: () {
+        log('缩略图生成完成: ${manga.title}');
+        if (onComplete != null) {
+          try {
+            // 使用Future.microtask确保回调在下一个事件循环中执行
+            Future.microtask(() {
+              onComplete();
+            });
+          } catch (e) {
+            log('回调执行失败: $e');
           }
-
-          final updatePages = page.copyWith(
-            smallThumbnail: smallThumbnail,
-            mediumThumbnail: mediumThumbnail,
-            largeThumbnail: largeThumbnail,
-          );
-          await updatePage(updatePages);
-          batchUpdatedPages.add(updatePages);
         }
-
-        updatedPages.addAll(batchUpdatedPages);
-
-        // 每批处理完成后触发回调
+      },
+      onBatchProcessed: (batchPages) {
+        log("生成[${manga.title}]的${batchPages.length}页的缩略图");
+        // 触发外部回调
         if (onBatchProcessed != null) {
-          onBatchProcessed(batchUpdatedPages);
-          log("生成[${manga.title}]的${batchUpdatedPages.length}页的缩略图");
+          onBatchProcessed(batchPages);
         }
-
-        // 添加小延迟避免阻塞UI
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
-
-      manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-      manga.metadata
-          .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
-      if (thumbnailPath != null) {
-        await updateManga(manga);
-      }
-      log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
-    }
-
-    // 缩略图生成完成后安全地调用回调
-    if (onComplete != null) {
-      try {
-        // 使用Future.microtask确保回调在下一个事件循环中执行
-        Future.microtask(() {
-          onComplete();
-        });
-      } catch (e) {
-        log('回调执行失败: $e');
-      }
-    }
+      },
+    );
   }
 
   @override
