@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
@@ -8,7 +7,6 @@ import 'dart:convert';
 
 /// 隐私模式管理服务
 class PrivacyService {
-  static const String _privateLibrariesKey = 'private_libraries';
   static const String _activatedLibrariesKey = 'activated_libraries';
   static const String _passwordHashKey = 'password_hash';
   static const String _biometricEnabledKey = 'biometric_enabled';
@@ -189,17 +187,11 @@ class PrivacyService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_activatedLibrariesKey, _activatedLibraries.toList());
   }
-  
-  /// 从本地存储加载已激活的隐私库
-  static Future<void> _loadActivatedLibraries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final libraries = prefs.getStringList(_activatedLibrariesKey) ?? [];
-    _activatedLibraries = Set.from(libraries);
-  }
+
   
   /// 密码哈希
   static String _hashPassword(String password) {
-    final bytes = utf8.encode(password + 'manhua_reader_salt');
+    final bytes = utf8.encode('${password}manhua_reader_salt');
     final digest = sha256.convert(bytes);
     return digest.toString();
   }
