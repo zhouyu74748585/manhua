@@ -170,42 +170,57 @@ class _MangaCardState extends State<MangaCard> {
       );
     }
 
-    return ClipRect(
-      child: OverflowBox(
-        alignment: _getCoverAlignment(),
-        child: Image.file(
+    // 根据显示模式处理图片
+    switch (widget.coverDisplayMode) {
+      case CoverDisplayMode.leftHalf:
+        // 显示图片的左半部分 (0-50%)
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: 3,
+              alignment: const Alignment(-0.4, 0),
+              child: Image.file(
+                File(widget.coverPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
+              ),
+            ),
+          ),
+        );
+      case CoverDisplayMode.rightHalf:
+        // 显示图片的右半部分 (50-100%)
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerRight,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: 3,
+              alignment: const Alignment(0.4,0),
+              child: Image.file(
+                File(widget.coverPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
+              ),
+            ),
+          ),
+        );
+      case CoverDisplayMode.defaultMode:
+        return Image.file(
           File(widget.coverPath!),
           fit: BoxFit.cover,
-          width: _getCoverWidth(),
+          width: double.infinity,
           height: double.infinity,
           errorBuilder: (context, error, stackTrace) {
             return const Center(child: Icon(Icons.broken_image));
           },
-        ),
-      ),
-    );
-  }
-
-  Alignment _getCoverAlignment() {
-    switch (widget.coverDisplayMode) {
-      case CoverDisplayMode.leftHalf:
-        return Alignment.centerLeft;
-      case CoverDisplayMode.rightHalf:
-        return Alignment.centerRight;
-      case CoverDisplayMode.defaultMode:
-      default:
-        return Alignment.center;
+        );
     }
   }
 
-  double? _getCoverWidth() {
-    switch (widget.coverDisplayMode) {
-      case CoverDisplayMode.leftHalf:
-      case CoverDisplayMode.rightHalf:
-        return double.infinity * 2; // 放大2倍以显示一半
-      case CoverDisplayMode.defaultMode:
-      default:
-        return double.infinity;
-    }
-  }
 }

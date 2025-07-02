@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -164,8 +165,9 @@ class DatabaseService {
       if (maps[i]['settings'] != null &&
           maps[i]['settings'].toString().isNotEmpty) {
         try {
-          settings = jsonDecode(maps[i]['settings']);
-        } catch (e) {
+           settings = LibrarySettings.fromJson(jsonDecode(maps[i]['settings']));
+        } catch (e,stack) {
+          log('从数据库获取漫画库失败: $e $stack');
           // 如果解析失败，使用空的设置
           settings = const LibrarySettings();
         }
@@ -204,7 +206,7 @@ class DatabaseService {
     LibrarySettings settings=const LibrarySettings();
     if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
       try {
-        settings = jsonDecode(map['settings']);
+        settings = LibrarySettings.fromJson(jsonDecode(map['settings']));
       } catch (e) {
         // 如果解析失败，使用空的设置
         settings = const LibrarySettings();

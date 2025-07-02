@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 // import 'package:file_picker/file_picker.dart'; // 暂时注释掉以解决编译问题
 import '../../../data/models/library.dart';
@@ -266,26 +267,20 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
   }
 
   Future<void> _selectFolder() async {
-    // 暂时禁用文件选择功能以解决编译问题
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('文件选择功能暂时不可用，请手动输入路径')),
-      );
+    try {
+      final result = await FilePicker.platform.getDirectoryPath();
+      if (result != null) {
+        setState(() {
+          _pathController.text = result;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('选择文件夹失败: $e')),
+        );
+      }
     }
-    // try {
-    //   final result = await FilePicker.platform.getDirectoryPath();
-    //   if (result != null) {
-    //     setState(() {
-    //       _pathController.text = result;
-    //     });
-    //   }
-    // } catch (e) {
-    //   if (mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text('选择文件夹失败: $e')),
-    //     );
-    //   }
-    // }
   }
 
   void _saveLibrary() {

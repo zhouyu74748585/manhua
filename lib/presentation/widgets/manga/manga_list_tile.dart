@@ -116,8 +116,7 @@ class MangaListTile extends StatelessWidget {
       case CoverDisplayMode.rightHalf:
         return Alignment.centerRight;
       case CoverDisplayMode.defaultMode:
-      default:
-        return Alignment.center;
+      return Alignment.center;
     }
   }
 
@@ -127,8 +126,7 @@ class MangaListTile extends StatelessWidget {
       case CoverDisplayMode.rightHalf:
         return 160.0; // 80 * 2，放大2倍以显示一半
       case CoverDisplayMode.defaultMode:
-      default:
-        return 80.0;
+      return 80.0;
     }
   }
 }
