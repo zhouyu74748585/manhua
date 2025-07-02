@@ -1,147 +1,45 @@
-# 编译输出
-target/
-build/
-out/
-*.class
-*.jar
-*.war
-*.ear
-
-# IDE 文件
+# Flutter-specific ignores
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.dart_tool/
 .idea/
-.vscode/
+
+# Build artifacts
+build/
 *.iml
 *.ipr
 *.iws
-.project
-.classpath
-.settings/
 
-# 操作系统文件
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Dependency caches
+.pub-cache/
 
-# 日志文件
-logs/
-*.log
-*.log.*
+# Generated files
+lib/generated_plugin_registrant.dart
 
-# 数据文件
-dbdata/
-cache/
-temp/
-covers/
-thumbnails/
-*.db
-*.sqlite
-*.h2.db
-
-# 配置文件（包含敏感信息）
-application-local.yml
-application-prod.yml
+# Local configuration
 .env
-.env.local
-.env.production
+.env.*
 
-# Maven
-.mvn/
-mvnw
-mvnw.cmd
+# macOS specific
+.DS_Store
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.npm
-.yarn-integrity
+# Windows specific
+thumbs.db
 
-# 前端构建输出
-dist/
-dist-app/
-dist-electron/
-
-# 后端构建输出
-backend/target/
-
-# 前端构建输出
-build/
-.next/
-.nuxt/
-.vuepress/dist/
-
-# 测试覆盖率
-coverage/
-.nyc_output/
-
-# 依赖目录
-vendor/
-
-# 临时文件
-*.tmp
-*.temp
+# Linux specific
 *.swp
-*.swo
-*~
 
-# 压缩文件
-*.zip
-*.rar
-*.7z
-*.tar.gz
-*.tar.bz2
+# Android specific
+android/
+ios/
+linux/
+macos/
+web/
+windows/
 
-# Docker
-.dockerignore
+# VS Code specific
+.vscode/
 
-# 密钥和证书
-*.key
-*.pem
-*.crt
-*.p12
-*.jks
-secrets/
+# Trae AI specific
 
-# 备份文件
-*.bak
-*.backup
-*.old
-
-# 运行时文件
-*.pid
-*.lock
-
-# 本地开发文件
-local/
-dev/
-test-data/
-
-# 监控和分析
-.sonar/
-sonar-project.properties
-
-# 文档生成
-docs/build/
-site/
-
-# 特定于项目的忽略
-# 漫画文件（开发时可能很大）
-*.cbz
-*.cbr
-*.cb7
-*.pdf
-*.epub
-
-# 图像缓存
-*.webp
-*.thumbnail
-
-# 扫描结果
-scan-results/
-metadata-cache/
-/backend/target/
