@@ -226,7 +226,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
           );
         }
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       if (context.mounted) {
         Navigator.of(context).pop(); // 关闭加载对话框
         ScaffoldMessenger.of(context).showSnackBar(

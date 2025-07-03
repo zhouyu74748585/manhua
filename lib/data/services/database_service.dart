@@ -215,7 +215,7 @@ class DatabaseService {
     if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
       try {
         settings = LibrarySettings.fromJson(jsonDecode(map['settings']));
-      } catch (e) {
+      } catch (e,stackTrace) {
         // 如果解析失败，使用空的设置
         settings = const LibrarySettings();
       }

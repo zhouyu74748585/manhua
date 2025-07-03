@@ -79,8 +79,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
         isBiometricAvailable: isBiometricAvailable,
         activatedLibraries: activatedLibraries.toList(),
       );
-    } catch (e) {
-      log('加载隐私模式初始状态失败: $e');
+    } catch (e,stackTrace) {
+      log('加载隐私模式初始状态失败: $e,堆栈:$stackTrace');
     }
   }
   
@@ -120,8 +120,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       state = state.copyWith(isPasswordSet: true);
       log('密码设置成功');
       return true;
-    } catch (e) {
-      log('设置密码失败: $e');
+    } catch (e,stackTrace) {
+      log('设置密码失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -138,8 +138,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
         AppLifecycleManager.instance.setBlurState(false);
       }
       return isValid;
-    } catch (e) {
-      log('验证密码失败: $e');
+    } catch (e,stackTrace) {
+      log('验证密码失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -151,8 +151,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       state = state.copyWith(isBiometricEnabled: true);
       log('生物识别启用成功');
       return true;
-    } catch (e) {
-      log('启用生物识别失败: $e');
+    } catch (e,stackTrace) {
+      log('启用生物识别失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -164,8 +164,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       state = state.copyWith(isBiometricEnabled: false);
       log('生物识别禁用成功');
       return true;
-    } catch (e) {
-      log('禁用生物识别失败: $e');
+    } catch (e,stackTrace) {
+      log('禁用生物识别失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -182,8 +182,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
         AppLifecycleManager.instance.setBlurState(false);
       }
       return isValid;
-    } catch (e) {
-      log('生物识别验证失败: $e');
+    } catch (e,stackTrace) {
+      log('生物识别验证失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -204,8 +204,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       
       log('隐私库激活成功: $libraryId');
       return true;
-    } catch (e) {
-      log('激活隐私库失败: $libraryId, 错误: $e');
+    } catch (e,stackTrace) {
+      log('激活隐私库失败: $libraryId, 错误: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -226,8 +226,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       
       log('隐私库取消激活成功: $libraryId');
       return true;
-    } catch (e) {
-      log('取消激活隐私库失败: $libraryId, 错误: $e');
+    } catch (e,stackTrace) {
+      log('取消激活隐私库失败: $libraryId, 错误: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -245,8 +245,8 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       
       log('库隐私模式设置成功: $libraryId, isPrivate: $isPrivate');
       return true;
-    } catch (e) {
-      log('设置库隐私模式失败: $libraryId, 错误: $e');
+    } catch (e,stackTrace) {
+      log('设置库隐私模式失败: $libraryId, 错误: $e,堆栈:$stackTrace');
       return false;
     }
   }

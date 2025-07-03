@@ -218,7 +218,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
       }
 
       return _buildPlaceholder(pageNumber);
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 捕获任何异常并返回占位符
       return _buildPlaceholder(pageNumber);
     }

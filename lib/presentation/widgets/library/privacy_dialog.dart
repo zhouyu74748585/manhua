@@ -44,7 +44,7 @@ class _PrivacyDialogState extends State<PrivacyDialog> {
         _isBiometricAvailable = isAvailable && isDeviceSupported;
         _isCheckingBiometric = false;
       });
-    } catch (e) {
+    } catch (e,stackTrace) {
       setState(() {
         _isBiometricAvailable = false;
         _isCheckingBiometric = false;
@@ -156,7 +156,7 @@ class _PrivacyDialogState extends State<PrivacyDialog> {
         await PrivacyService.setLibraryBiometric(widget.libraryId, true);
         widget.onBiometricSet?.call();
       }
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e,stackTrace) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('生物识别设置失败: ${e.message}')),
@@ -353,7 +353,7 @@ class _PrivacyVerificationDialogState extends State<PrivacyVerificationDialog> {
           widget.onVerified?.call();
         }
       }
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e,stackTrace) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('生物识别验证失败: ${e.message}')),

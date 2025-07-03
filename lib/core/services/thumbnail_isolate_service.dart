@@ -135,7 +135,7 @@ class ThumbnailIsolateService {
         'type': IsolateMessageType.complete.index,
         'results': results,
       });
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 发送错误消息
       sendPort.send({
         'type': IsolateMessageType.error.index,
@@ -170,7 +170,7 @@ void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
       'type': IsolateMessageType.complete.index,
     });
     
-  } catch (e) {
+  } catch (e,stackTrace) {
     // 发送错误消息
     mainSendPort.send({
       'type': IsolateMessageType.error.index,

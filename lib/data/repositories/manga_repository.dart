@@ -53,8 +53,8 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DatabaseService.getAllManga();
       return dbManga;
-    } catch (e) {
-      log('查询漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('查询漫画失败: $e,堆栈:$stackTrace');
       return List.empty();
     }
   }
@@ -86,8 +86,8 @@ class LocalMangaRepository implements MangaRepository {
     try {
       Manga? manga = await DatabaseService.getMangaById(id);
       return manga;
-    } catch (e) {
-      log('查询漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('查询漫画失败: $e,堆栈:$stackTrace');
       return null;
     }
   }
@@ -114,8 +114,8 @@ class LocalMangaRepository implements MangaRepository {
         }
       }
       return manga;
-    } catch (e) {
-      log('查询漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('查询漫画失败: $e,堆栈:$stackTrace');
       return null;
     }
   }
@@ -136,8 +136,8 @@ class LocalMangaRepository implements MangaRepository {
             Future.microtask(() {
               onComplete();
             });
-          } catch (e) {
-            log('回调执行失败: $e');
+          } catch (e,stackTrace) {
+            log('回调执行失败: $e,堆栈:$stackTrace');
           }
         }
       },
@@ -219,8 +219,8 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> saveManga(Manga manga) async {
     try {
       await DatabaseService.insertManga(manga);
-    } catch (e) {
-      log('保存漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('保存漫画失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -228,8 +228,8 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> updateManga(Manga manga) async {
     try {
       await DatabaseService.updateManga(manga);
-    } catch (e) {
-      log('更新漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('更新漫画失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -237,8 +237,8 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deleteManga(String id) async {
     try {
       await DatabaseService.deleteManga(id);
-    } catch (e) {
-      log('删除漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('删除漫画失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -250,8 +250,8 @@ class LocalMangaRepository implements MangaRepository {
         final updatedManga = manga.copyWith(isFavorite: isFavorite);
         await DatabaseService.updateManga(updatedManga);
       }
-    } catch (e) {
-      log('更新漫画失败: $e');
+    } catch (e,stackTrace) {
+      log('更新漫画失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -278,8 +278,8 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deleteProgressByMangaId(String id) async {
     try {
       await DatabaseService.deleteReadingProgress(id);
-    } catch (e) {
-      log('删除漫画进度失败: $e');
+    } catch (e,stackTrace) {
+      log('删除漫画进度失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -321,8 +321,8 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deletePageByMangaId(String id) async {
     try {
       await DatabaseService.deletePageByMangaId(id);
-    } catch (e) {
-      log('删除漫画页失败: $e');
+    } catch (e,stackTrace) {
+      log('删除漫画页失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -333,7 +333,7 @@ class LocalMangaRepository implements MangaRepository {
       for (final manga in mangaList) {
         await DatabaseService.insertManga(manga);
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 如果数据库操作失败，逐个保存
       await Future.delayed(const Duration(milliseconds: 200));
       for (final manga in mangaList) {

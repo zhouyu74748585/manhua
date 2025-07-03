@@ -193,7 +193,7 @@ class LibraryPage extends ConsumerWidget {
           const SnackBar(content: Text('扫描完成')),
         );
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$e')),

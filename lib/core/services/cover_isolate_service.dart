@@ -1,6 +1,8 @@
 import 'dart:isolate';
 import 'dart:io';
 import 'dart:developer';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'package:manhua_reader_flutter/data/models/manga.dart';
 import 'package:manhua_reader_flutter/data/services/cover_cache_service.dart';
 import 'package:manhua_reader_flutter/core/services/isolate_service.dart';
@@ -17,12 +19,25 @@ class CoverIsolateService {
   }) async {
     if (mangas.isEmpty) return;
 
+    // 检查是否已有Isolate在运行
+    if (IsolateService.isIsolateRunning(_isolateName)) {
+      log('封面生成Isolate已在运行，跳过重复启动');
+      return;
+    }
+
     try {
+      // 获取缓存目录路径，传递给Isolate
+      final appDir = await getApplicationDocumentsDirectory();
+      final cachePath = appDir.path;
+      
       // 启动Isolate
       await IsolateService.startIsolate(
         name: _isolateName,
         entryPoint: _coverGeneratorIsolate,
-        message: mangas.map((m) => m.toJson()).toList(),
+        message: {
+          'mangas': mangas.map((m) => m.toJson()).toList(),
+          'cachePath': cachePath,
+        },
       );
 
       // 监听Isolate消息
@@ -62,8 +77,8 @@ class CoverIsolateService {
           }
         }
       }
-    } catch (e) {
-      log('封面生成Isolate执行失败: $e');
+    } catch (e,stackTrace) {
+      log('封面生成Isolate执行失败: $e,堆栈:$stackTrace');
       await IsolateService.stopIsolate(_isolateName);
       rethrow;
     }
@@ -84,10 +99,16 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
   mainSendPort.send(isolateReceivePort.sendPort);
   
   try {
-    final List<dynamic> mangaJsonList = params['message'];
+    final Map<String, dynamic> messageData = params['message'];
+    final List<dynamic> mangaJsonList = messageData['mangas'];
+    final String cachePath = messageData['cachePath'];
+    
     final List<Manga> mangas = mangaJsonList
         .map((json) => Manga.fromJson(json.cast<String, dynamic>()))
         .toList();
+    
+    // 初始化CoverCacheService，使用传入的缓存路径
+    await CoverCacheService.init(cachePath);
     
     // 注意：在Isolate中需要重新初始化数据库连接
     // 这里暂时注释掉，因为Isolate中无法直接使用主线程的数据库连接
@@ -103,8 +124,8 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
           data: {'current': i + 1, 'total': mangas.length},
         ).toJson());
         
-        // 生成封面
-        Manga? updatedManga = await _generateCoverForManga(manga);
+        // 生成封面，传递缓存路径
+        Manga? updatedManga = await _generateCoverForManga(manga, cachePath);
         
         if (updatedManga != null) {
           // 发送单个漫画完成消息
@@ -114,8 +135,8 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
           ).toJson());
         }
         
-      } catch (e) {
-        log('生成漫画封面失败: ${manga.title}, 错误: $e');
+      } catch (e,stackTrace) {
+        log('生成漫画封面失败: ${manga.title}, 错误: $e,堆栈:$stackTrace');
         // 继续处理下一个，不中断整个流程
       }
     }
@@ -125,7 +146,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
       type: IsolateMessageType.complete,
     ).toJson());
     
-  } catch (e) {
+  } catch (e,stackTrace) {
     // 发送错误消息
     mainSendPort.send(IsolateMessage(
       type: IsolateMessageType.error,
@@ -137,7 +158,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
 }
 
 /// 为单个漫画生成封面
-Future<Manga?> _generateCoverForManga(Manga manga) async {
+Future<Manga?> _generateCoverForManga(Manga manga, String cachePath) async {
   if (manga.type == MangaType.folder) {
     return null; // 文件夹类型不需要生成封面
   }
@@ -152,6 +173,7 @@ Future<Manga?> _generateCoverForManga(Manga manga) async {
       final result = await CoverCacheService.extractAndCacheCoverFromZip(
         zipFile, 
         manga.id,
+        cachePath,
       );
       
       if (result != null) {
@@ -164,7 +186,10 @@ Future<Manga?> _generateCoverForManga(Manga manga) async {
       }
     } else if (manga.type == MangaType.pdf) {
       File pdfFile = File(manga.path);
-      final result = await CoverCacheService.extractAndCacheCoverFromPdf(pdfFile);
+      final result = await CoverCacheService.extractAndCacheCoverFromPdf(
+        pdfFile,
+        cachePath,
+      );
       
       if (result != null) {
         final updatedManga = manga.copyWith(
@@ -175,8 +200,8 @@ Future<Manga?> _generateCoverForManga(Manga manga) async {
         return updatedManga;
       }
     }
-  } catch (e) {
-    log('生成封面失败: ${manga.title}, 错误: $e');
+  } catch (e,stackTrace) {
+    log('生成封面失败: ${manga.title}, 错误: $e,堆栈:$stackTrace');
   }
   
   return null;

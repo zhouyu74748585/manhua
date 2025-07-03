@@ -7,6 +7,7 @@ class IsolateService {
   static final Map<String, Isolate> _isolates = {};
   static final Map<String, SendPort> _sendPorts = {};
   static final Map<String, ReceivePort> _receivePorts = {};
+  static final Map<String, Stream<dynamic>> _broadcastStreams = {};
 
   /// 启动一个新的Isolate
   static Future<String> startIsolate({
@@ -29,12 +30,16 @@ class IsolateService {
 
     _isolates[name] = isolate;
     _receivePorts[name] = receivePort;
+    
+    // 将ReceivePort转换为广播流，避免多次监听问题
+    final broadcastStream = receivePort.asBroadcastStream();
+    _broadcastStreams[name] = broadcastStream;
 
     // 等待Isolate发送SendPort
     final completer = Completer<SendPort>();
     late StreamSubscription subscription;
     
-    subscription = receivePort.listen((data) {
+    subscription = broadcastStream.listen((data) {
       if (data is SendPort) {
         _sendPorts[name] = data;
         completer.complete(data);
@@ -59,11 +64,11 @@ class IsolateService {
 
   /// 监听Isolate的消息
   static Stream<dynamic> listenToIsolate(String name) {
-    final receivePort = _receivePorts[name];
-    if (receivePort != null) {
-      return receivePort.asBroadcastStream();
+    final broadcastStream = _broadcastStreams[name];
+    if (broadcastStream != null) {
+      return broadcastStream;
     } else {
-      log('Isolate [$name] 的ReceivePort不存在');
+      log('Isolate [$name] 的BroadcastStream不存在');
       return const Stream.empty();
     }
   }
@@ -85,6 +90,7 @@ class IsolateService {
     }
     
     _sendPorts.remove(name);
+    _broadcastStreams.remove(name);
   }
 
   /// 停止所有Isolate

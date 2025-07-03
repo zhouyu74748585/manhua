@@ -89,7 +89,7 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
           _errorMessage = '密码错误';
         });
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });
@@ -121,7 +121,7 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
           _errorMessage = '生物识别验证失败';
         });
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });

@@ -81,8 +81,8 @@ class LibraryService {
       );
 
       await _repository.updateLibrary(updatedLibrary);
-    } catch (e) {
-      throw Exception('扫描库失败: $e');
+    } catch (e,stackTrace) {
+      throw Exception('扫描库失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -93,9 +93,9 @@ class LibraryService {
     for (final library in enabledLibraries) {
       try {
         await scanLibrary(library.id);
-      } catch (e) {
+      } catch (e,stackTrace) {
         // 记录错误但继续扫描其他库
-        log('扫描库 ${library.name} 失败: $e');
+        log('扫描库 ${library.name} 失败: $e,堆栈:$stackTrace');
       }
     }
   }
@@ -104,7 +104,7 @@ class LibraryService {
     try {
       await _validateLibraryPath(path, type);
       return true;
-    } catch (e) {
+    } catch (e,stackTrace) {
       return false;
     }
   }
@@ -145,14 +145,14 @@ class LibraryService {
       // 检查读取权限（尝试列出目录内容）
       try {
         await directory.list().take(1).toList();
-      } catch (e) {
+      } catch (e,stackTrace) {
         throw Exception('没有读取权限: $path');
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       if (e is Exception) {
         rethrow;
       }
-      throw Exception('路径验证失败: $e');
+      throw Exception('路径验证失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -188,11 +188,11 @@ class LibraryService {
       }
 
       // 对于其他协议，暂时只验证格式
-    } catch (e) {
+    } catch (e,stackTrace) {
       if (e is Exception) {
         rethrow;
       }
-      throw Exception('网络路径验证失败: $e');
+      throw Exception('网络路径验证失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -238,11 +238,11 @@ class LibraryService {
           !['http', 'https'].contains(uri.scheme.toLowerCase())) {
         throw Exception('云端路径必须使用 HTTPS 协议');
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       if (e is Exception) {
         rethrow;
       }
-      throw Exception('云端路径验证失败: $e');
+      throw Exception('云端路径验证失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -250,8 +250,8 @@ class LibraryService {
     try {
       List<Manga> mangas = await _repository.scanLibrary(library.id);
       return mangas.length;
-    } catch (e) {
-      throw Exception('扫描本地库失败: $e');
+    } catch (e,stackTrace) {
+      throw Exception('扫描本地库失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -271,8 +271,8 @@ class LibraryService {
       } else {
         throw Exception('不支持的网络协议: ${uri.scheme}');
       }
-    } catch (e) {
-      throw Exception('扫描网络库失败: $e');
+    } catch (e,stackTrace) {
+      throw Exception('扫描网络库失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -339,8 +339,8 @@ class LibraryService {
         // 对于其他云端服务，尝试通用的HTTP扫描
         return await _scanHttpLibrary(uri);
       }
-    } catch (e) {
-      throw Exception('扫描云端库失败: $e');
+    } catch (e,stackTrace) {
+      throw Exception('扫描云端库失败: $e,堆栈:$stackTrace');
     }
   }
 

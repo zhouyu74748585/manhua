@@ -113,8 +113,8 @@ class ReadingProgressService {
   static Future<void> saveProgress(ReadingProgress progress) async {
     try {
       await DatabaseService.insertOrUpdateReadingProgress(progress);
-    } catch (e) {
-      log('保存阅读进度失败: ${progress.id}, 错误: $e');
+    } catch (e,stackTrace) {
+      log('保存阅读进度失败: ${progress.id}, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }
   }
@@ -123,8 +123,8 @@ class ReadingProgressService {
   static Future<ReadingProgress?> getProgress(String mangaId) async {
     try {
       return await DatabaseService.getReadingProgressByMangaId(mangaId);
-    } catch (e) {
-      log('获取阅读进度失败: $mangaId, 错误: $e');
+    } catch (e,stackTrace) {
+      log('获取阅读进度失败: $mangaId, 错误: $e,堆栈:$stackTrace');
       return null;
     }
   }
@@ -133,8 +133,8 @@ class ReadingProgressService {
   static Future<void> deleteProgress(String mangaId) async {
     try {
       await DatabaseService.deleteReadingProgress(mangaId);
-    } catch (e) {
-      log('删除阅读进度失败: $mangaId, 错误: $e');
+    } catch (e,stackTrace) {
+      log('删除阅读进度失败: $mangaId, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }
   }

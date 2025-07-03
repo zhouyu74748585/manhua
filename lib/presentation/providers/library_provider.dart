@@ -133,7 +133,7 @@ class LibraryActions extends _$LibraryActions {
         await service.updateLibrary(updatedLibrary.copyWith(isScanning: false));
       }
       
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 扫描失败时也要清除扫描状态
       scanStateNotifier.setScanningState(libraryId, false);
       

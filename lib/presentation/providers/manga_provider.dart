@@ -74,7 +74,7 @@ Future<Manga?> mangaDetailWithCallback(
         // 尝试刷新相关的provider
         ref.invalidate(mangaDetailProvider(mangaId));
         ref.invalidate(mangaPagesProvider(mangaId));
-      } catch (e) {
+      } catch (e,stackTrace) {
         // 静默处理可能的错误（如provider已被销毁）
         // 这是正常情况，不需要记录错误
       }
@@ -87,7 +87,7 @@ Future<Manga?> mangaDetailWithCallback(
       try {
         // 刷新页面相关的provider
         ref.invalidate(mangaPagesProvider(mangaId));
-      } catch (e) {
+      } catch (e,stackTrace) {
         // 静默处理可能的错误
       }
     });

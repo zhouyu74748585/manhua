@@ -43,8 +43,8 @@ class FileScannerService {
 
     try {
       await _scanDirectoryRecursive(libraryDir, library.id, mangas, mangaPages);
-    } catch (e) {
-      throw Exception('扫描漫画库时发生错误: $e');
+    } catch (e,stackTrace) {
+      throw Exception('扫描漫画库时发生错误: $e,堆栈:$stackTrace');
     }
 
     return Tuple2(mangas, mangaPages);
@@ -93,7 +93,7 @@ class FileScannerService {
           }
         }
       }
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 如果无法访问目录，返回false
       return false;
     }
@@ -175,8 +175,8 @@ class FileScannerService {
       mangas.add(manga);
       mangaPages.addAll(pages);
       log('扫描到漫画: ${manga.path}');
-    } catch (e) {
-      log('从图片目录创建漫画失败: ${directory.path}, 错误: $e');
+    } catch (e,stackTrace) {
+      log('从图片目录创建漫画失败: ${directory.path}, 错误: $e,堆栈:$stackTrace');
       return null;
     }
   }
@@ -222,8 +222,8 @@ class FileScannerService {
           createdAt: DateTime.now(),
           updatedAt: fileStats.modified,
           fileSize: fileSize.toInt());
-    } catch (e) {
-      log('扫描文件失败: ${file.path}, 错误: $e');
+    } catch (e,stackTrace) {
+      log('扫描文件失败: ${file.path}, 错误: $e,堆栈:$stackTrace');
       return null;
     }
   }

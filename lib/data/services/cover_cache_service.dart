@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pdfx/pdfx.dart';
+import 'dart:isolate';
 
 class CoverCacheService {
   static const String _cacheDir = 'covers';
@@ -21,11 +22,19 @@ class CoverCacheService {
     '.webp',
   ];
   static Directory? _coverCacheDirectory;
+  static String? _isolateCachePath; // 用于Isolate环境的缓存路径
 
   /// 初始化封面缓存目录
-  static Future<void> init() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    _coverCacheDirectory = Directory(path.join(appDir.path, _cacheDir));
+  static Future<void> init([String? customCachePath]) async {
+    if (customCachePath != null) {
+      // 在Isolate中使用传入的缓存路径
+      _isolateCachePath = customCachePath;
+      _coverCacheDirectory = Directory(path.join(customCachePath, _cacheDir));
+    } else {
+      // 在主线程中使用path_provider
+      final appDir = await getApplicationDocumentsDirectory();
+      _coverCacheDirectory = Directory(path.join(appDir.path, _cacheDir));
+    }
 
     if (!await _coverCacheDirectory!.exists()) {
       await _coverCacheDirectory!.create(recursive: true);
@@ -35,7 +44,12 @@ class CoverCacheService {
   /// 获取缓存目录
   static Future<Directory> _getCacheDirectory() async {
     if (_coverCacheDirectory == null) {
-      await init();
+      // 检查是否在Isolate环境中
+      if (_isolateCachePath != null) {
+        await init(_isolateCachePath);
+      } else {
+        await init();
+      }
     }
     return _coverCacheDirectory!;
   }
@@ -49,7 +63,11 @@ class CoverCacheService {
 
   /// 从ZIP文件提取并缓存封面
   static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(
-      File zipFile, String mangaId) async {
+      File zipFile, String mangaId, [String? isolateCachePath]) async {
+    // 如果提供了Isolate缓存路径，设置它
+    if (isolateCachePath != null) {
+      _isolateCachePath = isolateCachePath;
+    }
     try {
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
@@ -91,15 +109,19 @@ class CoverCacheService {
         'cover': cacheFile.path,
         'pages': pageCount,
       };
-    } catch (e) {
-      log('从ZIP文件提取封面失败: $zipFile, 错误: $e');
+    } catch (e,stackTrace) {
+      log('从ZIP文件提取封面失败: $zipFile, 错误: $e,堆栈: $stackTrace');
       return null;
     }
   }
 
   /// 从PDF文件提取并缓存首页作为封面
   static Future<Map<String, dynamic>?> extractAndCacheCoverFromPdf(
-      File pdfFile) async {
+      File pdfFile, [String? isolateCachePath]) async {
+    // 如果提供了Isolate缓存路径，设置它
+    if (isolateCachePath != null) {
+      _isolateCachePath = isolateCachePath;
+    }
     try {
       // 检查平台支持
       if (kIsWeb) {
@@ -146,25 +168,25 @@ class CoverCacheService {
         log('PDF封面提取成功: $pdfFile -> ${cacheFile.path}');
 
         return {'cover': cacheFile.path, 'pages': document.pagesCount};
-      } on MissingPluginException catch (e) {
-        log('PDF渲染插件未找到，跳过PDF封面提取: $pdfFile, 错误: $e');
+      } on MissingPluginException catch (e,stackTrace) {
+        log('PDF渲染插件未找到，跳过PDF封面提取: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
-      } on PlatformException catch (e) {
-        log('PDF渲染平台异常: $pdfFile, 错误: $e');
+      } on PlatformException catch (e,stackTrace) {
+        log('PDF渲染平台异常: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
-      } on UnsupportedError catch (e) {
-        log('PDF渲染不支持当前操作: $pdfFile, 错误: $e');
+      } on UnsupportedError catch (e,stackTrace) {
+        log('PDF渲染不支持当前操作: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
       } finally {
         // 确保资源被正确清理
         try {
           document?.close();
-        } catch (e) {
-          log('清理PDF资源时出错: $e');
+        } catch (e,stackTrace) {
+          log('清理PDF资源时出错: $e,堆栈:$stackTrace');
         }
       }
-    } catch (e) {
-      log('从PDF文件提取封面失败: $pdfFile, 错误: $e');
+    } catch (e,stackTrace) {
+      log('从PDF文件提取封面失败: $pdfFile, 错误: $e,堆栈:$stackTrace');
       return null;
     }
   }
@@ -230,8 +252,8 @@ class CoverCacheService {
         await cacheDir.delete(recursive: true);
         await cacheDir.create(recursive: true);
       }
-    } catch (e) {
-      log('清理封面缓存失败: $e');
+    } catch (e,stackTrace) {
+      log('清理封面缓存失败: $e,堆栈:$stackTrace');
     }
   }
 
@@ -251,8 +273,8 @@ class CoverCacheService {
         }
       }
       return totalSize;
-    } catch (e) {
-      log('获取缓存大小失败: $e');
+    } catch (e,stackTrace) {
+      log('获取缓存大小失败: $e,堆栈:$stackTrace');
       return 0;
     }
   }
@@ -271,8 +293,8 @@ class CoverCacheService {
           break;
         }
       }
-    } catch (e) {
-      log('删除缓存文件失败: $filePath, 错误: $e');
+    } catch (e,stackTrace) {
+      log('删除缓存文件失败: $filePath, 错误: $e,堆栈:$stackTrace');
     }
   }
 }

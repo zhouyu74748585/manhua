@@ -173,7 +173,7 @@ class NetworkConfig {
         remotePath: remotePath?.isEmpty == true ? null : remotePath,
         useSSL: uri.scheme.toLowerCase() == 'https',
       );
-    } catch (e) {
+    } catch (e,stackTrace) {
       // 解析失败时返回默认配置
       return NetworkConfig(
         protocol: NetworkProtocol.smb,

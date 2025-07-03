@@ -100,7 +100,7 @@ class SharedPreferencesStorage implements LocalStorage {
 
     try {
       return jsonDecode(jsonString) as List<dynamic>;
-    } catch (e) {
+    } catch (e,stackTrace) {
       return null;
     }
   }
@@ -120,7 +120,7 @@ class SharedPreferencesStorage implements LocalStorage {
 
     try {
       return jsonDecode(jsonString) as Map<String, dynamic>;
-    } catch (e) {
+    } catch (e,stackTrace) {
       return null;
     }
   }

@@ -74,8 +74,8 @@ class PrivacyService {
       final isAvailable = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
       return isAvailable && isDeviceSupported;
-    } catch (e) {
-      log('检查生物识别可用性失败: $e');
+    } catch (e,stackTrace) {
+      log('检查生物识别可用性失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -84,8 +84,8 @@ class PrivacyService {
   static Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _localAuth.getAvailableBiometrics();
-    } catch (e) {
-      log('获取生物识别类型失败: $e');
+    } catch (e,stackTrace) {
+      log('获取生物识别类型失败: $e,堆栈:$stackTrace');
       return [];
     }
   }
@@ -105,8 +105,8 @@ class PrivacyService {
       );
       
       return isAuthenticated;
-    } catch (e) {
-      log('生物识别验证失败: $e');
+    } catch (e,stackTrace) {
+      log('生物识别验证失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
@@ -133,8 +133,8 @@ class PrivacyService {
       }
       
       return false;
-    } catch (e) {
-      log('激活隐私库失败: $e');
+    } catch (e,stackTrace) {
+      log('激活隐私库失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
