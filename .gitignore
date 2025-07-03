@@ -4,6 +4,7 @@
 .packages
 .dart_tool/
 .idea/
+.metadata
 
 # Build artifacts
 build/
