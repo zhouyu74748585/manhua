@@ -168,9 +168,17 @@ class FileScannerService {
         ));
       }
       pages.sort((a, b) => b.localPath.compareTo(a.localPath));
+      // 重新创建pages列表，设置正确的pageIndex
+      List<MangaPage> sortedPages = [];
       for (int i = 0; i < pages.length; i++) {
-        pages[i].pageIndex = i + 1;
+        sortedPages.add(MangaPage(
+          id: pages[i].id,
+          mangaId: pages[i].mangaId,
+          pageIndex: i + 1,
+          localPath: pages[i].localPath,
+        ));
       }
+      pages = sortedPages;
 
       mangas.add(manga);
       mangaPages.addAll(pages);
@@ -277,12 +285,21 @@ class FileScannerService {
   }
 
   static Future<List<MangaPage>> extractFileToDisk(Manga manga,
-      {Function(List<MangaPage>)? onBatchProcessed}) async {
+      {Function(List<MangaPage>)? onBatchProcessed, String? cachePath}) async {
     try {
-      final appDir = await getApplicationDocumentsDirectory();
+      String appDirPath;
+      if (cachePath != null) {
+        // Isolate环境：使用传入的缓存路径
+        appDirPath = cachePath;
+      } else {
+        // 主线程环境：使用path_provider获取路径
+        final appDir = await getApplicationDocumentsDirectory();
+        appDirPath = appDir.path;
+      }
+      
       //为当前漫画创建目录
       final mangaDir =
-          Directory(path.join(appDir.path, "thumbnails/${manga.id}/pages"));
+          Directory(path.join(appDirPath, "thumbnails/${manga.id}/pages"));
       if (!await mangaDir.exists()) {
         await mangaDir.create(recursive: true);
       }
@@ -323,7 +340,7 @@ class FileScannerService {
 
           Map<String, String> thumbnailMap =
               await ThumbnailService.generateThumbnailsByData(
-                  manga.id, file.name, imageData);
+                  manga.id, file.name, imageData, cachePath);
           String? smallThumbnail = thumbnailMap["small"];
           String? mediumThumbnail = thumbnailMap["medium"];
           String? largeThumbnail = thumbnailMap["large"];

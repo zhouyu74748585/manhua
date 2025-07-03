@@ -1,17 +1,28 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:hive/hive.dart';
 
 part 'reading_progress.g.dart';
 
 @JsonSerializable()
+@HiveType(typeId: 8)
 class ReadingProgress {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String mangaId;
+  @HiveField(2)
   final String libraryId; // 所属漫画库ID
+  @HiveField(3)
   final int currentPage;
+  @HiveField(4)
   final int totalPages;
+  @HiveField(5)
   final double progressPercentage;
+  @HiveField(6)
   final DateTime lastReadAt;
+  @HiveField(7)
   final DateTime createdAt;
+  @HiveField(8)
   final DateTime updatedAt;
 
   const ReadingProgress({

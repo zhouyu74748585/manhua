@@ -1,37 +1,38 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:hive/hive.dart';
 
 part 'manga_page.g.dart';
 
 @JsonSerializable()
+@HiveType(typeId: 9)
 class MangaPage {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String mangaId;
-  int _pageIndex; // 移除final并改为私有变量
+  @HiveField(2)
+  final int _pageIndex;
+  @HiveField(3)
   final String localPath;
+  @HiveField(4)
   final String? largeThumbnail;
+  @HiveField(5)
   final String? mediumThumbnail;
+  @HiveField(6)
   final String? smallThumbnail;
 
   MangaPage({
     required this.id,
     required this.mangaId,
-    required int pageIndex, // 构造函数参数保持不变
+    required int pageIndex,
     required this.localPath,
     this.largeThumbnail,
     this.mediumThumbnail,
     this.smallThumbnail,
-  }) : _pageIndex = pageIndex; // 初始化私有变量
+  }) : _pageIndex = pageIndex;
 
   // Getter
   int get pageIndex => _pageIndex;
-
-  // Setter - 控制页码更新并添加验证
-  set pageIndex(int value) {
-    if (value < 0) {
-      throw ArgumentError('页码不能为负数');
-    }
-    _pageIndex = value;
-  }
 
   factory MangaPage.fromJson(Map<String, dynamic> json) =>
       _$MangaPageFromJson(json);

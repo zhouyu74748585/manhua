@@ -3,6 +3,68 @@
 part of 'reading_progress.dart';
 
 // **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
+
+class ReadingProgressAdapter extends TypeAdapter<ReadingProgress> {
+  @override
+  final int typeId = 8;
+
+  @override
+  ReadingProgress read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return ReadingProgress(
+      id: fields[0] as String,
+      mangaId: fields[1] as String,
+      libraryId: fields[2] as String,
+      currentPage: fields[3] as int,
+      totalPages: fields[4] as int,
+      progressPercentage: fields[5] as double,
+      lastReadAt: fields[6] as DateTime,
+      createdAt: fields[7] as DateTime,
+      updatedAt: fields[8] as DateTime,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, ReadingProgress obj) {
+    writer
+      ..writeByte(9)
+      ..writeByte(0)
+      ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.mangaId)
+      ..writeByte(2)
+      ..write(obj.libraryId)
+      ..writeByte(3)
+      ..write(obj.currentPage)
+      ..writeByte(4)
+      ..write(obj.totalPages)
+      ..writeByte(5)
+      ..write(obj.progressPercentage)
+      ..writeByte(6)
+      ..write(obj.lastReadAt)
+      ..writeByte(7)
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.updatedAt);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ReadingProgressAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+// **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 

@@ -10,6 +10,7 @@ import 'dart:convert';
 class ThumbnailService {
   static const String _thumbnailDir = 'thumbnails';
   static Directory? _thumbnailCacheDirectory;
+  static String? _isolateCachePath;
 
   // 定义缩略图尺寸 (宽度)
   static const Map<String, int> thumbnailSizes = {
@@ -19,9 +20,17 @@ class ThumbnailService {
   };
 
   /// 初始化缩略图缓存目录
-  static Future<void> init() async {
-    final appDir = await getApplicationDocumentsDirectory();
-    _thumbnailCacheDirectory = Directory(path.join(appDir.path, _thumbnailDir));
+  static Future<void> init([String? customCachePath]) async {
+    if (customCachePath != null) {
+      // Isolate环境：使用传入的缓存路径
+      _isolateCachePath = customCachePath;
+      _thumbnailCacheDirectory = Directory(path.join(customCachePath, _thumbnailDir));
+    } else {
+      // 主线程环境：使用path_provider获取路径
+      final appDir = await getApplicationDocumentsDirectory();
+      _thumbnailCacheDirectory = Directory(path.join(appDir.path, _thumbnailDir));
+    }
+    
     if (!await _thumbnailCacheDirectory!.exists()) {
       await _thumbnailCacheDirectory!.create(recursive: true);
     }
@@ -30,7 +39,13 @@ class ThumbnailService {
   /// 获取缓存目录
   static Future<Directory> _getCacheDirectory() async {
     if (_thumbnailCacheDirectory == null) {
-      await init();
+      if (_isolateCachePath != null) {
+        // Isolate环境：使用预设的缓存路径
+        await init(_isolateCachePath);
+      } else {
+        // 主线程环境：正常初始化
+        await init();
+      }
     }
     return _thumbnailCacheDirectory!;
   }
@@ -45,7 +60,11 @@ class ThumbnailService {
   /// 为指定的封面图片生成并缓存缩略图
   /// 返回一个从尺寸标识符到其缓存文件路径的映射
   static Future<Map<String, String>> generateThumbnails(
-      String mangaId, String originalImgPath) async {
+      String mangaId, String originalImgPath, [String? cachePath]) async {
+    // 如果提供了缓存路径，在Isolate中初始化
+    if (cachePath != null) {
+      await init(cachePath);
+    }
     final File originalFile = File(originalImgPath);
     if (!await originalFile.exists()) {
       log('无法为缩略图生成找到原始封面: $originalImgPath');
@@ -91,7 +110,11 @@ class ThumbnailService {
   }
 
   static Future<Map<String, String>> generateThumbnailsByData(
-      String mangaId, String originalImgPath, Uint8List data) async {
+      String mangaId, String originalImgPath, Uint8List data, [String? cachePath]) async {
+    // 如果提供了缓存路径，在Isolate中初始化
+    if (cachePath != null) {
+      await init(cachePath);
+    }
     final image = img.decodeImage(data);
     if (image == null) {
       log('解码图片失败');

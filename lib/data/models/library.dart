@@ -1,20 +1,34 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:hive/hive.dart';
 
 part 'library.g.dart';
 
 @JsonSerializable()
+@HiveType(typeId: 4)
 class MangaLibrary {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final String path;
+  @HiveField(3)
   final LibraryType type;
+  @HiveField(4)
   final bool isEnabled;
+  @HiveField(5)
   final DateTime createdAt;
+  @HiveField(6)
   final DateTime? lastScanAt;
+  @HiveField(7)
   final int mangaCount;
+  @HiveField(8)
   final LibrarySettings settings;
+  @HiveField(9)
   final bool isScanning; // 扫描状态
+  @HiveField(10)
   final bool isPrivate; // 隐私模式
+  @HiveField(11)
   final bool isPrivateActivated; // 隐私模式是否已激活
 
   const MangaLibrary({
@@ -76,11 +90,15 @@ class MangaLibrary {
   int get hashCode => id.hashCode;
 }
 
+@HiveType(typeId: 5)
 enum LibraryType {
+  @HiveField(0)
   @JsonValue('local')
   local,
+  @HiveField(1)
   @JsonValue('network')
   network,
+  @HiveField(2)
   @JsonValue('cloud')
   cloud,
 }
@@ -110,15 +128,25 @@ extension LibraryTypeExtension on LibraryType {
 }
 
 @JsonSerializable()
+@HiveType(typeId: 6)
 class LibrarySettings {
+  @HiveField(0)
   final bool autoScan;
+  @HiveField(1)
   final Duration scanInterval;
+  @HiveField(2)
   final List<String> supportedFormats;
+  @HiveField(3)
   final bool includeSubfolders;
+  @HiveField(4)
   final String? coverPattern;
+  @HiveField(5)
   final bool generateThumbnails;
+  @HiveField(6)
   final CoverDisplayMode coverDisplayMode;
+  @HiveField(7)
   final double coverScale; // 封面缩放比例（宽高比）
+  @HiveField(8)
   final double coverOffsetX; // 封面X轴偏移量
 
   const LibrarySettings({
@@ -162,11 +190,15 @@ class LibrarySettings {
   }
 }
 
+@HiveType(typeId: 7)
 enum CoverDisplayMode {
+  @HiveField(0)
   @JsonValue('default')
   defaultMode,
+  @HiveField(1)
   @JsonValue('left_half')
   leftHalf,
+  @HiveField(2)
   @JsonValue('right_half')
   rightHalf,
 }

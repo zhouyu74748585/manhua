@@ -1,8 +1,9 @@
 import 'dart:developer';
 
+import 'package:manhua_reader_flutter/data/services/database_service.dart';
+
 import '../models/reading_progress.dart';
 import '../models/manga.dart';
-import 'database_service.dart';
 
 class ReadingProgressService {
   /// 为漫画创建初始化的阅读进度

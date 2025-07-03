@@ -247,7 +247,7 @@ class _MangaDetailProviderElement
 }
 
 String _$mangaDetailWithCallbackHash() =>
-    r'3811a72060e04795eda07cc0920344c5232cea05';
+    r'2a2bb9b4cbed8d5b885a431eb0b4b3bfcbf01c0e';
 
 /// See also [mangaDetailWithCallback].
 @ProviderFor(mangaDetailWithCallback)

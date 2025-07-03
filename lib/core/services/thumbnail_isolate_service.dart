@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:isolate';
 import 'dart:developer';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:manhua_reader_flutter/data/models/manga.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/repositories/manga_repository.dart';
 import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
+import 'package:manhua_reader_flutter/data/services/database_service.dart';
 import 'package:manhua_reader_flutter/core/services/isolate_service.dart';
 
 /// 缩略图生成Isolate服务
@@ -19,12 +22,19 @@ class ThumbnailIsolateService {
     void Function()? onComplete,
     Function(List<MangaPage>)? onBatchProcessed,
   }) async {
+    // 在主线程获取应用文档目录路径
+    final appDir = await getApplicationDocumentsDirectory();
+    final cachePath = appDir.path;
+    final dbPath = '${appDir.path}/manhua_reader.db';
+    
     final receivePort = ReceivePort();
     final isolate = await Isolate.spawn(
       _thumbnailGeneratorIsolate,
       {
         'sendPort': receivePort.sendPort,
         'manga': manga.toJson(),
+        'cachePath': cachePath,
+        'dbPath': dbPath,
       },
     );
 
@@ -65,12 +75,19 @@ class ThumbnailIsolateService {
   static Future<List<Map<String, String>>> generateThumbnailsBatch(
     List<Map<String, dynamic>> pageData,
   ) async {
+    // 在主线程获取应用文档目录路径
+    final appDir = await getApplicationDocumentsDirectory();
+    final cachePath = appDir.path;
+    final dbPath = '${appDir.path}/manhua_reader.db';
+    
     final receivePort = ReceivePort();
     final isolate = await Isolate.spawn(
       _batchThumbnailGeneratorIsolate,
       {
         'sendPort': receivePort.sendPort,
         'pageData': pageData,
+        'cachePath': cachePath,
+        'dbPath': dbPath,
       },
     );
 
@@ -113,18 +130,24 @@ class ThumbnailIsolateService {
   static void _batchThumbnailGeneratorIsolate(Map<String, dynamic> params) async {
     final sendPort = params['sendPort'] as SendPort;
     final pageData = params['pageData'] as List<Map<String, dynamic>>;
+    final cachePath = params['cachePath'] as String;
+    final dbPath = params['dbPath'] as String;
 
     try {
+      // 在Isolate中初始化数据库服务
+      await DatabaseService.init();
+      
       final List<Map<String, String>> results = [];
       
       for (final data in pageData) {
         final mangaId = data['mangaId'] as String;
         final localPath = data['localPath'] as String;
         
-        // 生成缩略图
+        // 生成缩略图，传入缓存路径
         final thumbnailMap = await ThumbnailService.generateThumbnails(
           mangaId,
           localPath,
+          cachePath,
         );
         
         results.add(thumbnailMap);
@@ -153,17 +176,22 @@ class ThumbnailIsolateService {
 /// 缩略图生成Isolate入口点
 void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
   final SendPort mainSendPort = params['sendPort'];
+  final cachePath = params['cachePath'] as String;
+  final dbPath = params['dbPath'] as String;
   final ReceivePort isolateReceivePort = ReceivePort();
   // 发送SendPort给主线程
   mainSendPort.send(isolateReceivePort.sendPort);
   
   try {
+    // 在Isolate中初始化数据库服务
+    await DatabaseService.init();
+    
     // 在 Isolate 中初始化数据库和 Repository
-    final mangaRepository = LocalMangaRepository();
+     final mangaRepository = LocalMangaRepository();
 
     final Map<String, dynamic> mangaJson = params['manga'];
     final Manga manga = Manga.fromJson(mangaJson);
-    await _generateThumbnailsForManga(manga, mangaRepository, mainSendPort);
+    await _generateThumbnailsForManga(manga, mangaRepository, mainSendPort, cachePath);
     
     // 发送完成消息
     mainSendPort.send({
@@ -186,6 +214,7 @@ Future<void> _generateThumbnailsForManga(
    Manga manga,
    MangaRepository mangaRepository,
     SendPort mainSendPort,
+    String cachePath,
 ) async {
   log('开始生成漫画[${manga.title}]的缩略图');
   
@@ -197,6 +226,7 @@ Future<void> _generateThumbnailsForManga(
       // 处理压缩包类型
       List<MangaPage> extractedPages = await FileScannerService.extractFileToDisk(
         manga,
+        cachePath: cachePath,
         onBatchProcessed: (batchPages) async {
           // 保存当前批次的页面到数据库
           await mangaRepository.savePageList(batchPages);
@@ -246,7 +276,7 @@ Future<void> _generateThumbnailsForManga(
         String localPath = page.localPath;
         Map<String, String> thumbnailMap =
             await ThumbnailService.generateThumbnails(
-                page.mangaId, localPath);
+                page.mangaId, localPath, cachePath);
         String? smallThumbnail = thumbnailMap["small"];
         String? mediumThumbnail = thumbnailMap["medium"];
         String? largeThumbnail = thumbnailMap["large"];
