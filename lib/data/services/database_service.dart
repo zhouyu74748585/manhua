@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'package:sqflite/sqflite.dart';
+
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+
+import '../models/library.dart';
 import '../models/manga.dart';
 import '../models/manga_page.dart';
-import '../models/library.dart';
 import '../models/reading_progress.dart';
 
 class DatabaseService {
   static Database? _database;
+  static String? _databasePath;
   static const String _databaseName = 'manhua_reader.db';
   static const int _databaseVersion = 2;
 
@@ -26,13 +29,87 @@ class DatabaseService {
     return _database!;
   }
 
+  /// Execute database operation with retry mechanism for concurrent access
+  static Future<T> _executeWithRetry<T>(Future<T> Function() operation,
+      {int maxRetries = 3}) async {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        return await operation();
+      } catch (e) {
+        attempts++;
+        if (e.toString().contains('database is locked') ||
+            e.toString().contains('bad parameter or other API misuse') ||
+            e.toString().contains('sqlite_error: 21')) {
+          if (attempts >= maxRetries) {
+            log('Database operation failed after $maxRetries attempts: $e');
+            rethrow;
+          }
+          // Wait before retry with exponential backoff
+          await Future.delayed(Duration(milliseconds: 100 * attempts));
+          log('Database operation failed, retrying (attempt $attempts/$maxRetries): $e');
+        } else {
+          // For non-concurrency related errors, don't retry
+          rethrow;
+        }
+      }
+    }
+    throw Exception('Should not reach here');
+  }
+
+  /// Get database path for sharing with isolates
+  static Future<String> get databasePath async {
+    if (_databasePath != null) return _databasePath!;
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    _databasePath = join(documentsDirectory.path, _databaseName);
+    return _databasePath!;
+  }
+
+  /// Initialize database for isolate with specific path
+  static Future<Database> initDatabaseForIsolate(String dbPath) async {
+    return await openDatabase(
+      dbPath,
+      version: _databaseVersion,
+      onOpen: (db) async {
+        // Enable WAL mode for concurrent access
+        await db.execute('PRAGMA journal_mode = WAL;');
+        // Set busy timeout to handle concurrent access
+        await db.execute('PRAGMA busy_timeout = 30000;');
+        // Enable foreign keys
+        await db.execute('PRAGMA foreign_keys = ON;');
+        // Optimize for concurrent reads
+        await db.execute('PRAGMA synchronous = NORMAL;');
+        await db.execute('PRAGMA cache_size = 10000;');
+        await db.execute('PRAGMA temp_store = memory;');
+      },
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+
   static Future<Database> _initDatabase() async {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, _databaseName);
+    _databasePath = path;
 
     return await openDatabase(
       path,
       version: _databaseVersion,
+      onOpen: (db) async {
+        // Enable WAL mode for concurrent access
+        await db.execute('PRAGMA journal_mode = WAL;');
+        // Set busy timeout to handle concurrent access - increased timeout
+        await db.execute('PRAGMA busy_timeout = 60000;');
+        // Enable foreign keys
+        await db.execute('PRAGMA foreign_keys = ON;');
+        // Optimize for concurrent reads
+        await db.execute('PRAGMA synchronous = NORMAL;');
+        await db.execute('PRAGMA cache_size = 10000;');
+        await db.execute('PRAGMA temp_store = memory;');
+        // Additional concurrency settings
+        await db.execute('PRAGMA wal_autocheckpoint = 1000;');
+        await db.execute('PRAGMA wal_checkpoint(TRUNCATE);');
+      },
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -135,9 +212,12 @@ class DatabaseService {
     // 数据库升级逻辑
     if (oldVersion < 2 && newVersion >= 2) {
       // 添加新的字段到漫画库表
-      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_scanning INTEGER NOT NULL DEFAULT 0');
-      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0');
-      await db.execute('ALTER TABLE $_libraryTable ADD COLUMN is_private_activated INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE $_libraryTable ADD COLUMN is_scanning INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE $_libraryTable ADD COLUMN is_private INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE $_libraryTable ADD COLUMN is_private_activated INTEGER NOT NULL DEFAULT 0');
     }
   }
 
@@ -201,45 +281,51 @@ class DatabaseService {
   }
 
   static Future<MangaLibrary?> getLibraryById(String id) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      _libraryTable,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    // Ensure id is a string and log for debugging
+    final String stringId = id.toString();
+    log('getLibraryById called with id: $id (type: ${id.runtimeType}), converted to: $stringId');
 
-    if (maps.isEmpty) return null;
+    return await _executeWithRetry(() async {
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        _libraryTable,
+        where: 'id = ?',
+        whereArgs: [stringId],
+      );
 
-    final map = maps.first;
-    LibrarySettings settings = const LibrarySettings();
-    if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
-      try {
-        settings = LibrarySettings.fromJson(jsonDecode(map['settings']));
-      } catch (e,stackTrace) {
-        // 如果解析失败，使用空的设置
-        settings = const LibrarySettings();
+      if (maps.isEmpty) return null;
+
+      final map = maps.first;
+      LibrarySettings settings = const LibrarySettings();
+      if (map['settings'] != null && map['settings'].toString().isNotEmpty) {
+        try {
+          settings = LibrarySettings.fromJson(jsonDecode(map['settings']));
+        } catch (e, stackTrace) {
+          // 如果解析失败，使用空的设置
+          settings = const LibrarySettings();
+        }
       }
-    }
 
-    return MangaLibrary(
-      id: map['id'],
-      name: map['name'],
-      path: map['path'],
-      type: LibraryType.values.firstWhere(
-        (e) => e.toString() == map['type'],
-        orElse: () => LibraryType.local,
-      ),
-      isEnabled: map['is_enabled'] == 1,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
-      lastScanAt: map['last_scan_at'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(map['last_scan_at'])
-          : null,
-      mangaCount: map['manga_count'],
-      settings: settings,
-      isScanning: map['is_scanning'] == 1,
-      isPrivate: map['is_private'] == 1,
-      isPrivateActivated: map['is_private_activated'] == 1,
-    );
+      return MangaLibrary(
+        id: map['id'],
+        name: map['name'],
+        path: map['path'],
+        type: LibraryType.values.firstWhere(
+          (e) => e.toString() == map['type'],
+          orElse: () => LibraryType.local,
+        ),
+        isEnabled: map['is_enabled'] == 1,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+        lastScanAt: map['last_scan_at'] != null
+            ? DateTime.fromMillisecondsSinceEpoch(map['last_scan_at'])
+            : null,
+        mangaCount: map['manga_count'],
+        settings: settings,
+        isScanning: map['is_scanning'] == 1,
+        isPrivate: map['is_private'] == 1,
+        isPrivateActivated: map['is_private_activated'] == 1,
+      );
+    });
   }
 
   static Future<void> updateLibrary(MangaLibrary library) async {

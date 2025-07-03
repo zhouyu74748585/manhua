@@ -1,22 +1,18 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'app/app.dart';
-import 'data/services/database_service.dart';
+import 'data/services/drift_database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 在Windows、Linux、macOS平台上初始化FFI数据库
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
+  // Initialize Drift database - no platform-specific setup needed
+  // Drift handles cross-platform database initialization automatically
+  final database = DriftDatabaseService.database;
 
-  // 初始化数据库
-  await DatabaseService.database;
+  // Ensure database is ready
+  await database.customStatement('SELECT 1');
 
   runApp(
     const ProviderScope(
