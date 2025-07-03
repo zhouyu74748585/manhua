@@ -44,6 +44,28 @@ class HiveDatabaseService {
     }
   }
 
+  /// 为Isolate环境初始化Hive数据库
+  static Future<void> initForIsolate(String dbPath) async {
+    if (_isInitialized) return;
+
+    try {
+      // 在Isolate中使用Hive.init()而不是Hive.initFlutter()
+      Hive.init(dbPath);
+
+      // 注册适配器
+      _registerAdapters();
+
+      // 打开所有Box
+      await _openBoxes();
+
+      _isInitialized = true;
+      log('Hive数据库(Isolate)初始化成功');
+    } catch (e, stackTrace) {
+      log('Hive数据库(Isolate)初始化失败: $e, 堆栈: $stackTrace');
+      rethrow;
+    }
+  }
+
   /// 注册Hive适配器
   static void _registerAdapters() {
     if (!Hive.isAdapterRegistered(1)) {

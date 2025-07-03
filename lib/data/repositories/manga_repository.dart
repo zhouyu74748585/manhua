@@ -97,6 +97,7 @@ class LocalMangaRepository implements MangaRepository {
       Function(List<MangaPage>)? onBatchProcessed}) async {
     try {
       Manga? manga = await DatabaseService.getMangaById(id);
+      List<MangaPage> pages = await DatabaseService.getPagesByMangaId(id);
       if (manga != null) {
         bool hasThumbnail = false;
         String? thumbnailPath = manga.metadata['thumbnail'];

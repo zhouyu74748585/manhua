@@ -135,7 +135,7 @@ class ThumbnailIsolateService {
 
     try {
       // 在Isolate中初始化数据库服务
-      await DatabaseService.init();
+      await DatabaseService.initForIsolate(dbPath);
       
       final List<Map<String, String>> results = [];
       
@@ -160,6 +160,7 @@ class ThumbnailIsolateService {
       });
     } catch (e,stackTrace) {
       // 发送错误消息
+      log("生成缩略图失败：$e, 堆栈: $stackTrace");
       sendPort.send({
         'type': IsolateMessageType.error.index,
         'error': e.toString(),
@@ -184,7 +185,7 @@ void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
   
   try {
     // 在Isolate中初始化数据库服务
-    await DatabaseService.init();
+    await DatabaseService.initForIsolate(dbPath);
     
     // 在 Isolate 中初始化数据库和 Repository
      final mangaRepository = LocalMangaRepository();
@@ -200,6 +201,7 @@ void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
     
   } catch (e,stackTrace) {
     // 发送错误消息
+    log("生成缩略图失败：$e, 堆栈: $stackTrace");
     mainSendPort.send({
       'type': IsolateMessageType.error.index,
       'error': e.toString(),
@@ -230,7 +232,7 @@ Future<void> _generateThumbnailsForManga(
         onBatchProcessed: (batchPages) async {
           // 保存当前批次的页面到数据库
           await mangaRepository.savePageList(batchPages);
-          log("生成[${manga.title}]的${batchPages.length}页的缩略图");
+          log("生成[${manga.title}]的${batchPages.length}页的缩略图-A");
           
           // 发送批次完成消息
           mainSendPort.send({
@@ -245,12 +247,13 @@ Future<void> _generateThumbnailsForManga(
           : null;
           
       // 更新漫画元数据
-      manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-      manga.metadata.putIfAbsent(
-          "thumbnailGenerteDate", () => DateTime.now().toString());
-          
       if (thumbnailPath != null) {
-        await mangaRepository.updateManga(manga);
+        final updatedMetadata = Map<String, dynamic>.from(manga.metadata);
+        updatedMetadata["thumbnail"] = thumbnailPath;
+        updatedMetadata["thumbnailGenerteDate"] = DateTime.now().toString();
+        
+        final updatedManga = manga.copyWith(metadata: updatedMetadata);
+        await mangaRepository.updateManga(updatedManga);
         // 最终保存所有页面（确保完整性）
         await mangaRepository.savePageList(extractedPages);
       }
@@ -308,11 +311,13 @@ Future<void> _generateThumbnailsForManga(
       await Future.delayed(const Duration(milliseconds: 50));
     }
 
-    manga.metadata.putIfAbsent("thumbnail", () => thumbnailPath);
-    manga.metadata
-        .putIfAbsent("thumbnailGenerteDate", () => DateTime.now().toString());
     if (thumbnailPath != null) {
-      await mangaRepository.updateManga(manga);
+      final updatedMetadata = Map<String, dynamic>.from(manga.metadata);
+      updatedMetadata["thumbnail"] = thumbnailPath;
+      updatedMetadata["thumbnailGenerteDate"] = DateTime.now().toString();
+      
+      final updatedManga = manga.copyWith(metadata: updatedMetadata);
+      await mangaRepository.updateManga(updatedManga);
     }
     log("生成[${manga.title}]共${pages.length}页的缩略图,路径地址$thumbnailPath");
   }

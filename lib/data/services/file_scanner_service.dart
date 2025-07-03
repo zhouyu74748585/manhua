@@ -360,7 +360,7 @@ class FileScannerService {
 
         // 触发批次处理完成回调
         if (onBatchProcessed != null) {
-          onBatchProcessed(List.from(allPages)); // 传递当前所有已处理的页面
+          onBatchProcessed(List.from(batchPages)); // 传递当前批次的页面
         }
 
         // 添加小延迟，避免阻塞UI

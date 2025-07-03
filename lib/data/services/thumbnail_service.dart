@@ -80,7 +80,10 @@ class ThumbnailService {
     }
 
     final Map<String, String> thumbnailPaths = {};
-    final cacheDir = await _getCacheDirectory();
+    // 确保在isolate环境中使用正确的缓存目录
+    final cacheDir = cachePath != null 
+        ? Directory(path.join(cachePath, _thumbnailDir))
+        : await _getCacheDirectory();
 
     for (var entry in thumbnailSizes.entries) {
       final sizeKey = entry.key;
@@ -122,7 +125,10 @@ class ThumbnailService {
     }
 
     final Map<String, String> thumbnailPaths = {};
-    final cacheDir = await _getCacheDirectory();
+    // 确保在isolate环境中使用正确的缓存目录
+    final cacheDir = cachePath != null 
+        ? Directory(path.join(cachePath, _thumbnailDir))
+        : await _getCacheDirectory();
 
     for (var entry in thumbnailSizes.entries) {
       final sizeKey = entry.key;

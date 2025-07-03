@@ -1,0 +1,60 @@
+sequenceDiagram
+    participant UI as 主进程(UI线程)
+    participant TIS as ThumbnailIsolateService
+    participant Isolate as Isolate进程
+    participant TS as ThumbnailService
+    participant FSS as FileScannerService
+    participant DB as 数据库服务
+    participant FS as 文件系统
+
+    Note over UI, FS: 缩略图生成时序图
+    
+    UI->>TIS: 调用generateThumbnailsInIsolate(mangas)
+    TIS->>TIS: 创建ReceivePort监听isolate消息
+    TIS->>Isolate: 启动isolate(_batchThumbnailGeneratorIsolate)
+    
+    Note over Isolate: Isolate进程启动
+    
+    Isolate->>DB: DatabaseService.initForIsolate(dbPath)
+    DB-->>Isolate: 初始化完成
+    
+    Isolate->>TS: ThumbnailService.init(cachePath)
+    TS-->>Isolate: 缓存目录初始化完成
+    
+    loop 处理每个漫画
+        Isolate->>Isolate: _generateThumbnailsForManga(manga)
+        
+        alt 压缩包类型漫画
+            Isolate->>FSS: FileScannerService.extractFileToDisk(manga)
+            FSS->>FS: 读取压缩包文件
+            FS-->>FSS: 返回文件数据
+            FSS->>FS: 解压并保存图片到临时目录
+            FS-->>FSS: 保存完成
+            FSS-->>Isolate: 返回MangaPage列表
+        else 目录类型漫画
+            Isolate->>FS: 直接读取目录中的图片文件
+            FS-->>Isolate: 返回图片文件列表
+        end
+        
+        loop 处理每个页面
+            Isolate->>TS: generateThumbnailsByData(imageData)
+            TS->>TS: 生成不同尺寸缩略图(small, medium, large)
+            TS->>FS: 保存缩略图到缓存目录
+            FS-->>TS: 保存完成
+            TS-->>Isolate: 返回缩略图路径
+        end
+        
+        Isolate->>DB: 更新漫画元数据(thumbnail, thumbnailGenerateDate)
+        DB-->>Isolate: 更新完成
+        
+        Isolate->>TIS: 发送进度消息(IsolateMessageType.progress)
+        TIS->>UI: 通知进度更新
+    end
+    
+    Isolate->>TIS: 发送完成消息(IsolateMessageType.completed)
+    TIS->>UI: 通知生成完成
+    
+    Note over UI, FS: 进程间通信说明
+    Note over TIS, Isolate: 通过SendPort/ReceivePort进行消息传递
+    Note over Isolate: isolate中使用initForIsolate避免Flutter绑定冲突
+    Note over TS: 缓存路径在isolate中直接传入，避免调用path_provider

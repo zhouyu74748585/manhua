@@ -29,6 +29,24 @@ class DatabaseService {
     }
   }
 
+  /// 为Isolate环境初始化数据库服务
+  static Future<void> initForIsolate(String dbPath) async {
+    if (_isInitialized) return;
+
+    try {
+      log('初始化数据库服务(Isolate)...');
+      
+      // 初始化Hive数据库(Isolate)
+      await HiveDatabaseService.initForIsolate(dbPath);
+      
+      _isInitialized = true;
+      log('数据库服务(Isolate)初始化完成');
+    } catch (e, stackTrace) {
+      log('数据库服务(Isolate)初始化失败: $e, 堆栈: $stackTrace');
+      rethrow;
+    }
+  }
+
   /// 确保数据库已初始化
   static Future<void> _ensureInitialized() async {
     if (!_isInitialized) {
