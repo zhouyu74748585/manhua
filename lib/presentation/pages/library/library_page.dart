@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../data/models/library.dart';
 import '../../providers/library_provider.dart';
-import '../../widgets/library/library_card.dart';
 import '../../widgets/library/add_library_dialog.dart';
+import '../../widgets/library/library_card.dart';
 import '../../widgets/library/library_settings_dialog.dart';
 import '../../widgets/library/privacy_dialog.dart';
-import '../../../data/models/library.dart';
 
 class LibraryPage extends ConsumerWidget {
   const LibraryPage({super.key});

@@ -1,10 +1,11 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
-import 'package:go_router/go_router.dart';
-import 'dart:io';
 
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';

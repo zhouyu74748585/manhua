@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+
 import 'reading_progress.dart';
 
 part 'manga.g.dart';

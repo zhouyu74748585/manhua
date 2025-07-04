@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../data/models/library.dart';
 import '../../../data/services/privacy_service.dart';
 import 'privacy_dialog.dart';
@@ -26,7 +27,7 @@ class PrivacyAccessHandler {
 
     // 获取认证方式
     final authMethod = await PrivacyService.getLibraryAuthMethod(library.id);
-    
+
     if (authMethod == PrivacyAuthMethod.none) {
       // 没有设置认证方式，直接允许访问
       onAccessGranted?.call();

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:manhua_reader_flutter/presentation/widgets/manga/manga_list_tile.dart';
-import '../../providers/manga_provider.dart';
-import '../../providers/library_provider.dart';
-import '../../widgets/manga/manga_card.dart';
-import '../../../data/models/manga.dart';
+
 import '../../../data/models/library.dart';
+import '../../../data/models/manga.dart';
+import '../../providers/library_provider.dart';
+import '../../providers/manga_provider.dart';
+import '../../widgets/manga/manga_card.dart';
 import '../manga_detail/manga_detail_page.dart';
 import '../reader/reader_page.dart';
 

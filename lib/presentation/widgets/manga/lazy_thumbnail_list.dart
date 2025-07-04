@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 import '../../../data/models/manga_page.dart';
 

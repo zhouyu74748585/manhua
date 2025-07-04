@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../presentation/pages/bookshelf/bookshelf_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/library/library_page.dart';
-import '../../presentation/pages/bookshelf/bookshelf_page.dart';
-import '../../presentation/pages/settings/settings_page.dart';
-import '../../presentation/pages/reader/reader_page.dart';
 import '../../presentation/pages/manga_detail/manga_detail_page.dart';
+import '../../presentation/pages/reader/reader_page.dart';
 import '../../presentation/pages/search/search_page.dart';
+import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/widgets/layout/main_layout.dart';
 
 part 'app_router.g.dart';

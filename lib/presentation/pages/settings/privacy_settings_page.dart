@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
+
 import '../../../core/services/privacy_service.dart';
 import '../../providers/library_provider.dart';
 
@@ -96,7 +97,7 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
 
     await PrivacyService.setBiometricEnabled(enabled);
     await _loadSettings();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -142,7 +143,7 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // 密码设置
                         ListTile(
                           leading: const Icon(Icons.key),
@@ -153,7 +154,7 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                             child: Text(_hasPassword ? '修改' : '设置'),
                           ),
                         ),
-                        
+
                         // 生物识别设置
                         if (_isBiometricAvailable)
                           SwitchListTile(
@@ -169,9 +170,9 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // 隐私库管理
                 Card(
                   child: Padding(
@@ -184,11 +185,11 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 16),
-                        
+
                         librariesAsync.when(
                           data: (libraries) {
                             final privateLibraries = libraries.where((lib) => lib.isPrivate).toList();
-                            
+
                             if (privateLibraries.isEmpty) {
                               return const ListTile(
                                 leading: Icon(Icons.info_outline),
@@ -196,11 +197,11 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                                 subtitle: Text('在库设置中可以将库设置为隐私模式'),
                               );
                             }
-                            
+
                             return Column(
                               children: privateLibraries.map((library) {
                                 final isActivated = PrivacyService.isLibraryActivated(library.id);
-                                
+
                                 return ListTile(
                                   leading: Icon(
                                     Icons.folder_special,
@@ -237,9 +238,9 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // 安全说明
                 Card(
                   child: Padding(

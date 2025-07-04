@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

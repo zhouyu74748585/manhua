@@ -1,13 +1,15 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:archive/archive.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:tuple/tuple.dart';
-import '../models/manga.dart';
+
 import '../models/library.dart';
+import '../models/manga.dart';
 import 'cover_cache_service.dart';
 
 class FileScannerService {

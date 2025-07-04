@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+
 import '../../../data/services/privacy_service.dart';
 
 class PrivacyDialog extends StatefulWidget {
@@ -282,7 +283,7 @@ class _PasswordSetupDialogState extends State<PasswordSetupDialog> {
     if (_formKey.currentState!.validate()) {
       // 保存密码
       await PrivacyService.setLibraryPassword(widget.libraryId, _passwordController.text);
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         widget.onPasswordSet?.call();
@@ -347,7 +348,7 @@ class _PrivacyVerificationDialogState extends State<PrivacyVerificationDialog> {
       if (didAuthenticate) {
         // 设置激活状态
         await PrivacyService.setLibraryActivationStatus(widget.libraryId, true);
-        
+
         if (mounted) {
           Navigator.of(context).pop();
           widget.onVerified?.call();
@@ -453,16 +454,16 @@ class _PrivacyVerificationDialogState extends State<PrivacyVerificationDialog> {
       );
       return;
     }
-    
+
     final isValid = await PrivacyService.verifyLibraryPassword(
       widget.libraryId,
       _passwordController.text,
     );
-    
+
     if (isValid) {
       // 设置激活状态
       await PrivacyService.setLibraryActivationStatus(widget.libraryId, true);
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         widget.onVerified?.call();

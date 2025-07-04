@@ -1,8 +1,8 @@
 import 'dart:developer';
 
-import '../models/reading_progress.dart';
 import '../models/manga.dart';
-import 'database_service.dart';
+import '../models/reading_progress.dart';
+import 'drift_database_service.dart';
 
 class ReadingProgressService {
   /// 为漫画创建初始化的阅读进度
@@ -112,8 +112,8 @@ class ReadingProgressService {
   /// 保存阅读进度到数据库
   static Future<void> saveProgress(ReadingProgress progress) async {
     try {
-      await DatabaseService.insertOrUpdateReadingProgress(progress);
-    } catch (e,stackTrace) {
+      await DriftDatabaseService.insertOrUpdateReadingProgress(progress);
+    } catch (e, stackTrace) {
       log('保存阅读进度失败: ${progress.id}, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }
@@ -122,8 +122,8 @@ class ReadingProgressService {
   /// 从数据库获取阅读进度
   static Future<ReadingProgress?> getProgress(String mangaId) async {
     try {
-      return await DatabaseService.getReadingProgressByMangaId(mangaId);
-    } catch (e,stackTrace) {
+      return await DriftDatabaseService.getReadingProgressByMangaId(mangaId);
+    } catch (e, stackTrace) {
       log('获取阅读进度失败: $mangaId, 错误: $e,堆栈:$stackTrace');
       return null;
     }
@@ -132,8 +132,8 @@ class ReadingProgressService {
   /// 删除阅读进度
   static Future<void> deleteProgress(String mangaId) async {
     try {
-      await DatabaseService.deleteReadingProgress(mangaId);
-    } catch (e,stackTrace) {
+      await DriftDatabaseService.deleteReadingProgress(mangaId);
+    } catch (e, stackTrace) {
       log('删除阅读进度失败: $mangaId, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }

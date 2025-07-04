@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/platform_utils.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/platform_utils.dart';
 
 class ResponsiveGrid<T> extends StatelessWidget {
   final List<T> items;

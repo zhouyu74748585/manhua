@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../data/models/settings.dart';
 import '../../data/repositories/settings_repository.dart';
-import '../../core/constants/app_constants.dart';
 
 part 'settings_provider.g.dart';
 

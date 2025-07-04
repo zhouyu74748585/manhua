@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/library.dart';
@@ -105,43 +104,43 @@ class LibraryActions extends _$LibraryActions {
   Future<List<Manga>> scanLibrary(String libraryId) async {
     final service = ref.read(libraryServiceProvider);
     final scanStateNotifier = ref.read(libraryScanStateProvider.notifier);
-    
+
     // 检查是否有任何库正在扫描
     if (scanStateNotifier.hasAnyScanning) {
       throw Exception('已有漫画库正在扫描中，请等待扫描完成后再试');
     }
-    
+
     try {
       // 设置扫描状态
       scanStateNotifier.setScanningState(libraryId, true);
-      
+
       // 更新数据库中的扫描状态
       final library = await service.getLibraryById(libraryId);
       if (library != null) {
         await service.updateLibrary(library.copyWith(isScanning: true));
       }
-      
+
       // 执行扫描
       await service.scanLibrary(libraryId);
-      
+
       // 扫描完成后更新状态
       scanStateNotifier.setScanningState(libraryId, false);
-      
+
       // 更新数据库中的扫描状态
       final updatedLibrary = await service.getLibraryById(libraryId);
       if (updatedLibrary != null) {
         await service.updateLibrary(updatedLibrary.copyWith(isScanning: false));
       }
-      
+
     } catch (e,stackTrace) {
       // 扫描失败时也要清除扫描状态
       scanStateNotifier.setScanningState(libraryId, false);
-      
+
       final library = await service.getLibraryById(libraryId);
       if (library != null) {
         await service.updateLibrary(library.copyWith(isScanning: false));
       }
-      
+
       rethrow;
     }
 
@@ -204,12 +203,12 @@ class LibraryScanState extends _$LibraryScanState {
     // 从数据库加载扫描状态
     final service = ref.watch(libraryServiceProvider);
     final libraries = await service.getAllLibraries();
-    
+
     final scanStates = <String, bool>{};
     for (final library in libraries) {
       scanStates[library.id] = library.isScanning;
     }
-    
+
     return scanStates;
   }
 
@@ -230,7 +229,7 @@ class LibraryScanState extends _$LibraryScanState {
     final currentState = state.valueOrNull ?? {};
     return currentState.values.any((isScanning) => isScanning);
   }
-  
+
   // 刷新扫描状态
   Future<void> refreshScanStates() async {
     ref.invalidateSelf();

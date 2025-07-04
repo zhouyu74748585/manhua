@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../core/services/privacy_service.dart';
+
 import '../../core/services/app_lifecycle_manager.dart';
+import '../../core/services/privacy_service.dart';
 import '../../data/models/library.dart';
 import '../../data/repositories/library_repository.dart';
 
@@ -16,7 +18,7 @@ class PrivacyState {
   final List<String> activatedLibraries;
   final bool needsAuthentication;
   final bool isBlurred;
-  
+
   const PrivacyState({
     this.isPasswordSet = false,
     this.isBiometricEnabled = false,
@@ -25,7 +27,7 @@ class PrivacyState {
     this.needsAuthentication = false,
     this.isBlurred = false,
   });
-  
+
   PrivacyState copyWith({
     bool? isPasswordSet,
     bool? isBiometricEnabled,
@@ -50,21 +52,21 @@ class PrivacyState {
 class PrivacyNotifier extends _$PrivacyNotifier {
   StreamSubscription? _lifecycleSubscription;
   StreamSubscription? _authSubscription;
-  
+
   @override
   PrivacyState build() {
     // 初始化时加载状态
     _loadInitialState();
-    
+
     // 监听应用生命周期
     _setupLifecycleListener();
-    
+
     // 监听隐私验证需求
     _setupAuthListener();
-    
+
     return const PrivacyState();
   }
-  
+
   /// 加载初始状态
   Future<void> _loadInitialState() async {
     try {
@@ -72,7 +74,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       final isBiometricEnabled = await PrivacyService.isBiometricEnabled();
       final isBiometricAvailable = await PrivacyService.isBiometricAvailable();
       final activatedLibraries = PrivacyService.activatedLibraries;
-      
+
       state = state.copyWith(
         isPasswordSet: isPasswordSet,
         isBiometricEnabled: isBiometricEnabled,
@@ -83,7 +85,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       log('加载隐私模式初始状态失败: $e,堆栈:$stackTrace');
     }
   }
-  
+
   /// 设置应用生命周期监听
   void _setupLifecycleListener() {
     _lifecycleSubscription = AppLifecycleManager.instance.stateStream.listen(
@@ -93,7 +95,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       },
     );
   }
-  
+
   /// 设置隐私验证监听
   void _setupAuthListener() {
     _authSubscription = AppLifecycleManager.instance.privacyAuthStream.listen(
@@ -105,14 +107,14 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       },
     );
   }
-  
+
   /// 更新模糊化状态
   void _updateBlurState() {
-    final needsBlur = AppLifecycleManager.instance.needsBlur || 
+    final needsBlur = AppLifecycleManager.instance.needsBlur ||
                      state.needsAuthentication;
     state = state.copyWith(isBlurred: needsBlur);
   }
-  
+
   /// 设置密码
   Future<bool> setPassword(String password) async {
     try {
@@ -125,7 +127,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 验证密码
   Future<bool> verifyPassword(String password) async {
     try {
@@ -143,7 +145,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 启用生物识别
   Future<bool> enableBiometric() async {
     try {
@@ -156,7 +158,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 禁用生物识别
   Future<bool> disableBiometric() async {
     try {
@@ -169,7 +171,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 生物识别验证
   Future<bool> authenticateWithBiometric() async {
     try {
@@ -187,21 +189,21 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 激活隐私库
   Future<bool> activatePrivateLibrary(String libraryId) async {
     try {
       await PrivacyService.activatePrivateLibrary(libraryId);
-      
+
       // 更新库仓库中的激活状态
       final libraryRepo = ref.read(libraryRepositoryProvider);
       await libraryRepo.updateLibraryPrivateActivation(libraryId, true);
-      
+
       // 更新状态
       final updatedList = List<String>.from(state.activatedLibraries)
         ..add(libraryId);
       state = state.copyWith(activatedLibraries: updatedList);
-      
+
       log('隐私库激活成功: $libraryId');
       return true;
     } catch (e,stackTrace) {
@@ -209,21 +211,21 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 取消激活隐私库
   Future<bool> deactivatePrivateLibrary(String libraryId) async {
     try {
       await PrivacyService.deactivatePrivateLibrary(libraryId);
-      
+
       // 更新库仓库中的激活状态
       final libraryRepo = ref.read(libraryRepositoryProvider);
       await libraryRepo.updateLibraryPrivateActivation(libraryId, false);
-      
+
       // 更新状态
       final updatedList = List<String>.from(state.activatedLibraries)
         ..remove(libraryId);
       state = state.copyWith(activatedLibraries: updatedList);
-      
+
       log('隐私库取消激活成功: $libraryId');
       return true;
     } catch (e,stackTrace) {
@@ -231,18 +233,18 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 设置库为隐私模式
   Future<bool> setLibraryPrivate(String libraryId, bool isPrivate) async {
     try {
       final libraryRepo = ref.read(libraryRepositoryProvider);
       await libraryRepo.setLibraryPrivate(libraryId, isPrivate);
-      
+
       // 如果禁用隐私模式，同时取消激活
       if (!isPrivate && state.activatedLibraries.contains(libraryId)) {
         await deactivatePrivateLibrary(libraryId);
       }
-      
+
       log('库隐私模式设置成功: $libraryId, isPrivate: $isPrivate');
       return true;
     } catch (e,stackTrace) {
@@ -250,12 +252,12 @@ class PrivacyNotifier extends _$PrivacyNotifier {
       return false;
     }
   }
-  
+
   /// 检查库是否已激活
   bool isLibraryActivated(String libraryId) {
     return state.activatedLibraries.contains(libraryId);
   }
-  
+
   /// 清除认证需求
   void clearAuthenticationRequest() {
     state = state.copyWith(
@@ -264,7 +266,7 @@ class PrivacyNotifier extends _$PrivacyNotifier {
     );
     AppLifecycleManager.instance.clearPrivacyAuth();
   }
-  
+
   /// 手动触发认证需求
   void requestAuthentication() {
     state = state.copyWith(
@@ -273,12 +275,12 @@ class PrivacyNotifier extends _$PrivacyNotifier {
     );
     AppLifecycleManager.instance.requestPrivacyAuth();
   }
-  
+
   /// 刷新状态
   Future<void> refresh() async {
     await _loadInitialState();
   }
-  
+
   void dispose() {
     _lifecycleSubscription?.cancel();
     _authSubscription?.cancel();

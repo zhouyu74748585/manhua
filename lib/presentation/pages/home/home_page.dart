@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_router.dart';
 import '../../widgets/common/responsive_grid.dart';
-import '../../widgets/manga/manga_card.dart';
 import '../../widgets/common/section_header.dart';
+import '../../widgets/manga/manga_card.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});

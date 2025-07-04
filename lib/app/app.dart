@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'routes/app_router.dart';
-import 'themes/app_theme.dart';
+import '../core/constants/app_constants.dart';
 import '../presentation/providers/theme_provider.dart';
 import '../presentation/widgets/privacy/privacy_app_wrapper.dart';
-import '../core/constants/app_constants.dart';
+import 'routes/app_router.dart';
+import 'themes/app_theme.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});

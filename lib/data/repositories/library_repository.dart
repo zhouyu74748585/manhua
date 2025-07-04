@@ -1,16 +1,17 @@
 import 'dart:developer';
 
+import 'package:manhua_reader_flutter/core/services/cover_isolate_service.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../presentation/providers/manga_provider.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
-import '../services/file_scanner_service.dart';
-import '../services/database_service.dart';
 import '../services/cover_cache_service.dart';
+import '../services/drift_database_service.dart';
+import '../services/file_scanner_service.dart';
 import 'manga_repository.dart';
-import '../../presentation/providers/manga_provider.dart';
-import 'package:manhua_reader_flutter/core/services/cover_isolate_service.dart';
 
 part 'library_repository.g.dart';
 
@@ -42,7 +43,7 @@ abstract class LibraryRepository {
   Future<Map<String, int>> getLibraryStats(String libraryId);
   Future<int> getTotalMangaCount();
   Future<int> getTotalLibraryCount();
-  
+
   // 隐私模式管理
   Future<void> setLibraryPrivate(String libraryId, bool isPrivate);
   Future<void> updateLibraryPrivateActivation(String libraryId, bool isActivated);
@@ -70,7 +71,7 @@ class LocalLibraryRepository implements LibraryRepository {
 
     try {
       // 从数据库获取漫画库
-      final libraries = await DatabaseService.getAllLibraries();
+      final libraries = await DriftDatabaseService.getAllLibraries();
 
       // 更新缓存
       _cachedLibraries = libraries;
@@ -97,7 +98,7 @@ class LocalLibraryRepository implements LibraryRepository {
       }
 
       // 从数据库获取
-      return await DatabaseService.getLibraryById(id);
+      return await DriftDatabaseService.getLibraryById(id);
     } catch (e,stackTrace) {
       log('获取漫画库失败: $id, 错误: $e,堆栈:$stackTrace');
       return null;
@@ -108,7 +109,7 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> addLibrary(MangaLibrary library) async {
     try {
       // 从数据库检查是否已存在相同名称或路径的库
-      final allLibraries = await DatabaseService.getAllLibraries();
+      final allLibraries = await DriftDatabaseService.getAllLibraries();
       final existingByName =
           allLibraries.any((lib) => lib.name == library.name);
       final existingByPath =
@@ -123,7 +124,7 @@ class LocalLibraryRepository implements LibraryRepository {
       }
 
       // 保存到数据库
-      await DatabaseService.insertLibrary(library);
+      await DriftDatabaseService.insertLibrary(library);
 
       // 清除缓存，强制下次重新从数据库加载
       _cachedLibraries = null;
@@ -138,7 +139,7 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> deleteLibrary(String id) async {
     try {
       // 获取该库下的所有漫画
-      final libraryMangas = await DatabaseService.getMangaByLibraryId(id);
+      final libraryMangas = await DriftDatabaseService.getMangaByLibraryId(id);
 
       // 删除每个漫画的相关数据
       for (final manga in libraryMangas) {
@@ -162,7 +163,7 @@ class LocalLibraryRepository implements LibraryRepository {
       }
 
       // 从数据库删除漫画库
-      await DatabaseService.deleteLibrary(id);
+      await DriftDatabaseService.deleteLibrary(id);
 
       // 清除缓存
       _cachedLibraries = null;
@@ -179,13 +180,13 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> updateLibrary(MangaLibrary library) async {
     try {
       // 检查漫画库是否存在
-      final existingLibrary = await DatabaseService.getLibraryById(library.id);
+      final existingLibrary = await DriftDatabaseService.getLibraryById(library.id);
       if (existingLibrary == null) {
         throw Exception('漫画库不存在');
       }
 
       // 检查名称和路径是否与其他库冲突
-      final allLibraries = await DatabaseService.getAllLibraries();
+      final allLibraries = await DriftDatabaseService.getAllLibraries();
       final otherLibraries = allLibraries.where((lib) => lib.id != library.id);
       final existingByName =
           otherLibraries.any((lib) => lib.name == library.name);
@@ -201,7 +202,7 @@ class LocalLibraryRepository implements LibraryRepository {
       }
 
       // 更新数据库
-      await DatabaseService.updateLibrary(library);
+      await DriftDatabaseService.updateLibrary(library);
 
       // 清除缓存
       _cachedLibraries = null;
@@ -226,7 +227,7 @@ class LocalLibraryRepository implements LibraryRepository {
     try {
       // 获取数据库中现有的漫画
       final existingMangas =
-          await DatabaseService.getMangaByLibraryId(libraryId);
+          await DriftDatabaseService.getMangaByLibraryId(libraryId);
       final existingMangaPaths = existingMangas.map((m) => m.path).toSet();
 
       // 使用文件扫描服务进行实际扫描
@@ -291,13 +292,13 @@ class LocalLibraryRepository implements LibraryRepository {
 
   Future<void> getCovers(List<Manga> mangas) async {
     // 过滤需要生成封面的漫画
-    final mangasNeedingCovers = mangas.where((m) => 
-      m.type != MangaType.folder && 
+    final mangasNeedingCovers = mangas.where((m) =>
+      m.type != MangaType.folder &&
       (m.coverPath == null || m.coverPath!.isEmpty)
     ).toList();
-    
+
     if (mangasNeedingCovers.isEmpty) return;
-    
+
     // 使用 Isolate 处理封面提取
     await CoverIsolateService.generateCoversInIsolate(
       mangasNeedingCovers,
@@ -315,13 +316,13 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> syncLibrary(String libraryId) async {
     try {
       // 获取漫画库
-      final library = await DatabaseService.getLibraryById(libraryId);
+      final library = await DriftDatabaseService.getLibraryById(libraryId);
       if (library != null) {
         // 更新最后扫描时间
         final updatedLibrary = library.copyWith(
           lastScanAt: DateTime.now(),
         );
-        await DatabaseService.updateLibrary(updatedLibrary);
+        await DriftDatabaseService.updateLibrary(updatedLibrary);
 
         // 清除缓存
         _cachedLibraries = null;
@@ -361,15 +362,14 @@ class LocalLibraryRepository implements LibraryRepository {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
       // 从数据库获取该库的实际漫画数量
-      final libraryManga = await DatabaseService.getMangaByLibraryId(libraryId);
+      final libraryManga = await DriftDatabaseService.getMangaByLibraryId(libraryId);
       final totalManga = libraryManga.length;
       final readProgress =
-          await DatabaseService.getReadingProgressByLibraryId(libraryId);
+          await DriftDatabaseService.getReadingProgressByLibraryId(libraryId);
       // 计算已读和收藏数量（简化实现）
       final readManga = readProgress
-              ?.where((readProgres) => readProgres.isCompleted == true)
-              .length ??
-          0;
+              .where((readProgres) => readProgres.progressPercentage >= 1.0)
+              .length;
       final favoriteManga =
           libraryManga.where((manga) => manga.isFavorite == true).length;
 
@@ -396,7 +396,7 @@ class LocalLibraryRepository implements LibraryRepository {
     await Future.delayed(const Duration(milliseconds: 100));
     try {
       // 从数据库获取实际的漫画数量
-      final allManga = await DatabaseService.getAllManga();
+      final allManga = await DriftDatabaseService.getAllManga();
       return allManga.length;
     } catch (e,stackTrace) {
       log('获取漫画总数失败: $e,堆栈:$stackTrace');
@@ -408,69 +408,69 @@ class LocalLibraryRepository implements LibraryRepository {
   @override
   Future<int> getTotalLibraryCount() async {
     try {
-      final libraries = await DatabaseService.getAllLibraries();
+      final libraries = await DriftDatabaseService.getAllLibraries();
       return libraries.length;
     } catch (e,stackTrace) {
       log('获取漫画库总数失败: $e,堆栈:$stackTrace');
       return 0;
     }
   }
-  
+
   @override
   Future<void> setLibraryPrivate(String libraryId, bool isPrivate) async {
     try {
-      final library = await DatabaseService.getLibraryById(libraryId);
+      final library = await DriftDatabaseService.getLibraryById(libraryId);
       if (library == null) {
         throw Exception('漫画库不存在: $libraryId');
       }
-      
+
       final updatedLibrary = library.copyWith(
         isPrivate: isPrivate,
         isPrivateActivated: false, // 设置隐私模式时重置激活状态
       );
-      
-      await DatabaseService.updateLibrary(updatedLibrary);
-      
+
+      await DriftDatabaseService.updateLibrary(updatedLibrary);
+
       // 清除缓存
       _cachedLibraries = null;
       _lastCacheTime = null;
-      
+
       log('已${isPrivate ? "启用" : "禁用"}漫画库隐私模式: ${library.name}');
     } catch (e,stackTrace) {
       log('设置漫画库隐私模式失败: $libraryId, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }
   }
-  
+
   @override
   Future<void> updateLibraryPrivateActivation(String libraryId, bool isActivated) async {
     try {
-      final library = await DatabaseService.getLibraryById(libraryId);
+      final library = await DriftDatabaseService.getLibraryById(libraryId);
       if (library == null) {
         throw Exception('漫画库不存在: $libraryId');
       }
-      
+
       if (!library.isPrivate) {
         throw Exception('该漫画库未启用隐私模式: ${library.name}');
       }
-      
+
       final updatedLibrary = library.copyWith(
         isPrivateActivated: isActivated,
       );
-      
-      await DatabaseService.updateLibrary(updatedLibrary);
-      
+
+      await DriftDatabaseService.updateLibrary(updatedLibrary);
+
       // 清除缓存
       _cachedLibraries = null;
       _lastCacheTime = null;
-      
+
       log('已${isActivated ? "激活" : "取消激活"}隐私漫画库: ${library.name}');
     } catch (e,stackTrace) {
       log('更新漫画库隐私激活状态失败: $libraryId, 错误: $e,堆栈:$stackTrace');
       rethrow;
     }
   }
-  
+
   @override
   Future<List<MangaLibrary>> getPrivateLibraries() async {
     try {
@@ -481,12 +481,12 @@ class LocalLibraryRepository implements LibraryRepository {
       return [];
     }
   }
-  
+
   @override
   Future<List<MangaLibrary>> getActivatedPrivateLibraries() async {
     try {
       final allLibraries = await getAllLibraries();
-      return allLibraries.where((library) => 
+      return allLibraries.where((library) =>
         library.isPrivate && library.isPrivateActivated
       ).toList();
     } catch (e,stackTrace) {

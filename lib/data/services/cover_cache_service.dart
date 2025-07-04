@@ -1,14 +1,14 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:archive/archive_io.dart';
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:pdfx/pdfx.dart';
-import 'dart:isolate';
 
 class CoverCacheService {
   static const String _cacheDir = 'covers';

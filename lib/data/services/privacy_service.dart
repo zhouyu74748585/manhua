@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +20,7 @@ class PrivacyService {
     final prefs = await SharedPreferences.getInstance();
     final storedHash = prefs.getString('$_passwordPrefix$libraryId');
     if (storedHash == null) return false;
-    
+
     final inputHash = _hashPassword(password);
     return storedHash == inputHash;
   }
@@ -85,12 +86,12 @@ class PrivacyService {
     if (hasBiometric) {
       return PrivacyAuthMethod.biometric;
     }
-    
+
     final hasPassword = await hasLibraryPassword(libraryId);
     if (hasPassword) {
       return PrivacyAuthMethod.password;
     }
-    
+
     return PrivacyAuthMethod.none;
   }
 
@@ -100,7 +101,7 @@ class PrivacyService {
     if (authMethod == PrivacyAuthMethod.none) {
       return false;
     }
-    
+
     // 检查是否已经验证过
     final isActivated = await getLibraryActivationStatus(libraryId);
     return !isActivated;

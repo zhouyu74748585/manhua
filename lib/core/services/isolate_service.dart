@@ -1,6 +1,6 @@
-import 'dart:isolate';
 import 'dart:async';
 import 'dart:developer';
+import 'dart:isolate';
 
 /// Isolate服务，用于在后台线程执行耗时操作
 class IsolateService {
@@ -30,7 +30,7 @@ class IsolateService {
 
     _isolates[name] = isolate;
     _receivePorts[name] = receivePort;
-    
+
     // 将ReceivePort转换为广播流，避免多次监听问题
     final broadcastStream = receivePort.asBroadcastStream();
     _broadcastStreams[name] = broadcastStream;
@@ -38,7 +38,7 @@ class IsolateService {
     // 等待Isolate发送SendPort
     final completer = Completer<SendPort>();
     late StreamSubscription subscription;
-    
+
     subscription = broadcastStream.listen((data) {
       if (data is SendPort) {
         _sendPorts[name] = data;
@@ -77,18 +77,18 @@ class IsolateService {
   static Future<void> stopIsolate(String name) async {
     final isolate = _isolates[name];
     final receivePort = _receivePorts[name];
-    
+
     if (isolate != null) {
       isolate.kill(priority: Isolate.immediate);
       _isolates.remove(name);
       log('Isolate [$name] 已停止');
     }
-    
+
     if (receivePort != null) {
       receivePort.close();
       _receivePorts.remove(name);
     }
-    
+
     _sendPorts.remove(name);
     _broadcastStreams.remove(name);
   }

@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/privacy_provider.dart';
+
 import '../../../core/services/app_lifecycle_manager.dart';
+import '../../providers/privacy_provider.dart';
 import 'general_auth_dialog.dart';
 
 /// 隐私保护应用包装器
 class PrivacyAppWrapper extends ConsumerStatefulWidget {
   final Widget child;
-  
+
   const PrivacyAppWrapper({
     super.key,
     required this.child,
   });
-  
+
   @override
   ConsumerState<PrivacyAppWrapper> createState() => _PrivacyAppWrapperState();
 }
@@ -24,22 +25,22 @@ class _PrivacyAppWrapperState extends ConsumerState<PrivacyAppWrapper> {
     // 初始化应用生命周期管理器
     AppLifecycleManager.instance.initialize();
   }
-  
+
   @override
   void dispose() {
     AppLifecycleManager.instance.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final privacyState = ref.watch(privacyNotifierProvider);
-    
+
     return Stack(
       children: [
         // 主应用内容
         widget.child,
-        
+
         // 隐私保护遮罩
         if (privacyState.isBlurred || privacyState.needsAuthentication)
           const PrivacyOverlay(),
@@ -51,11 +52,11 @@ class _PrivacyAppWrapperState extends ConsumerState<PrivacyAppWrapper> {
 /// 隐私保护遮罩
 class PrivacyOverlay extends ConsumerWidget {
   const PrivacyOverlay({super.key});
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final privacyState = ref.watch(privacyNotifierProvider);
-    
+
     return Positioned.fill(
       child: Material(
         color: Colors.black87,
@@ -94,9 +95,9 @@ class PrivacyOverlay extends ConsumerWidget {
                       color: Colors.white,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // 标题
                   const Text(
                     '隐私保护已启用',
@@ -106,9 +107,9 @@ class PrivacyOverlay extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // 描述
                   Text(
                     _getDescription(privacyState),
@@ -118,9 +119,9 @@ class PrivacyOverlay extends ConsumerWidget {
                       fontSize: 16,
                     ),
                   ),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   // 解锁按钮
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 48),
@@ -146,9 +147,9 @@ class PrivacyOverlay extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // 提示文本
                   const Text(
                     '使用密码或生物识别进行身份验证',
@@ -165,7 +166,7 @@ class PrivacyOverlay extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// 获取描述文本
   String _getDescription(PrivacyState state) {
     if (state.activatedLibraries.isNotEmpty) {
@@ -175,7 +176,7 @@ class PrivacyOverlay extends ConsumerWidget {
       return '应用已进入隐私保护模式\n请验证身份以继续使用';
     }
   }
-  
+
   /// 显示认证对话框
   Future<void> _showAuthDialog(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<bool>(
@@ -187,7 +188,7 @@ class PrivacyOverlay extends ConsumerWidget {
         canCancel: false,
       ),
     );
-    
+
     if (result == true) {
       // 认证成功，清除保护状态
       final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
@@ -202,7 +203,7 @@ class SimplePrivacyBlur extends StatelessWidget {
   final bool isBlurred;
   final VoidCallback? onTap;
   final String? message;
-  
+
   const SimplePrivacyBlur({
     super.key,
     required this.child,
@@ -210,7 +211,7 @@ class SimplePrivacyBlur extends StatelessWidget {
     this.onTap,
     this.message,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return Stack(

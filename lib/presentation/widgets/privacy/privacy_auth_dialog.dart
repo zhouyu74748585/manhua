@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
+
 import '../../../core/services/privacy_service.dart';
 
 /// 隐私模式认证对话框
@@ -46,14 +47,14 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
     final isAvailable = await PrivacyService.isBiometricAvailable();
     final isEnabled = await PrivacyService.isBiometricEnabled();
     final biometrics = await PrivacyService.getAvailableBiometrics();
-    
+
     if (mounted) {
       setState(() {
         _isBiometricAvailable = isAvailable;
         _isBiometricEnabled = isEnabled;
         _availableBiometrics = biometrics;
       });
-      
+
       // 如果启用了生物识别，自动尝试
       if (_isBiometricAvailable && _isBiometricEnabled) {
         _authenticateWithBiometric();
@@ -181,7 +182,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            
+
             // 生物识别按钮
             if (_isBiometricAvailable && _isBiometricEnabled)
               Container(
@@ -201,7 +202,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
                   ),
                 ),
               ),
-            
+
             // 分隔线
             if (_isBiometricAvailable && _isBiometricEnabled)
               Row(
@@ -217,10 +218,10 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
                   const Expanded(child: Divider()),
                 ],
               ),
-            
+
             if (_isBiometricAvailable && _isBiometricEnabled)
               const SizedBox(height: 16),
-            
+
             // 密码输入
             TextField(
               controller: _passwordController,

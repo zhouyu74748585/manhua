@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../data/models/library.dart';
 import '../../providers/privacy_provider.dart';
 import '../privacy/privacy_auth_dialog.dart';
@@ -8,17 +9,17 @@ import '../privacy/privacy_auth_dialog.dart';
 class LibraryPrivacyTile extends ConsumerWidget {
   final MangaLibrary library;
   final VoidCallback? onChanged;
-  
+
   const LibraryPrivacyTile({
     super.key,
     required this.library,
     this.onChanged,
   });
-  
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ExpansionTile(
@@ -33,11 +34,11 @@ class LibraryPrivacyTile extends ConsumerWidget {
           ),
         ),
         subtitle: Text(
-          library.isPrivate 
+          library.isPrivate
             ? (library.isPrivateActivated ? '隐私模式 - 已激活' : '隐私模式 - 未激活')
             : '普通模式',
           style: TextStyle(
-            color: library.isPrivate 
+            color: library.isPrivate
               ? (library.isPrivateActivated ? Colors.green : Colors.orange)
               : Colors.grey,
           ),
@@ -54,42 +55,42 @@ class LibraryPrivacyTile extends ConsumerWidget {
                   subtitle: const Text('启用后需要密码或生物识别才能访问'),
                   value: library.isPrivate,
                   onChanged: (value) => _togglePrivateMode(
-                    context, 
-                    ref, 
-                    privacyNotifier, 
+                    context,
+                    ref,
+                    privacyNotifier,
                     value,
                   ),
                 ),
-                
+
                 if (library.isPrivate) ...[
                   const Divider(),
-                  
+
                   // 激活状态显示
                   ListTile(
                     leading: Icon(
-                      library.isPrivateActivated 
-                        ? Icons.check_circle 
+                      library.isPrivateActivated
+                        ? Icons.check_circle
                         : Icons.radio_button_unchecked,
-                      color: library.isPrivateActivated 
-                        ? Colors.green 
+                      color: library.isPrivateActivated
+                        ? Colors.green
                         : Colors.grey,
                     ),
                     title: Text(
                       library.isPrivateActivated ? '已激活' : '未激活',
                       style: TextStyle(
-                        color: library.isPrivateActivated 
-                          ? Colors.green 
+                        color: library.isPrivateActivated
+                          ? Colors.green
                           : Colors.grey,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     subtitle: Text(
-                      library.isPrivateActivated 
+                      library.isPrivateActivated
                         ? '当前可以访问此隐私库的内容'
                         : '需要验证身份才能访问此隐私库',
                     ),
                   ),
-                  
+
                   // 激活/取消激活按钮
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -99,8 +100,8 @@ class LibraryPrivacyTile extends ConsumerWidget {
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () => _activateLibrary(
-                                context, 
-                                ref, 
+                                context,
+                                ref,
                                 privacyNotifier,
                               ),
                               icon: const Icon(Icons.lock_open),
@@ -115,8 +116,8 @@ class LibraryPrivacyTile extends ConsumerWidget {
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () => _deactivateLibrary(
-                                context, 
-                                ref, 
+                                context,
+                                ref,
                                 privacyNotifier,
                               ),
                               icon: const Icon(Icons.lock),
@@ -130,9 +131,9 @@ class LibraryPrivacyTile extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // 安全提示
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -163,7 +164,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 16),
               ],
             ),
@@ -172,7 +173,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
       ),
     );
   }
-  
+
   /// 切换隐私模式
   Future<void> _togglePrivateMode(
     BuildContext context,
@@ -188,7 +189,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
         return;
       }
     }
-    
+
     // 显示加载对话框
     showDialog(
       context: context,
@@ -197,16 +198,16 @@ class LibraryPrivacyTile extends ConsumerWidget {
         child: CircularProgressIndicator(),
       ),
     );
-    
+
     try {
       final success = await privacyNotifier.setLibraryPrivate(
-        library.id, 
+        library.id,
         value,
       );
-      
+
       if (context.mounted) {
         Navigator.of(context).pop(); // 关闭加载对话框
-        
+
         if (success) {
           onChanged?.call();
           ScaffoldMessenger.of(context).showSnackBar(
@@ -238,7 +239,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
       }
     }
   }
-  
+
   /// 激活隐私库
   Future<void> _activateLibrary(
     BuildContext context,
@@ -252,10 +253,10 @@ class LibraryPrivacyTile extends ConsumerWidget {
         libraryName: library.name,
       ),
     );
-    
+
     if (result == true) {
       final success = await privacyNotifier.activatePrivateLibrary(library.id);
-      
+
       if (context.mounted) {
         if (success) {
           onChanged?.call();
@@ -276,7 +277,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
       }
     }
   }
-  
+
   /// 取消激活隐私库
   Future<void> _deactivateLibrary(
     BuildContext context,
@@ -300,10 +301,10 @@ class LibraryPrivacyTile extends ConsumerWidget {
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       final success = await privacyNotifier.deactivatePrivateLibrary(library.id);
-      
+
       if (context.mounted) {
         if (success) {
           onChanged?.call();
@@ -324,7 +325,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
       }
     }
   }
-  
+
   /// 显示需要设置密码的对话框
   void _showPasswordRequiredDialog(BuildContext context) {
     showDialog(
