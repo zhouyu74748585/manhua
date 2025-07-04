@@ -4,10 +4,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../providers/library_provider.dart';
 import '../../../core/services/privacy_service.dart';
-import '../../providers/privacy_provider.dart';
 import '../../../data/models/library.dart';
+import '../../providers/library_provider.dart';
+import '../../providers/privacy_provider.dart';
 import '../../widgets/library/add_library_dialog.dart';
 import '../../widgets/library/library_card.dart';
 import '../../widgets/library/library_settings_dialog.dart';
@@ -146,7 +146,8 @@ class LibraryPage extends ConsumerWidget {
       itemBuilder: (context, index) {
         final library = libraries[index];
         final scanState = scanStateAsync.valueOrNull ?? {};
-        final isScanning = library.isScanning || (scanState[library.id] ?? false);
+        final isScanning =
+            library.isScanning || (scanState[library.id] ?? false);
 
         return LibraryCard(
           library: library,
@@ -177,8 +178,8 @@ class LibraryPage extends ConsumerWidget {
     );
   }
 
-  void _toggleLibraryEnabled(
-      BuildContext context, WidgetRef ref, MangaLibrary library, bool enabled) async {
+  void _toggleLibraryEnabled(BuildContext context, WidgetRef ref,
+      MangaLibrary library, bool enabled) async {
     // 如果是隐私库且要激活，需要验证身份
     if (library.isPrivate && enabled) {
       final success = await _showPrivacyAuthDialog(context, ref, library);
@@ -186,14 +187,15 @@ class LibraryPage extends ConsumerWidget {
         return; // 验证失败，不执行激活操作
       }
     }
-    
+
     // 直接更新库的 isEnabled 状态，不再使用独立的激活状态系统
     final updatedLibrary = library.copyWith(isEnabled: enabled);
     ref.read(libraryActionsProvider.notifier).updateLibrary(updatedLibrary);
   }
-  
+
   /// 显示隐私验证对话框
-  Future<bool> _showPrivacyAuthDialog(BuildContext context, WidgetRef ref, MangaLibrary library) async {
+  Future<bool> _showPrivacyAuthDialog(
+      BuildContext context, WidgetRef ref, MangaLibrary library) async {
     final result = await showPasswordVerifyDialog(
       context,
       libraryId: library.id,
@@ -201,7 +203,7 @@ class LibraryPage extends ConsumerWidget {
       title: '激活隐私库',
       message: '请验证身份以激活隐私库 "${library.name}"',
     );
-    
+
     return result == true;
   }
 
@@ -217,7 +219,7 @@ class LibraryPage extends ConsumerWidget {
           const SnackBar(content: Text('扫描完成')),
         );
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('扫描库时出错: $e, 栈跟踪: $stackTrace');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -293,13 +295,13 @@ class LibraryPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, MangaLibrary library) async {
     // 检查是否已设置密码
     final hasPassword = await PrivacyService.hasPassword();
-    
+
     if (!hasPassword) {
       // 如果没有设置密码，显示提示对话框
       _showPasswordRequiredDialog(context);
       return;
     }
-    
+
     // 如果已设置密码，直接显示验证对话框
     final result = await showPasswordVerifyDialog(
       context,
@@ -308,12 +310,13 @@ class LibraryPage extends ConsumerWidget {
       title: '隐私验证',
       message: '请验证身份以访问隐私库 "${library.name}"',
     );
-    
+
     if (result == true) {
       // 验证成功，激活隐私库
       final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
-      final success = await privacyNotifier.updateLibraryEnabled(library.id, true);
-      
+      final success = await privacyNotifier.updateLibraryEnabled(
+          library.id, !library.isPrivate);
+
       if (context.mounted) {
         if (success) {
           ref.refresh(allLibrariesProvider);
@@ -334,7 +337,7 @@ class LibraryPage extends ConsumerWidget {
       }
     }
   }
-  
+
   /// 显示需要设置密码的对话框
   void _showPasswordRequiredDialog(BuildContext context) {
     showDialog(

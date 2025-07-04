@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/navigation/global_navigator.dart';
 import '../../presentation/pages/bookshelf/bookshelf_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/library/library_page.dart';
@@ -27,6 +28,7 @@ class AppRoutes {
 @riverpod
 GoRouter appRouter(AppRouterRef ref) {
   return GoRouter(
+    navigatorKey: globalNavigatorKey,
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: true,
     routes: [

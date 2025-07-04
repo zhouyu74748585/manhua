@@ -102,15 +102,9 @@ class LibraryCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   if (library.isPrivate)
                     _buildInfoChip(
-                      icon: library.isEnabled 
-                          ? Icons.lock 
-                          : Icons.lock_outline,
-                      label: library.isEnabled 
-                          ? '隐私已激活' 
-                          : '隐私未激活',
-                      color: library.isEnabled 
-                          ? Colors.red 
-                          : Colors.grey,
+                      icon: Icons.lock,
+                      label: '隐私模式已激活',
+                      color: Colors.red,
                     ),
                   const SizedBox(width: 8),
                   if (library.lastScanAt != null)
@@ -169,7 +163,9 @@ class LibraryCard extends StatelessWidget {
                         library.isPrivate ? Icons.lock : Icons.lock_open,
                         size: 16,
                       ),
-                      label: const Text('隐私'),
+                      label: library.isPrivate
+                          ? const Text('停用隐私保护')
+                          : const Text('开启隐私保护'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: library.isPrivate ? Colors.red : null,
                       ),
