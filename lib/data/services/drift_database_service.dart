@@ -200,58 +200,87 @@ class DriftDatabaseService {
     return manga != null ? _mangaFromDrift(manga) : null;
   }
 
-  /// Search for manga
+  /// Search for manga from enabled libraries only
   static Future<List<model.Manga>> searchManga(String query) async {
     final db = database;
-    final select = db.select(db.mangas)
-      ..where((tbl) =>
-          tbl.title.like('%$query%') |
-          tbl.author.like('%$query%') |
-          tbl.description.like('%$query%'))
-      ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)]);
-    final mangas = await select.get();
-    return mangas.map(_mangaFromDrift).toList();
+    final select = db.select(db.mangas).join([
+      leftOuterJoin(
+          db.libraries, db.libraries.id.equalsExp(db.mangas.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true) &
+          (db.mangas.title.like('%$query%') |
+              db.mangas.author.like('%$query%') |
+              db.mangas.description.like('%$query%')))
+      ..orderBy([OrderingTerm.asc(db.mangas.title)]);
+    final results = await select.get();
+    return results
+        .map((row) => _mangaFromDrift(row.readTable(db.mangas)))
+        .toList();
   }
 
-  /// Get manga by category
+  /// Get manga by category from enabled libraries only
   static Future<List<model.Manga>> getMangaByCategory(String category) async {
     final db = database;
-    final query = db.select(db.mangas)
-      ..where((tbl) => tbl.tags.like('%"$category"%'))
-      ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)]);
-    final mangas = await query.get();
-    return mangas.map(_mangaFromDrift).toList();
+    final query = db.select(db.mangas).join([
+      leftOuterJoin(
+          db.libraries, db.libraries.id.equalsExp(db.mangas.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true) &
+          db.mangas.tags.like('%"$category"%'))
+      ..orderBy([OrderingTerm.asc(db.mangas.title)]);
+    final results = await query.get();
+    return results
+        .map((row) => _mangaFromDrift(row.readTable(db.mangas)))
+        .toList();
   }
 
-  /// Get favorite manga
+  /// Get favorite manga from enabled libraries only
   static Future<List<model.Manga>> getFavoriteManga() async {
     final db = database;
-    final query = db.select(db.mangas)
-      ..where((tbl) => tbl.isFavorite.equals(true))
-      ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)]);
-    final mangas = await query.get();
-    return mangas.map(_mangaFromDrift).toList();
+    final query = db.select(db.mangas).join([
+      leftOuterJoin(
+          db.libraries, db.libraries.id.equalsExp(db.mangas.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true) &
+          db.mangas.isFavorite.equals(true))
+      ..orderBy([OrderingTerm.asc(db.mangas.title)]);
+    final results = await query.get();
+    return results
+        .map((row) => _mangaFromDrift(row.readTable(db.mangas)))
+        .toList();
   }
 
-  /// Get recently read manga
+  /// Get recently read manga from enabled libraries only
   static Future<List<model.Manga>> getRecentlyReadManga() async {
     final db = database;
-    final query = db.select(db.mangas)
-      ..where((tbl) => tbl.lastReadAt.isNotNull())
-      ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastReadAt)])
-      ..limit(20);
-    final mangas = await query.get();
-    return mangas.map(_mangaFromDrift).toList();
+    final query = db.select(db.mangas).join([
+      leftOuterJoin(
+          db.libraries, db.libraries.id.equalsExp(db.mangas.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true) &
+          db.mangas.lastReadAt.isNotNull())
+      ..orderBy([OrderingTerm.desc(db.mangas.lastReadAt)])
+      ..limit(5);
+    final results = await query.get();
+    return results
+        .map((row) => _mangaFromDrift(row.readTable(db.mangas)))
+        .toList();
   }
 
-  /// Get recently updated manga
+  /// Get recently updated manga from enabled libraries only
   static Future<List<model.Manga>> getRecentlyUpdatedManga() async {
     final db = database;
-    final query = db.select(db.mangas)
-      ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
+    final query = db.select(db.mangas).join([
+      leftOuterJoin(
+          db.libraries, db.libraries.id.equalsExp(db.mangas.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true))
+      ..orderBy([OrderingTerm.desc(db.mangas.updatedAt)])
       ..limit(20);
-    final mangas = await query.get();
-    return mangas.map(_mangaFromDrift).toList();
+    final results = await query.get();
+    return results
+        .map((row) => _mangaFromDrift(row.readTable(db.mangas)))
+        .toList();
   }
 
   /// Batch insert mangas
@@ -364,14 +393,21 @@ class DriftDatabaseService {
     return progresses.map(_readingProgressFromDrift).toList();
   }
 
-  /// Get all manga reading progress
+  /// Get all manga reading progress from enabled libraries only
   static Future<List<rp_model.ReadingProgress>>
       getAllMangaReadingProgress() async {
     final db = database;
-    final query = db.select(db.readingProgresses)
-      ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastReadAt)]);
-    final progresses = await query.get();
-    return progresses.map(_readingProgressFromDrift).toList();
+    final query = db.select(db.readingProgresses).join([
+      leftOuterJoin(db.libraries,
+          db.libraries.id.equalsExp(db.readingProgresses.libraryId)),
+    ])
+      ..where(db.libraries.isEnabled.equals(true))
+      ..orderBy([OrderingTerm.desc(db.readingProgresses.lastReadAt)]);
+    final results = await query.get();
+    return results
+        .map((row) =>
+            _readingProgressFromDrift(row.readTable(db.readingProgresses)))
+        .toList();
   }
 
   // ==================== Page Operations ====================

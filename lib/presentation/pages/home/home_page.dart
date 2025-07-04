@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/routes/app_router.dart';
+import '../../../data/models/manga.dart';
+import '../../../data/models/reading_progress.dart';
+import '../../providers/manga_provider.dart';
 import '../../widgets/common/responsive_grid.dart';
 import '../../widgets/common/section_header.dart';
 import '../../widgets/manga/manga_card.dart';
@@ -23,7 +26,10 @@ class HomePage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              // TODO: 刷新数据
+              // 刷新数据
+              ref.invalidate(recentlyReadMangaProvider);
+              ref.invalidate(recentlyUpdatedMangaProvider);
+              ref.invalidate(allMangaProgressProvider);
             },
           ),
         ],
@@ -40,7 +46,17 @@ class _HomeContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
       onRefresh: () async {
-        // TODO: 实现下拉刷新
+        // 实现下拉刷新
+        ref.invalidate(recentlyReadMangaProvider);
+        ref.invalidate(recentlyUpdatedMangaProvider);
+        ref.invalidate(allMangaProgressProvider);
+
+        // 等待数据加载完成
+        await Future.wait([
+          ref.read(recentlyReadMangaProvider.future),
+          ref.read(recentlyUpdatedMangaProvider.future),
+          ref.read(allMangaProgressProvider.future),
+        ]);
       },
       child: CustomScrollView(
         slivers: [
@@ -77,107 +93,148 @@ class _HomeContent extends ConsumerWidget {
   }
 
   Widget _buildRecentlyRead(BuildContext context, WidgetRef ref) {
-    // TODO: 从Provider获取最近阅读数据
-    final recentlyRead = <Map<String, dynamic>>[
-      {
-        'id': '1',
-        'title': '示例漫画 1',
-        'coverPath': '',
-        'progress': 0.6,
-        'totalPages': 100,
-        'lastReadChapter': '第 12 话',
-      },
-      {
-        'id': '2',
-        'title': '示例漫画 2',
-        'coverPath': '',
-        'progress': 0.3,
-        'totalPages': 100,
-        'lastReadChapter': '第 5 话',
-      },
-    ];
+    final recentlyReadAsync = ref.watch(recentlyReadMangaProvider);
+    final allProgressAsync = ref.watch(allMangaProgressProvider);
 
-    if (recentlyRead.isEmpty) {
-      return const Center(
-        child: Text(
-          '暂无最近阅读记录',
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
-    }
+    return recentlyReadAsync.when(
+      data: (recentlyRead) {
+        if (recentlyRead.isEmpty) {
+          return const Center(
+            child: Text(
+              '暂无最近阅读记录',
+              style: TextStyle(color: Colors.grey),
+            ),
+          );
+        }
 
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: recentlyRead.length,
-      itemBuilder: (context, index) {
-        final manga = recentlyRead[index];
-        return Container(
-          width: 140,
-          margin: const EdgeInsets.only(right: 12),
-          child: MangaCard(
-            title: manga['title'],
-            coverPath: manga['coverPath'],
-            progress: manga['progress'],
-            subtitle: manga['title'],
-            totalPages: manga['totalPages'],
-            onTap: () {
-              context.go('/manga/${manga['id']}');
-            },
+        return allProgressAsync.when(
+          data: (progressMap) {
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: recentlyRead.length,
+              itemBuilder: (context, index) {
+                final manga = recentlyRead[index];
+                final progress = progressMap[manga.id];
+
+                return Container(
+                  width: 140,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: MangaCard(
+                    title: manga.title,
+                    coverPath: manga.coverPath,
+                    progress: progress?.progressPercentage ?? 0.0,
+                    subtitle: _formatLastRead(progress),
+                    totalPages: manga.totalPages,
+                    onTap: () {
+                      context.go('/manga/${manga.id}');
+                    },
+                  ),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
+            child: Text(
+              '加载进度失败: $error',
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text(
+          '加载最近阅读失败: $error',
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
     );
   }
 
   Widget _buildLatestUpdates(BuildContext context, WidgetRef ref) {
-    // TODO: 从Provider获取最新更新数据
-    final latestUpdates = <Map<String, dynamic>>[
-      {
-        'id': '3',
-        'title': '最新漫画 1',
-        'coverPath': '',
-        'totalPages': 100,
-        'updateTime': '2小时前',
-        'newChapter': '第 25 话',
-      },
-      {
-        'id': '4',
-        'title': '最新漫画 2',
-        'coverPath': '',
-        'totalPages': 100,
-        'updateTime': '5小时前',
-        'newChapter': '第 18 话',
-      },
-    ];
+    final latestUpdatesAsync = ref.watch(recentlyUpdatedMangaProvider);
 
-    if (latestUpdates.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(32),
-            child: Text(
-              '暂无最新更新',
-              style: TextStyle(color: Colors.grey),
+    return latestUpdatesAsync.when(
+      data: (latestUpdates) {
+        if (latestUpdates.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Text(
+                  '暂无最新更新',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
             ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    return ResponsiveGrid(
-      items: latestUpdates,
-      itemBuilder: (context, manga) {
-        return MangaCard(
-          title: manga['title'],
-          coverPath: manga['coverPath'],
-          subtitle: '${manga['newChapter']} • ${manga['updateTime']}',
-          totalPages: manga['totalPages'],
-          onTap: () {
-            context.go('/manga/${manga['id']}');
+        return ResponsiveGrid<Manga>(
+          items: latestUpdates,
+          itemBuilder: (context, manga) {
+            return MangaCard(
+              title: manga.title,
+              coverPath: manga.coverPath,
+              subtitle: _formatUpdateTime(manga.updatedAt),
+              totalPages: manga.totalPages,
+              onTap: () {
+                context.go('/manga/${manga.id}');
+              },
+            );
           },
         );
       },
+      loading: () => const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      error: (error, stack) => SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Text(
+              '加载最新更新失败: $error',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ),
+      ),
     );
+  }
+
+  /// 格式化最后阅读信息
+  String _formatLastRead(ReadingProgress? progress) {
+    if (progress == null) return '未开始阅读';
+
+    final currentPage = progress.currentPage;
+    final totalPages = progress.totalPages;
+    final percentage = (progress.progressPercentage * 100).toInt();
+
+    return '第 $currentPage/$totalPages 页 ($percentage%)';
+  }
+
+  /// 格式化更新时间
+  String _formatUpdateTime(DateTime? updatedAt) {
+    if (updatedAt == null) return '未知时间';
+
+    final now = DateTime.now();
+    final difference = now.difference(updatedAt);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}天前';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}小时前';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}分钟前';
+    } else {
+      return '刚刚';
+    }
   }
 }
