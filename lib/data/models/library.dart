@@ -15,7 +15,6 @@ class MangaLibrary {
   final LibrarySettings settings;
   final bool isScanning; // 扫描状态
   final bool isPrivate; // 隐私模式
-  final bool isPrivateActivated; // 隐私模式是否已激活
 
   const MangaLibrary({
     required this.id,
@@ -29,7 +28,6 @@ class MangaLibrary {
     this.settings = const LibrarySettings(),
     this.isScanning = false,
     this.isPrivate = false,
-    this.isPrivateActivated = false,
   });
 
   factory MangaLibrary.fromJson(Map<String, dynamic> json) =>
@@ -48,7 +46,6 @@ class MangaLibrary {
     LibrarySettings? settings,
     bool? isScanning,
     bool? isPrivate,
-    bool? isPrivateActivated,
   }) {
     return MangaLibrary(
       id: id ?? this.id,
@@ -62,7 +59,6 @@ class MangaLibrary {
       settings: settings ?? this.settings,
       isScanning: isScanning ?? this.isScanning,
       isPrivate: isPrivate ?? this.isPrivate,
-      isPrivateActivated: isPrivateActivated ?? this.isPrivateActivated,
     );
   }
 

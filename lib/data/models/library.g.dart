@@ -22,7 +22,6 @@ MangaLibrary _$MangaLibraryFromJson(Map<String, dynamic> json) => MangaLibrary(
           : LibrarySettings.fromJson(json['settings'] as Map<String, dynamic>),
       isScanning: json['isScanning'] as bool? ?? false,
       isPrivate: json['isPrivate'] as bool? ?? false,
-      isPrivateActivated: json['isPrivateActivated'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$MangaLibraryToJson(MangaLibrary instance) =>
@@ -38,7 +37,6 @@ Map<String, dynamic> _$MangaLibraryToJson(MangaLibrary instance) =>
       'settings': instance.settings,
       'isScanning': instance.isScanning,
       'isPrivate': instance.isPrivate,
-      'isPrivateActivated': instance.isPrivateActivated,
     };
 
 const _$LibraryTypeEnumMap = {

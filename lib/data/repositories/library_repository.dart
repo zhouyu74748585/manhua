@@ -50,7 +50,7 @@ abstract class LibraryRepository {
       String libraryId, bool isActivated);
   Future<List<MangaLibrary>> getPrivateLibraries();
   Future<List<MangaLibrary>> getActivatedPrivateLibraries();
-  
+
   // 应用启动时初始化隐私库状态
   Future<void> initializePrivateLibrariesOnStartup();
 }
@@ -433,7 +433,6 @@ class LocalLibraryRepository implements LibraryRepository {
 
       final updatedLibrary = library.copyWith(
         isPrivate: isPrivate,
-        isPrivateActivated: false, // 设置隐私模式时重置激活状态
       );
 
       await DriftDatabaseService.updateLibrary(updatedLibrary);
@@ -459,7 +458,7 @@ class LocalLibraryRepository implements LibraryRepository {
       }
 
       final updatedLibrary = library.copyWith(
-        isPrivateActivated: isActivated,
+        isPrivate: isActivated,
       );
 
       await DriftDatabaseService.updateLibrary(updatedLibrary);
@@ -491,7 +490,7 @@ class LocalLibraryRepository implements LibraryRepository {
     try {
       final allLibraries = await getAllLibraries();
       return allLibraries
-          .where((library) => library.isPrivate && library.isPrivateActivated)
+          .where((library) => library.isPrivate && library.isEnabled)
           .toList();
     } catch (e, stackTrace) {
       log('获取已激活的隐私漫画库列表失败: $e,堆栈:$stackTrace');
@@ -503,25 +502,23 @@ class LocalLibraryRepository implements LibraryRepository {
   Future<void> initializePrivateLibrariesOnStartup() async {
     try {
       final allLibraries = await getAllLibraries();
-      final privateLibraries = allLibraries.where((library) => library.isPrivate).toList();
-      
+      final privateLibraries =
+          allLibraries.where((library) => library.isPrivate).toList();
+
       for (final library in privateLibraries) {
         // 根据用户需求，隐私库在应用启动时应设置为非激活状态（isEnabled=false）
         if (library.isEnabled) {
-          final updatedLibrary = library.copyWith(
-            isEnabled: false,
-            isPrivateActivated: false,
-          );
-          
+          final updatedLibrary = library.copyWith(isEnabled: false);
+
           await DriftDatabaseService.updateLibrary(updatedLibrary);
           log('已将隐私库设置为非激活状态: ${library.name}');
         }
       }
-      
+
       // 清除缓存
       _cachedLibraries = null;
       _lastCacheTime = null;
-      
+
       log('隐私库初始化完成，共处理 ${privateLibraries.length} 个隐私库');
     } catch (e, stackTrace) {
       log('初始化隐私库状态失败: $e,堆栈:$stackTrace');

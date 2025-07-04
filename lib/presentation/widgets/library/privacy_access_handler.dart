@@ -20,7 +20,7 @@ class PrivacyAccessHandler {
     }
 
     // 如果已经激活，直接允许访问
-    if (library.isPrivateActivated) {
+    if (library.isEnabled) {
       onAccessGranted?.call();
       return true;
     }

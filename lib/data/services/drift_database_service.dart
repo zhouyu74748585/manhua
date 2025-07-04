@@ -48,7 +48,6 @@ class DriftDatabaseService {
             settings: Value(jsonEncode(library.settings.toJson())),
             isScanning: Value(library.isScanning),
             isPrivate: Value(library.isPrivate),
-            isPrivateActivated: Value(library.isPrivateActivated),
           ),
           mode: InsertMode.insertOrReplace,
         );
@@ -83,7 +82,6 @@ class DriftDatabaseService {
       settings: Value(jsonEncode(library.settings.toJson())),
       isScanning: Value(library.isScanning),
       isPrivate: Value(library.isPrivate),
-      isPrivateActivated: Value(library.isPrivateActivated),
     ));
   }
 
@@ -478,7 +476,6 @@ class DriftDatabaseService {
       settings: settings,
       isScanning: library.isScanning,
       isPrivate: library.isPrivate,
-      isPrivateActivated: library.isPrivateActivated,
     );
   }
 

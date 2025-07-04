@@ -309,7 +309,6 @@ class DriftIsolateDatabaseService {
       settings: settings,
       isScanning: library.isScanning,
       isPrivate: library.isPrivate,
-      isPrivateActivated: library.isPrivateActivated,
     );
   }
 
