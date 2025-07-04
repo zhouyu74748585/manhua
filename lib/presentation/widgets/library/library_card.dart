@@ -51,141 +51,141 @@ class LibraryCard extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题行
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        library.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题行
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          library.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        library.path,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
+                        const SizedBox(height: 4),
+                        Text(
+                          library.path,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                // 启用/禁用开关
-                Switch(
-                  value: library.isEnabled,
-                  onChanged: onToggleEnabled,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  // 启用/禁用开关
+                  Switch(
+                    value: library.isEnabled,
+                    onChanged: onToggleEnabled,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
-            // 信息行
-            Row(
-              children: [
-                _buildInfoChip(
-                  icon: Icons.category,
-                  label: _getTypeLabel(library.type),
-                  color: _getTypeColor(library.type),
-                ),
-                const SizedBox(width: 8),
-                _buildInfoChip(
-                  icon: Icons.book,
-                  label: '${library.mangaCount} 本',
-                  color: Colors.blue,
-                ),
-                const SizedBox(width: 8),
-                if (library.isPrivate)
+              // 信息行
+              Row(
+                children: [
                   _buildInfoChip(
-                    icon: Icons.lock,
-                    label: '隐私保护',
+                    icon: Icons.category,
+                    label: _getTypeLabel(library.type),
+                    color: _getTypeColor(library.type),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildInfoChip(
+                    icon: Icons.book,
+                    label: '${library.mangaCount} 本',
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(width: 8),
+                  if (library.isPrivate)
+                    _buildInfoChip(
+                      icon: Icons.lock,
+                      label: '隐私保护',
+                      color: Colors.red,
+                    ),
+                  const SizedBox(width: 8),
+                  if (library.lastScanAt != null)
+                    _buildInfoChip(
+                      icon: Icons.access_time,
+                      label: _formatLastScan(library.lastScanAt!),
+                      color: Colors.green,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // 操作按钮行
+              Row(
+                children: [
+                  // 扫描按钮
+                  ElevatedButton.icon(
+                    onPressed: library.isEnabled && !isScanning ? onScan : null,
+                    icon: isScanning
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 16),
+                    label: Text(isScanning ? '扫描中...' : '扫描'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // 编辑按钮
+                  OutlinedButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('编辑'),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // 设置按钮
+                  if (onSettings != null)
+                    OutlinedButton.icon(
+                      onPressed: onSettings,
+                      icon: const Icon(Icons.settings, size: 16),
+                      label: const Text('设置'),
+                    ),
+                  const SizedBox(width: 8),
+
+                  // 隐私设置按钮
+                  if (onPrivacySettings != null)
+                    OutlinedButton.icon(
+                      onPressed: onPrivacySettings,
+                      icon: Icon(
+                        library.isPrivate ? Icons.lock : Icons.lock_open,
+                        size: 16,
+                      ),
+                      label: const Text('隐私'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: library.isPrivate ? Colors.red : null,
+                      ),
+                    ),
+                  const Spacer(),
+
+                  // 删除按钮
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete),
                     color: Colors.red,
+                    tooltip: '删除漫画库',
                   ),
-                const SizedBox(width: 8),
-                if (library.lastScanAt != null)
-                  _buildInfoChip(
-                    icon: Icons.access_time,
-                    label: _formatLastScan(library.lastScanAt!),
-                    color: Colors.green,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 操作按钮行
-            Row(
-              children: [
-                // 扫描按钮
-                ElevatedButton.icon(
-                  onPressed: library.isEnabled && !isScanning ? onScan : null,
-                  icon: isScanning
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.refresh, size: 16),
-                  label: Text(isScanning ? '扫描中...' : '扫描'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // 编辑按钮
-                OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit, size: 16),
-                  label: const Text('编辑'),
-                ),
-                const SizedBox(width: 8),
-
-                // 设置按钮
-                if (onSettings != null)
-                  OutlinedButton.icon(
-                    onPressed: onSettings,
-                    icon: const Icon(Icons.settings, size: 16),
-                    label: const Text('设置'),
-                  ),
-                const SizedBox(width: 8),
-
-                // 隐私设置按钮
-                if (onPrivacySettings != null)
-                  OutlinedButton.icon(
-                    onPressed: onPrivacySettings,
-                    icon: Icon(
-                      library.isPrivate ? Icons.lock : Icons.lock_open,
-                      size: 16,
-                    ),
-                    label: const Text('隐私'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: library.isPrivate ? Colors.red : null,
-                    ),
-                  ),
-                const Spacer(),
-
-                // 删除按钮
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete),
-                  color: Colors.red,
-                  tooltip: '删除漫画库',
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -199,9 +199,9 @@ class LibraryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha:0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

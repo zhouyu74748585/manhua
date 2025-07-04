@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:manhua_reader_flutter/core/services/thumbnail_isolate_service.dart';
-import 'package:sqflite/sqflite.dart';
 
 import '../models/manga.dart';
 import '../models/manga_page.dart';
@@ -55,7 +53,7 @@ class LocalMangaRepository implements MangaRepository {
     try {
       final dbManga = await DriftDatabaseService.getAllManga();
       return dbManga;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('查询漫画失败: $e,堆栈:$stackTrace');
       return List.empty();
     }
@@ -75,7 +73,8 @@ class LocalMangaRepository implements MangaRepository {
   @override
   Future<ReadingProgress?> getReadingProgressById(String id) async {
     try {
-      final dbManga = await DriftDatabaseService.getReadingProgressByMangaId(id);
+      final dbManga =
+          await DriftDatabaseService.getReadingProgressByMangaId(id);
       return dbManga;
     } catch (e, stackTrace) {
       log('查询漫画进度失败: $e,$stackTrace');
@@ -88,7 +87,7 @@ class LocalMangaRepository implements MangaRepository {
     try {
       Manga? manga = await DriftDatabaseService.getMangaById(id);
       return manga;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('查询漫画失败: $e,堆栈:$stackTrace');
       return null;
     }
@@ -116,7 +115,7 @@ class LocalMangaRepository implements MangaRepository {
         }
       }
       return manga;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('查询漫画失败: $e,堆栈:$stackTrace');
       return null;
     }
@@ -138,7 +137,7 @@ class LocalMangaRepository implements MangaRepository {
             Future.microtask(() {
               onComplete();
             });
-          } catch (e,stackTrace) {
+          } catch (e, stackTrace) {
             log('回调执行失败: $e,堆栈:$stackTrace');
           }
         }
@@ -182,7 +181,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> saveManga(Manga manga) async {
     try {
       await DriftDatabaseService.insertManga(manga);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('保存漫画失败: $e,堆栈:$stackTrace');
     }
   }
@@ -191,7 +190,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> updateManga(Manga manga) async {
     try {
       await DriftDatabaseService.updateManga(manga);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('更新漫画失败: $e,堆栈:$stackTrace');
     }
   }
@@ -200,7 +199,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deleteManga(String id) async {
     try {
       await DriftDatabaseService.deleteManga(id);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('删除漫画失败: $e,堆栈:$stackTrace');
     }
   }
@@ -213,7 +212,7 @@ class LocalMangaRepository implements MangaRepository {
         final updatedManga = manga.copyWith(isFavorite: isFavorite);
         await DriftDatabaseService.updateManga(updatedManga);
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('更新漫画失败: $e,堆栈:$stackTrace');
     }
   }
@@ -235,7 +234,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deleteProgressByMangaId(String id) async {
     try {
       await DriftDatabaseService.deleteReadingProgress(id);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('删除漫画进度失败: $e,堆栈:$stackTrace');
     }
   }
@@ -264,7 +263,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> deletePageByMangaId(String id) async {
     try {
       await DriftDatabaseService.deletePagesByMangaId(id);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('删除漫画页失败: $e,堆栈:$stackTrace');
     }
   }
@@ -273,7 +272,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> saveMangaList(List<Manga> mangaList) async {
     try {
       await DriftDatabaseService.saveMangaList(mangaList);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('批量保存漫画失败: $e,堆栈:$stackTrace');
     }
   }
@@ -282,7 +281,7 @@ class LocalMangaRepository implements MangaRepository {
   Future<void> savePageList(List<MangaPage> pageList) async {
     try {
       await DriftDatabaseService.savePageList(pageList);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('批量保存页面失败: $e,堆栈:$stackTrace');
     }
   }

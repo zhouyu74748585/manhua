@@ -132,11 +132,11 @@ class IsolateMessage {
   });
 
   Map<String, dynamic> toJson() => {
-    'type': type.name,
-    'data': data,
-    'error': error,
-    'progress': progress,
-  };
+        'type': type.name,
+        'data': data,
+        'error': error,
+        'progress': progress,
+      };
 
   factory IsolateMessage.fromJson(Map<String, dynamic> json) {
     return IsolateMessage(

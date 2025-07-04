@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'network_config.g.dart';
@@ -173,8 +175,9 @@ class NetworkConfig {
         remotePath: remotePath?.isEmpty == true ? null : remotePath,
         useSSL: uri.scheme.toLowerCase() == 'https',
       );
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       // 解析失败时返回默认配置
+      log('网络解析异常: $e, $stackTrace');
       return NetworkConfig(
         protocol: NetworkProtocol.smb,
         host: '',

@@ -13,7 +13,8 @@ class Libraries extends Table {
   TextColumn get settings => text().nullable()();
   BoolColumn get isScanning => boolean().withDefault(const Constant(false))();
   BoolColumn get isPrivate => boolean().withDefault(const Constant(false))();
-  BoolColumn get isPrivateActivated => boolean().withDefault(const Constant(false))();
+  BoolColumn get isPrivateActivated =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -22,7 +23,8 @@ class Libraries extends Table {
 /// Manga table definition
 class Mangas extends Table {
   TextColumn get id => text()();
-  TextColumn get libraryId => text().references(Libraries, #id, onDelete: KeyAction.cascade)();
+  TextColumn get libraryId =>
+      text().references(Libraries, #id, onDelete: KeyAction.cascade)();
   TextColumn get title => text()();
   TextColumn get subtitle => text().nullable()();
   TextColumn get author => text().nullable()();
@@ -53,7 +55,8 @@ class Mangas extends Table {
 /// Manga pages table definition
 class MangaPages extends Table {
   TextColumn get id => text()();
-  TextColumn get mangaId => text().references(Mangas, #id, onDelete: KeyAction.cascade)();
+  TextColumn get mangaId =>
+      text().references(Mangas, #id, onDelete: KeyAction.cascade)();
   IntColumn get pageIndex => integer()();
   TextColumn get localPath => text().nullable()();
   TextColumn get largeThumbnail => text().nullable()();
@@ -67,11 +70,13 @@ class MangaPages extends Table {
 /// Reading progress table definition
 class ReadingProgresses extends Table {
   TextColumn get id => text()();
-  TextColumn get mangaId => text().references(Mangas, #id, onDelete: KeyAction.cascade)();
+  TextColumn get mangaId =>
+      text().references(Mangas, #id, onDelete: KeyAction.cascade)();
   TextColumn get libraryId => text()();
   IntColumn get currentPage => integer().withDefault(const Constant(1))();
   IntColumn get totalPages => integer().withDefault(const Constant(1))();
-  RealColumn get progressPercentage => real().withDefault(const Constant(0.0))();
+  RealColumn get progressPercentage =>
+      real().withDefault(const Constant(0.0))();
   DateTimeColumn get lastReadAt => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

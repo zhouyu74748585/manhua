@@ -294,7 +294,7 @@ class _DoublePageThumbnailListState extends State<DoublePageThumbnailList> {
                     boxShadow: isPreviewGroup
                         ? [
                             BoxShadow(
-                              color: Colors.blue.withValues(alpha:0.8),
+                              color: Colors.blue.withValues(alpha: 0.8),
                               blurRadius: 16,
                               spreadRadius: 4,
                               offset: const Offset(0, 3),
@@ -303,7 +303,7 @@ class _DoublePageThumbnailListState extends State<DoublePageThumbnailList> {
                         : isCurrentGroup
                             ? [
                                 BoxShadow(
-                                  color: Colors.amber.withValues(alpha:0.6),
+                                  color: Colors.amber.withValues(alpha: 0.6),
                                   blurRadius: 12,
                                   spreadRadius: 3,
                                   offset: const Offset(0, 2),
@@ -311,7 +311,7 @@ class _DoublePageThumbnailListState extends State<DoublePageThumbnailList> {
                               ]
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha:0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 1),
@@ -341,7 +341,8 @@ class _DoublePageThumbnailListState extends State<DoublePageThumbnailList> {
           Expanded(
             child: _buildSingleThumbnail(group[0]),
           ),
-          Container(width: 1, color: Colors.white.withValues(alpha:0.3)), // 分隔线
+          Container(
+              width: 1, color: Colors.white.withValues(alpha: 0.3)), // 分隔线
           Expanded(
             child: _buildSingleThumbnail(group[1]),
           ),

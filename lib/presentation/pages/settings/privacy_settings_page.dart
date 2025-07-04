@@ -10,7 +10,8 @@ class PrivacySettingsPage extends ConsumerStatefulWidget {
   const PrivacySettingsPage({super.key});
 
   @override
-  ConsumerState<PrivacySettingsPage> createState() => _PrivacySettingsPageState();
+  ConsumerState<PrivacySettingsPage> createState() =>
+      _PrivacySettingsPageState();
 }
 
 class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
@@ -150,7 +151,8 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                           title: const Text('密码'),
                           subtitle: Text(_hasPassword ? '已设置' : '未设置'),
                           trailing: TextButton(
-                            onPressed: _hasPassword ? _changePassword : _setPassword,
+                            onPressed:
+                                _hasPassword ? _changePassword : _setPassword,
                             child: Text(_hasPassword ? '修改' : '设置'),
                           ),
                         ),
@@ -185,10 +187,11 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 16),
-
                         librariesAsync.when(
                           data: (libraries) {
-                            final privateLibraries = libraries.where((lib) => lib.isPrivate).toList();
+                            final privateLibraries = libraries
+                                .where((lib) => lib.isPrivate)
+                                .toList();
 
                             if (privateLibraries.isEmpty) {
                               return const ListTile(
@@ -200,24 +203,32 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
 
                             return Column(
                               children: privateLibraries.map((library) {
-                                final isActivated = PrivacyService.isLibraryActivated(library.id);
+                                final isActivated =
+                                    PrivacyService.isLibraryActivated(
+                                        library.id);
 
                                 return ListTile(
                                   leading: Icon(
                                     Icons.folder_special,
-                                    color: isActivated ? Colors.green : Colors.grey,
+                                    color: isActivated
+                                        ? Colors.green
+                                        : Colors.grey,
                                   ),
                                   title: Text(library.name),
                                   subtitle: Text(
                                     isActivated ? '已激活' : '未激活',
                                     style: TextStyle(
-                                      color: isActivated ? Colors.green : Colors.grey,
+                                      color: isActivated
+                                          ? Colors.green
+                                          : Colors.grey,
                                     ),
                                   ),
                                   trailing: isActivated
                                       ? TextButton(
                                           onPressed: () async {
-                                            await PrivacyService.deactivatePrivateLibrary(library.id);
+                                            await PrivacyService
+                                                .deactivatePrivateLibrary(
+                                                    library.id);
                                             setState(() {});
                                           },
                                           child: const Text('取消激活'),
@@ -227,7 +238,8 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                               }).toList(),
                             );
                           },
-                          loading: () => const Center(child: CircularProgressIndicator()),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
                           error: (error, stack) => ListTile(
                             leading: const Icon(Icons.error),
                             title: const Text('加载失败'),
@@ -479,7 +491,9 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
               hintText: '请输入当前密码',
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isOldPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isOldPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
                 onPressed: () {
                   setState(() {
@@ -498,7 +512,9 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
               hintText: '请输入新密码（至少6位）',
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isNewPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  _isNewPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
                 onPressed: () {
                   setState(() {

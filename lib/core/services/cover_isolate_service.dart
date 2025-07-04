@@ -77,7 +77,7 @@ class CoverIsolateService {
           }
         }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('封面生成Isolate执行失败: $e,堆栈:$stackTrace');
       await IsolateService.stopIsolate(_isolateName);
       rethrow;
@@ -134,8 +134,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
             data: updatedManga.toJson(),
           ).toJson());
         }
-
-      } catch (e,stackTrace) {
+      } catch (e, stackTrace) {
         log('生成漫画封面失败: ${manga.title}, 错误: $e,堆栈:$stackTrace');
         // 继续处理下一个，不中断整个流程
       }
@@ -145,8 +144,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
     mainSendPort.send(const IsolateMessage(
       type: IsolateMessageType.complete,
     ).toJson());
-
-  } catch (e,stackTrace) {
+  } catch (e, stackTrace) {
     // 发送错误消息
     mainSendPort.send(IsolateMessage(
       type: IsolateMessageType.error,
@@ -200,7 +198,7 @@ Future<Manga?> _generateCoverForManga(Manga manga, String cachePath) async {
         return updatedManga;
       }
     }
-  } catch (e,stackTrace) {
+  } catch (e, stackTrace) {
     log('生成封面失败: ${manga.title}, 错误: $e,堆栈:$stackTrace');
   }
 

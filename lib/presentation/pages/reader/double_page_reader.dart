@@ -35,7 +35,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
   int _currentPageIndex = 0;
   ReadingDirection _readingDirection = ReadingDirection.leftToRight;
   bool _isLoading = true;
- final FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
   // 双页模式专用状态
   int _currentGroupIndex = 0; // 当前双页组索引
   List<List<int>> _doublePageGroups = []; // 双页分组
@@ -240,7 +240,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha:0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -256,7 +256,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha:0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -282,7 +282,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha:0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -303,7 +303,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
             alignment: Alignment.center,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha:0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: IconButton(
@@ -457,7 +457,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
       backgroundColor: Colors.black,
       appBar: _showControls
           ? AppBar(
-              backgroundColor: Colors.black.withValues(alpha:0.7),
+              backgroundColor: Colors.black.withValues(alpha: 0.7),
               foregroundColor: Colors.white,
               title: mangaAsync.when(
                 data: (manga) => Text(manga?.title ?? '双页阅读'),
@@ -558,7 +558,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                       left: 16,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha:0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: IconButton(
@@ -577,7 +577,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                     right: 16,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha:0.7),
+                        color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: IconButton(
@@ -641,7 +641,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
           ? mangaAsync.when(
               data: (manga) => manga != null && manga.totalPages > 0
                   ? Container(
-                      color: Colors.black.withValues(alpha:0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -709,7 +709,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                                         },
                                         activeColor: Colors.white,
                                         inactiveColor:
-                                            Colors.white.withValues(alpha:0.3),
+                                            Colors.white.withValues(alpha: 0.3),
                                       ),
                                     ],
                                   ),

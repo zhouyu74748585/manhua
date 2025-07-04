@@ -63,7 +63,8 @@ class CoverCacheService {
 
   /// 从ZIP文件提取并缓存封面
   static Future<Map<String, dynamic>?> extractAndCacheCoverFromZip(
-      File zipFile, String mangaId, [String? isolateCachePath]) async {
+      File zipFile, String mangaId,
+      [String? isolateCachePath]) async {
     // 如果提供了Isolate缓存路径，设置它
     if (isolateCachePath != null) {
       _isolateCachePath = isolateCachePath;
@@ -109,15 +110,15 @@ class CoverCacheService {
         'cover': cacheFile.path,
         'pages': pageCount,
       };
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('从ZIP文件提取封面失败: $zipFile, 错误: $e,堆栈: $stackTrace');
       return null;
     }
   }
 
   /// 从PDF文件提取并缓存首页作为封面
-  static Future<Map<String, dynamic>?> extractAndCacheCoverFromPdf(
-      File pdfFile, [String? isolateCachePath]) async {
+  static Future<Map<String, dynamic>?> extractAndCacheCoverFromPdf(File pdfFile,
+      [String? isolateCachePath]) async {
     // 如果提供了Isolate缓存路径，设置它
     if (isolateCachePath != null) {
       _isolateCachePath = isolateCachePath;
@@ -168,24 +169,24 @@ class CoverCacheService {
         log('PDF封面提取成功: $pdfFile -> ${cacheFile.path}');
 
         return {'cover': cacheFile.path, 'pages': document.pagesCount};
-      } on MissingPluginException catch (e,stackTrace) {
+      } on MissingPluginException catch (e, stackTrace) {
         log('PDF渲染插件未找到，跳过PDF封面提取: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
-      } on PlatformException catch (e,stackTrace) {
+      } on PlatformException catch (e, stackTrace) {
         log('PDF渲染平台异常: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
-      } on UnsupportedError catch (e,stackTrace) {
+      } on UnsupportedError catch (e, stackTrace) {
         log('PDF渲染不支持当前操作: $pdfFile, 错误: $e,堆栈:$stackTrace');
         return null;
       } finally {
         // 确保资源被正确清理
         try {
           document?.close();
-        } catch (e,stackTrace) {
+        } catch (e, stackTrace) {
           log('清理PDF资源时出错: $e,堆栈:$stackTrace');
         }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('从PDF文件提取封面失败: $pdfFile, 错误: $e,堆栈:$stackTrace');
       return null;
     }
@@ -252,7 +253,7 @@ class CoverCacheService {
         await cacheDir.delete(recursive: true);
         await cacheDir.create(recursive: true);
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('清理封面缓存失败: $e,堆栈:$stackTrace');
     }
   }
@@ -273,7 +274,7 @@ class CoverCacheService {
         }
       }
       return totalSize;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('获取缓存大小失败: $e,堆栈:$stackTrace');
       return 0;
     }
@@ -293,7 +294,7 @@ class CoverCacheService {
           break;
         }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('删除缓存文件失败: $filePath, 错误: $e,堆栈:$stackTrace');
     }
   }

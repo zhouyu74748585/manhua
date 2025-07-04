@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,12 +37,12 @@ class LibraryPrivacyTile extends ConsumerWidget {
         ),
         subtitle: Text(
           library.isPrivate
-            ? (library.isPrivateActivated ? '隐私模式 - 已激活' : '隐私模式 - 未激活')
-            : '普通模式',
+              ? (library.isPrivateActivated ? '隐私模式 - 已激活' : '隐私模式 - 未激活')
+              : '普通模式',
           style: TextStyle(
             color: library.isPrivate
-              ? (library.isPrivateActivated ? Colors.green : Colors.orange)
-              : Colors.grey,
+                ? (library.isPrivateActivated ? Colors.green : Colors.orange)
+                : Colors.grey,
           ),
         ),
         children: [
@@ -69,25 +71,25 @@ class LibraryPrivacyTile extends ConsumerWidget {
                   ListTile(
                     leading: Icon(
                       library.isPrivateActivated
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
                       color: library.isPrivateActivated
-                        ? Colors.green
-                        : Colors.grey,
+                          ? Colors.green
+                          : Colors.grey,
                     ),
                     title: Text(
                       library.isPrivateActivated ? '已激活' : '未激活',
                       style: TextStyle(
                         color: library.isPrivateActivated
-                          ? Colors.green
-                          : Colors.grey,
+                            ? Colors.green
+                            : Colors.grey,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     subtitle: Text(
                       library.isPrivateActivated
-                        ? '当前可以访问此隐私库的内容'
-                        : '需要验证身份才能访问此隐私库',
+                          ? '当前可以访问此隐私库的内容'
+                          : '需要验证身份才能访问此隐私库',
                     ),
                   ),
 
@@ -227,7 +229,8 @@ class LibraryPrivacyTile extends ConsumerWidget {
           );
         }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
+      log('切换隐私模式失败: $e, $stackTrace');
       if (context.mounted) {
         Navigator.of(context).pop(); // 关闭加载对话框
         ScaffoldMessenger.of(context).showSnackBar(
@@ -303,7 +306,8 @@ class LibraryPrivacyTile extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      final success = await privacyNotifier.deactivatePrivateLibrary(library.id);
+      final success =
+          await privacyNotifier.deactivatePrivateLibrary(library.id);
 
       if (context.mounted) {
         if (success) {

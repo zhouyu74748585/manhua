@@ -31,18 +31,22 @@ class CoverDisplayModeSelector extends ConsumerWidget {
         Text(
           '选择漫画封面的显示方式，适用于不同的封面扫描格式',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                color: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.color
+                    ?.withOpacity(0.7),
               ),
         ),
         const SizedBox(height: 16),
-        
+
         // 模式选择卡片
         ...CoverDisplayMode.values.map((mode) => _buildModeCard(
-          context,
-          mode,
-          isSelected: currentMode == mode,
-          onTap: enabled ? () => onModeChanged(mode) : null,
-        )),
+              context,
+              mode,
+              isSelected: currentMode == mode,
+              onTap: enabled ? () => onModeChanged(mode) : null,
+            )),
       ],
     );
   }
@@ -55,13 +59,11 @@ class CoverDisplayModeSelector extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isSelected 
-            ? colorScheme.primaryContainer 
-            : colorScheme.surface,
+        color: isSelected ? colorScheme.primaryContainer : colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         elevation: isSelected ? 2 : 0,
         child: InkWell(
@@ -72,8 +74,8 @@ class CoverDisplayModeSelector extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected 
-                    ? colorScheme.primary 
+                color: isSelected
+                    ? colorScheme.primary
                     : colorScheme.outline.withOpacity(0.3),
                 width: isSelected ? 2 : 1,
               ),
@@ -94,7 +96,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
                   child: _buildModePreview(context, mode),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // 模式信息
                 Expanded(
                   child: Column(
@@ -106,8 +108,8 @@ class CoverDisplayModeSelector extends ConsumerWidget {
                             mode.displayName,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: isSelected 
-                                  ? colorScheme.onPrimaryContainer 
+                              color: isSelected
+                                  ? colorScheme.onPrimaryContainer
                                   : colorScheme.onSurface,
                             ),
                           ),
@@ -125,7 +127,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
                       Text(
                         mode.description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected 
+                          color: isSelected
                               ? colorScheme.onPrimaryContainer.withOpacity(0.8)
                               : colorScheme.onSurface.withOpacity(0.7),
                         ),
@@ -133,7 +135,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
                     ],
                   ),
                 ),
-                
+
                 // 选择指示器
                 if (isSelected)
                   Container(
@@ -171,7 +173,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
 
   Widget _buildModePreview(BuildContext context, CoverDisplayMode mode) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     switch (mode) {
       case CoverDisplayMode.defaultMode:
         return Container(
@@ -186,7 +188,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
             size: 24,
           ),
         );
-        
+
       case CoverDisplayMode.leftHalf:
         return Container(
           margin: const EdgeInsets.all(8),
@@ -224,7 +226,7 @@ class CoverDisplayModeSelector extends ConsumerWidget {
             ],
           ),
         );
-        
+
       case CoverDisplayMode.rightHalf:
         return Container(
           margin: const EdgeInsets.all(8),
@@ -290,7 +292,7 @@ class CompactCoverDisplayModeSelector extends ConsumerWidget {
         );
       }).toList(),
       selected: {currentMode},
-      onSelectionChanged: enabled 
+      onSelectionChanged: enabled
           ? (Set<CoverDisplayMode> selection) {
               if (selection.isNotEmpty) {
                 onModeChanged(selection.first);
@@ -299,7 +301,8 @@ class CompactCoverDisplayModeSelector extends ConsumerWidget {
           : null,
       style: SegmentedButton.styleFrom(
         selectedBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        selectedForegroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        selectedForegroundColor:
+            Theme.of(context).colorScheme.onPrimaryContainer,
       ),
     );
   }

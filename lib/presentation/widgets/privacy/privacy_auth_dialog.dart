@@ -91,7 +91,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
           _errorMessage = '密码错误';
         });
       }
-    } catch (e,stackTrace) {
+    } catch (e) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });
@@ -111,7 +111,8 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
     });
 
     try {
-      final success = await PrivacyService.activatePrivateLibrary(widget.libraryId);
+      final success =
+          await PrivacyService.activatePrivateLibrary(widget.libraryId);
 
       if (success) {
         if (mounted) {
@@ -123,7 +124,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
           _errorMessage = '生物识别验证失败';
         });
       }
-    } catch (e,stackTrace) {
+    } catch (e) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });
@@ -232,7 +233,9 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
                 prefixIcon: const Icon(Icons.key),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {
@@ -250,10 +253,12 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () {
-            Navigator.of(context).pop();
-            widget.onCancel?.call();
-          },
+          onPressed: _isLoading
+              ? null
+              : () {
+                  Navigator.of(context).pop();
+                  widget.onCancel?.call();
+                },
           child: const Text('取消'),
         ),
         ElevatedButton(

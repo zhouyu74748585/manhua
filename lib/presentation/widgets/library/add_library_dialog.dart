@@ -275,7 +275,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
           _pathController.text = result;
         });
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('选择文件夹失败: $e')),

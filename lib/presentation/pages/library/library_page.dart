@@ -141,7 +141,8 @@ class LibraryPage extends ConsumerWidget {
       itemBuilder: (context, index) {
         final library = libraries[index];
         final scanState = scanStateAsync.valueOrNull ?? {};
-        final isScanning = library.isScanning || (scanState[library.id] ?? false);
+        final isScanning =
+            library.isScanning || (scanState[library.id] ?? false);
 
         return LibraryCard(
           library: library,
@@ -194,7 +195,7 @@ class LibraryPage extends ConsumerWidget {
           const SnackBar(content: Text('扫描完成')),
         );
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$e')),

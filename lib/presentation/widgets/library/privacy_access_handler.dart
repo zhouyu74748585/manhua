@@ -83,7 +83,8 @@ class PrivacyAccessHandler {
   }
 
   /// 清除所有漫画库的激活状态
-  static Future<void> clearAllActivationStatus(List<MangaLibrary> libraries) async {
+  static Future<void> clearAllActivationStatus(
+      List<MangaLibrary> libraries) async {
     for (final library in libraries) {
       if (library.isPrivate) {
         await clearActivationStatus(library.id);

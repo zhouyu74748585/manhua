@@ -9,14 +9,16 @@ class PrivacyService {
   static const String _activationPrefix = 'library_activation_';
 
   // 设置漫画库密码
-  static Future<void> setLibraryPassword(String libraryId, String password) async {
+  static Future<void> setLibraryPassword(
+      String libraryId, String password) async {
     final prefs = await SharedPreferences.getInstance();
     final hashedPassword = _hashPassword(password);
     await prefs.setString('$_passwordPrefix$libraryId', hashedPassword);
   }
 
   // 验证漫画库密码
-  static Future<bool> verifyLibraryPassword(String libraryId, String password) async {
+  static Future<bool> verifyLibraryPassword(
+      String libraryId, String password) async {
     final prefs = await SharedPreferences.getInstance();
     final storedHash = prefs.getString('$_passwordPrefix$libraryId');
     if (storedHash == null) return false;
@@ -38,7 +40,8 @@ class PrivacyService {
   }
 
   // 设置漫画库生物识别
-  static Future<void> setLibraryBiometric(String libraryId, bool enabled) async {
+  static Future<void> setLibraryBiometric(
+      String libraryId, bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('$_biometricPrefix$libraryId', enabled);
   }
@@ -56,7 +59,8 @@ class PrivacyService {
   }
 
   // 设置漫画库隐私激活状态
-  static Future<void> setLibraryActivationStatus(String libraryId, bool activated) async {
+  static Future<void> setLibraryActivationStatus(
+      String libraryId, bool activated) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('$_activationPrefix$libraryId', activated);
   }
@@ -81,7 +85,8 @@ class PrivacyService {
   }
 
   // 获取漫画库隐私验证方式
-  static Future<PrivacyAuthMethod> getLibraryAuthMethod(String libraryId) async {
+  static Future<PrivacyAuthMethod> getLibraryAuthMethod(
+      String libraryId) async {
     final hasBiometric = await isLibraryBiometricEnabled(libraryId);
     if (hasBiometric) {
       return PrivacyAuthMethod.biometric;

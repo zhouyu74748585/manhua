@@ -1,3 +1,5 @@
+// ignore_for_file: override_on_non_overriding_member
+
 import 'dart:developer';
 import 'dart:ui';
 
@@ -231,6 +233,7 @@ class IsolateMangaRepository implements MangaRepository {
         await _databaseService.insertManga(manga);
       }
     } catch (e, stackTrace) {
+      log('批量保存漫画失败: $e, 堆栈: $stackTrace');
       // If database operation fails, save individually
       await Future.delayed(const Duration(milliseconds: 200));
       for (final manga in mangaList) {

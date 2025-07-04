@@ -83,7 +83,7 @@ class ThumbnailService {
         // 以JPEG格式保存缩略图
         await thumbnailFile.writeAsBytes(img.encodeJpg(thumbnail, quality: 85));
         thumbnailPaths[sizeKey] = thumbnailFile.path;
-      } catch (e,stackTrace) {
+      } catch (e, stackTrace) {
         log('生成尺寸为 $sizeKey 的缩略图失败: $e,堆栈:$stackTrace');
       }
     }
@@ -121,7 +121,7 @@ class ThumbnailService {
         // 以JPEG格式保存缩略图
         await thumbnailFile.writeAsBytes(img.encodeJpg(thumbnail, quality: 85));
         thumbnailPaths[sizeKey] = thumbnailFile.path;
-      } catch (e,stackTrace) {
+      } catch (e, stackTrace) {
         log('生成尺寸为 $sizeKey 的缩略图失败: $e,堆栈:$stackTrace');
       }
     }

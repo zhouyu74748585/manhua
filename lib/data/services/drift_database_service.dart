@@ -187,10 +187,11 @@ class DriftDatabaseService {
   }
 
   /// Update manga's last read at timestamp
-  static Future<void> updateMangaLastReadAt(String mangaId, DateTime? lastReadAt) async {
+  static Future<void> updateMangaLastReadAt(
+      String mangaId, DateTime? lastReadAt) async {
     final db = database;
-    await (db.update(db.mangas)..where((tbl) => tbl.id.equals(mangaId)))
-        .write(MangasCompanion(lastReadAt: Value(lastReadAt?.toIso8601String())));
+    await (db.update(db.mangas)..where((tbl) => tbl.id.equals(mangaId))).write(
+        MangasCompanion(lastReadAt: Value(lastReadAt?.toIso8601String())));
   }
 
   /// Get manga by ID
@@ -366,7 +367,8 @@ class DriftDatabaseService {
   }
 
   /// Get all manga reading progress
-  static Future<List<rp_model.ReadingProgress>> getAllMangaReadingProgress() async {
+  static Future<List<rp_model.ReadingProgress>>
+      getAllMangaReadingProgress() async {
     final db = database;
     final query = db.select(db.readingProgresses)
       ..orderBy([(tbl) => OrderingTerm.desc(tbl.lastReadAt)]);
@@ -375,7 +377,6 @@ class DriftDatabaseService {
   }
 
   // ==================== Page Operations ====================
-
 
   /// Get page by ID
   static Future<page_model.MangaPage?> getPageById(String id) async {
@@ -431,12 +432,12 @@ class DriftDatabaseService {
   /// Delete pages by manga ID
   static Future<void> deletePagesByMangaId(String mangaId) async {
     final db = database;
-    await (db.delete(db.mangaPages)..where((tbl) => tbl.mangaId.equals(mangaId)))
+    await (db.delete(db.mangaPages)
+          ..where((tbl) => tbl.mangaId.equals(mangaId)))
         .go();
   }
 
   // ==================== Clear Operations ====================
-
 
   /// Clear all data from the database
   static Future<void> clearAllData() async {
@@ -450,7 +451,6 @@ class DriftDatabaseService {
   }
 
   // ==================== Helper Methods ====================
-
 
   /// Convert Drift Library to domain model
   static MangaLibrary _libraryFromDrift(Library library) {

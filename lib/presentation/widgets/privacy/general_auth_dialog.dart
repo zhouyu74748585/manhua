@@ -78,7 +78,8 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
     });
 
     try {
-      final success = await PrivacyService.verifyPassword(_passwordController.text);
+      final success =
+          await PrivacyService.verifyPassword(_passwordController.text);
 
       if (success) {
         if (mounted) {
@@ -90,7 +91,7 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
           _errorMessage = '密码错误';
         });
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });
@@ -122,7 +123,7 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
           _errorMessage = '生物识别验证失败';
         });
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       setState(() {
         _errorMessage = '验证失败: $e';
       });
@@ -230,7 +231,9 @@ class _GeneralAuthDialogState extends State<GeneralAuthDialog> {
                 prefixIcon: const Icon(Icons.lock_outline),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {

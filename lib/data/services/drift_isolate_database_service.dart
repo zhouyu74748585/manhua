@@ -278,7 +278,6 @@ class DriftIsolateDatabaseService {
       });
     } catch (e) {
       log('Error batch inserting pages in isolate: $e');
-      rethrow;
     }
   }
 

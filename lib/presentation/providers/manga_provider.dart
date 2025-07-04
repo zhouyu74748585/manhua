@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -75,9 +76,10 @@ Future<Manga?> mangaDetailWithCallback(
         // 尝试刷新相关的provider
         ref.invalidate(mangaDetailProvider(mangaId));
         ref.invalidate(mangaPagesProvider(mangaId));
-      } catch (e,stackTrace) {
+      } catch (e) {
         // 静默处理可能的错误（如provider已被销毁）
         // 这是正常情况，不需要记录错误
+        log('刷新详情失败: $e');
       }
     });
   }
@@ -88,8 +90,9 @@ Future<Manga?> mangaDetailWithCallback(
       try {
         // 刷新页面相关的provider
         ref.invalidate(mangaPagesProvider(mangaId));
-      } catch (e,stackTrace) {
+      } catch (e) {
         // 静默处理可能的错误
+        log('刷新页面失败: $e');
       }
     });
   }

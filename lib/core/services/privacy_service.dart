@@ -75,7 +75,7 @@ class PrivacyService {
       final isAvailable = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
       return isAvailable && isDeviceSupported;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('检查生物识别可用性失败: $e,堆栈:$stackTrace');
       return false;
     }
@@ -85,7 +85,7 @@ class PrivacyService {
   static Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _localAuth.getAvailableBiometrics();
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('获取生物识别类型失败: $e,堆栈:$stackTrace');
       return [];
     }
@@ -106,14 +106,15 @@ class PrivacyService {
       );
 
       return isAuthenticated;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('生物识别验证失败: $e,堆栈:$stackTrace');
       return false;
     }
   }
 
   /// 激活隐私库
-  static Future<bool> activatePrivateLibrary(String libraryId, {String? password}) async {
+  static Future<bool> activatePrivateLibrary(String libraryId,
+      {String? password}) async {
     try {
       bool authenticated = false;
 
@@ -134,7 +135,7 @@ class PrivacyService {
       }
 
       return false;
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('激活隐私库失败: $e,堆栈:$stackTrace');
       return false;
     }
@@ -186,9 +187,9 @@ class PrivacyService {
   /// 保存已激活的隐私库到本地存储
   static Future<void> _saveActivatedLibraries() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_activatedLibrariesKey, _activatedLibraries.toList());
+    await prefs.setStringList(
+        _activatedLibrariesKey, _activatedLibraries.toList());
   }
-
 
   /// 密码哈希
   static String _hashPassword(String password) {

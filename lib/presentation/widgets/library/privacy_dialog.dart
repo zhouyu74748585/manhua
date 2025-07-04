@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -45,7 +47,8 @@ class _PrivacyDialogState extends State<PrivacyDialog> {
         _isBiometricAvailable = isAvailable && isDeviceSupported;
         _isCheckingBiometric = false;
       });
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
+      log('检查生物识别支持失败: $e, $stackTrace');
       setState(() {
         _isBiometricAvailable = false;
         _isCheckingBiometric = false;
@@ -61,10 +64,10 @@ class _PrivacyDialogState extends State<PrivacyDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (widget.isPrivate) ...
-            _buildDisablePrivacySection()
-          else ...
-            _buildEnablePrivacySection(),
+          if (widget.isPrivate)
+            ..._buildDisablePrivacySection()
+          else
+            ..._buildEnablePrivacySection(),
         ],
       ),
       actions: [
@@ -157,7 +160,8 @@ class _PrivacyDialogState extends State<PrivacyDialog> {
         await PrivacyService.setLibraryBiometric(widget.libraryId, true);
         widget.onBiometricSet?.call();
       }
-    } on PlatformException catch (e,stackTrace) {
+    } on PlatformException catch (e, stackTrace) {
+      log('设置生物识别失败: $e, $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('生物识别设置失败: ${e.message}')),
@@ -282,7 +286,8 @@ class _PasswordSetupDialogState extends State<PasswordSetupDialog> {
   void _setPassword() async {
     if (_formKey.currentState!.validate()) {
       // 保存密码
-      await PrivacyService.setLibraryPassword(widget.libraryId, _passwordController.text);
+      await PrivacyService.setLibraryPassword(
+          widget.libraryId, _passwordController.text);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -354,7 +359,8 @@ class _PrivacyVerificationDialogState extends State<PrivacyVerificationDialog> {
           widget.onVerified?.call();
         }
       }
-    } on PlatformException catch (e,stackTrace) {
+    } on PlatformException catch (e, stackTrace) {
+      log('生物识别验证失败: $e, $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('生物识别验证失败: ${e.message}')),
@@ -378,10 +384,10 @@ class _PrivacyVerificationDialogState extends State<PrivacyVerificationDialog> {
         children: [
           const Text('此漫画库已启用隐私保护，请验证身份后访问。'),
           const SizedBox(height: 16),
-          if (widget.authMethod == PrivacyAuthMethod.password) ...
-            _buildPasswordInput()
-          else if (widget.authMethod == PrivacyAuthMethod.biometric) ...
-            _buildBiometricSection(),
+          if (widget.authMethod == PrivacyAuthMethod.password)
+            ..._buildPasswordInput()
+          else if (widget.authMethod == PrivacyAuthMethod.biometric)
+            ..._buildBiometricSection(),
         ],
       ),
       actions: [

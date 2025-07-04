@@ -45,7 +45,7 @@ class FileScannerService {
 
     try {
       await _scanDirectoryRecursive(libraryDir, library.id, mangas, mangaPages);
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       throw Exception('扫描漫画库时发生错误: $e,堆栈:$stackTrace');
     }
 
@@ -95,7 +95,8 @@ class FileScannerService {
           }
         }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
+      log('检查目录图片文件时出错: $e, 栈跟踪: $stackTrace');
       // 如果无法访问目录，返回false
       return false;
     }
@@ -177,7 +178,7 @@ class FileScannerService {
       mangas.add(manga);
       mangaPages.addAll(pages);
       log('扫描到漫画: ${manga.path}');
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('从图片目录创建漫画失败: ${directory.path}, 错误: $e,堆栈:$stackTrace');
       return null;
     }
@@ -224,7 +225,7 @@ class FileScannerService {
           createdAt: DateTime.now(),
           updatedAt: fileStats.modified,
           fileSize: fileSize.toInt());
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('扫描文件失败: ${file.path}, 错误: $e,堆栈:$stackTrace');
       return null;
     }
@@ -319,7 +320,8 @@ class FileScannerService {
           //生成文件
           final imageData = file.content;
           //处理文件名中的特殊符号
-          String fileName=file.name.replaceAll("/", "_").replaceAll("\\", "_");
+          String fileName =
+              file.name.replaceAll("/", "_").replaceAll("\\", "_");
           final pageFile = File(path.join(mangaDir.path, fileName));
           await pageFile.writeAsBytes(imageData);
 

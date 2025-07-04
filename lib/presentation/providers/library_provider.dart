@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/library.dart';
@@ -133,6 +135,7 @@ class LibraryActions extends _$LibraryActions {
       }
 
     } catch (e,stackTrace) {
+      log('扫描库时出错: $e, 栈跟踪: $stackTrace');
       // 扫描失败时也要清除扫描状态
       scanStateNotifier.setScanningState(libraryId, false);
 
