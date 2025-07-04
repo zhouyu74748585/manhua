@@ -50,6 +50,9 @@ abstract class LibraryRepository {
       String libraryId, bool isActivated);
   Future<List<MangaLibrary>> getPrivateLibraries();
   Future<List<MangaLibrary>> getActivatedPrivateLibraries();
+  
+  // 应用启动时初始化隐私库状态
+  Future<void> initializePrivateLibrariesOnStartup();
 }
 
 class LocalLibraryRepository implements LibraryRepository {
@@ -455,10 +458,6 @@ class LocalLibraryRepository implements LibraryRepository {
         throw Exception('漫画库不存在: $libraryId');
       }
 
-      if (!library.isPrivate) {
-        throw Exception('该漫画库未启用隐私模式: ${library.name}');
-      }
-
       final updatedLibrary = library.copyWith(
         isPrivateActivated: isActivated,
       );
@@ -497,6 +496,36 @@ class LocalLibraryRepository implements LibraryRepository {
     } catch (e, stackTrace) {
       log('获取已激活的隐私漫画库列表失败: $e,堆栈:$stackTrace');
       return [];
+    }
+  }
+
+  @override
+  Future<void> initializePrivateLibrariesOnStartup() async {
+    try {
+      final allLibraries = await getAllLibraries();
+      final privateLibraries = allLibraries.where((library) => library.isPrivate).toList();
+      
+      for (final library in privateLibraries) {
+        // 根据用户需求，隐私库在应用启动时应设置为非激活状态（isEnabled=false）
+        if (library.isEnabled) {
+          final updatedLibrary = library.copyWith(
+            isEnabled: false,
+            isPrivateActivated: false,
+          );
+          
+          await DriftDatabaseService.updateLibrary(updatedLibrary);
+          log('已将隐私库设置为非激活状态: ${library.name}');
+        }
+      }
+      
+      // 清除缓存
+      _cachedLibraries = null;
+      _lastCacheTime = null;
+      
+      log('隐私库初始化完成，共处理 ${privateLibraries.length} 个隐私库');
+    } catch (e, stackTrace) {
+      log('初始化隐私库状态失败: $e,堆栈:$stackTrace');
+      rethrow;
     }
   }
 }

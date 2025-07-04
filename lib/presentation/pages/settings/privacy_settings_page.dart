@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../../core/services/privacy_service.dart';
+import '../../widgets/privacy/unified_password_dialog.dart';
 import '../../providers/library_provider.dart';
 
 /// 隐私设置页面
@@ -56,34 +57,65 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
   }
 
   Future<void> _setPassword() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => const _PasswordSetupDialog(),
-    );
+    final result = await showPasswordSetupDialog(context);
 
     if (result != null) {
-      await PrivacyService.setPassword(result);
-      await _loadSettings();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('密码设置成功')),
-        );
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        await PrivacyService.setPassword(result);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('密码设置成功')),
+          );
+          await _loadSettings();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('设置密码失败: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
 
   Future<void> _changePassword() async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => const _PasswordChangeDialog(),
-    );
+    final result = await showPasswordChangeDialog(context);
 
     if (result != null) {
-      await PrivacyService.setPassword(result);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('密码修改成功')),
-        );
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        await PrivacyService.setPassword(result);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('密码修改成功')),
+          );
+          await _loadSettings();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('修改密码失败: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -278,290 +310,6 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-/// 密码设置对话框
-class _PasswordSetupDialog extends StatefulWidget {
-  const _PasswordSetupDialog();
-
-  @override
-  State<_PasswordSetupDialog> createState() => _PasswordSetupDialogState();
-}
-
-class _PasswordSetupDialogState extends State<_PasswordSetupDialog> {
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _isPasswordVisible = false;
-  bool _isConfirmVisible = false;
-  String? _errorMessage;
-
-  @override
-  void dispose() {
-    _passwordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
-  }
-
-  void _confirm() {
-    final password = _passwordController.text;
-    final confirm = _confirmController.text;
-
-    if (password.isEmpty) {
-      setState(() {
-        _errorMessage = '请输入密码';
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      setState(() {
-        _errorMessage = '密码长度至少6位';
-      });
-      return;
-    }
-
-    if (password != confirm) {
-      setState(() {
-        _errorMessage = '两次输入的密码不一致';
-      });
-      return;
-    }
-
-    Navigator.of(context).pop(password);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('设置密码'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _passwordController,
-            obscureText: !_isPasswordVisible,
-            decoration: InputDecoration(
-              labelText: '密码',
-              hintText: '请输入密码（至少6位）',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _confirmController,
-            obscureText: !_isConfirmVisible,
-            decoration: InputDecoration(
-              labelText: '确认密码',
-              hintText: '请再次输入密码',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isConfirmVisible ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isConfirmVisible = !_isConfirmVisible;
-                  });
-                },
-              ),
-              errorText: _errorMessage,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        ElevatedButton(
-          onPressed: _confirm,
-          child: const Text('确认'),
-        ),
-      ],
-    );
-  }
-}
-
-/// 密码修改对话框
-class _PasswordChangeDialog extends StatefulWidget {
-  const _PasswordChangeDialog();
-
-  @override
-  State<_PasswordChangeDialog> createState() => _PasswordChangeDialogState();
-}
-
-class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
-  final _oldPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _isOldPasswordVisible = false;
-  bool _isNewPasswordVisible = false;
-  bool _isConfirmVisible = false;
-  String? _errorMessage;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _oldPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _confirm() async {
-    final oldPassword = _oldPasswordController.text;
-    final newPassword = _newPasswordController.text;
-    final confirm = _confirmController.text;
-
-    if (oldPassword.isEmpty) {
-      setState(() {
-        _errorMessage = '请输入当前密码';
-      });
-      return;
-    }
-
-    if (newPassword.isEmpty) {
-      setState(() {
-        _errorMessage = '请输入新密码';
-      });
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setState(() {
-        _errorMessage = '新密码长度至少6位';
-      });
-      return;
-    }
-
-    if (newPassword != confirm) {
-      setState(() {
-        _errorMessage = '两次输入的新密码不一致';
-      });
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final isValid = await PrivacyService.verifyPassword(oldPassword);
-      if (!isValid) {
-        setState(() {
-          _errorMessage = '当前密码错误';
-        });
-        return;
-      }
-
-      Navigator.of(context).pop(newPassword);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('修改密码'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _oldPasswordController,
-            obscureText: !_isOldPasswordVisible,
-            decoration: InputDecoration(
-              labelText: '当前密码',
-              hintText: '请输入当前密码',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isOldPasswordVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isOldPasswordVisible = !_isOldPasswordVisible;
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _newPasswordController,
-            obscureText: !_isNewPasswordVisible,
-            decoration: InputDecoration(
-              labelText: '新密码',
-              hintText: '请输入新密码（至少6位）',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isNewPasswordVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isNewPasswordVisible = !_isNewPasswordVisible;
-                  });
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _confirmController,
-            obscureText: !_isConfirmVisible,
-            decoration: InputDecoration(
-              labelText: '确认新密码',
-              hintText: '请再次输入新密码',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isConfirmVisible ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isConfirmVisible = !_isConfirmVisible;
-                  });
-                },
-              ),
-              errorText: _errorMessage,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _confirm,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('确认'),
-        ),
-      ],
     );
   }
 }

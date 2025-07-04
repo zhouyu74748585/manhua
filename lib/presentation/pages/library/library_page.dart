@@ -1,14 +1,17 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/models/library.dart';
 import '../../providers/library_provider.dart';
+import '../../../core/services/privacy_service.dart';
+import '../../providers/privacy_provider.dart';
+import '../../../data/models/library.dart';
 import '../../widgets/library/add_library_dialog.dart';
 import '../../widgets/library/library_card.dart';
 import '../../widgets/library/library_settings_dialog.dart';
-import '../../widgets/library/privacy_dialog.dart';
+import '../../widgets/privacy/unified_password_dialog.dart';
 
 class LibraryPage extends ConsumerWidget {
   const LibraryPage({super.key});
@@ -148,16 +151,12 @@ class LibraryPage extends ConsumerWidget {
         return LibraryCard(
           library: library,
           isScanning: isScanning,
-          onTap: () {
-            // TODO: 导航到漫画库详情页面
-            print('点击漫画库: ${library.name}');
-          },
           onAccessGranted: () {
             // 隐私验证通过后的回调
             print('隐私验证通过，允许访问: ${library.name}');
           },
           onToggleEnabled: (enabled) =>
-              _toggleLibraryEnabled(ref, library, enabled),
+              _toggleLibraryEnabled(context, ref, library, enabled),
           onScan: () => _scanLibrary(context, ref, library.id),
           onEdit: () => _editLibrary(context, ref, library),
           onDelete: () => _deleteLibrary(context, ref, library),
@@ -179,9 +178,31 @@ class LibraryPage extends ConsumerWidget {
   }
 
   void _toggleLibraryEnabled(
-      WidgetRef ref, MangaLibrary library, bool enabled) {
+      BuildContext context, WidgetRef ref, MangaLibrary library, bool enabled) async {
+    // 如果是隐私库且要激活，需要验证身份
+    if (library.isPrivate && enabled) {
+      final success = await _showPrivacyAuthDialog(context, ref, library);
+      if (!success) {
+        return; // 验证失败，不执行激活操作
+      }
+    }
+    
+    // 直接更新库的 isEnabled 状态，不再使用独立的激活状态系统
     final updatedLibrary = library.copyWith(isEnabled: enabled);
     ref.read(libraryActionsProvider.notifier).updateLibrary(updatedLibrary);
+  }
+  
+  /// 显示隐私验证对话框
+  Future<bool> _showPrivacyAuthDialog(BuildContext context, WidgetRef ref, MangaLibrary library) async {
+    final result = await showPasswordVerifyDialog(
+      context,
+      libraryId: library.id,
+      libraryName: library.name,
+      title: '激活隐私库',
+      message: '请验证身份以激活隐私库 "${library.name}"',
+    );
+    
+    return result == true;
   }
 
   void _scanLibrary(
@@ -269,43 +290,74 @@ class LibraryPage extends ConsumerWidget {
   }
 
   void _showPrivacySettings(
-      BuildContext context, WidgetRef ref, MangaLibrary library) {
+      BuildContext context, WidgetRef ref, MangaLibrary library) async {
+    // 检查是否已设置密码
+    final hasPassword = await PrivacyService.hasPassword();
+    
+    if (!hasPassword) {
+      // 如果没有设置密码，显示提示对话框
+      _showPasswordRequiredDialog(context);
+      return;
+    }
+    
+    // 如果已设置密码，直接显示验证对话框
+    final result = await showPasswordVerifyDialog(
+      context,
+      libraryId: library.id,
+      libraryName: library.name,
+      title: '隐私验证',
+      message: '请验证身份以访问隐私库 "${library.name}"',
+    );
+    
+    if (result == true) {
+      // 验证成功，激活隐私库
+      final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
+      final success = await privacyNotifier.updateLibraryEnabled(library.id, true);
+      
+      if (context.mounted) {
+        if (success) {
+          ref.refresh(allLibrariesProvider);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('隐私库已激活'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('激活失败，请重试'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+  
+  /// 显示需要设置密码的对话框
+  void _showPasswordRequiredDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => PrivacyDialog(
-        libraryId: library.id,
-        libraryName: library.name,
-        isPrivate: library.isPrivate,
-        onPasswordSet: () {
-          final updatedLibrary = library.copyWith(isPrivate: true);
-          ref
-              .read(libraryActionsProvider.notifier)
-              .updateLibrary(updatedLibrary);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('已为漫画库 "${library.name}" 启用密码保护')),
-          );
-        },
-        onBiometricSet: () {
-          final updatedLibrary = library.copyWith(isPrivate: true);
-          ref
-              .read(libraryActionsProvider.notifier)
-              .updateLibrary(updatedLibrary);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('已为漫画库 "${library.name}" 启用生物识别保护')),
-          );
-        },
-        onPrivacyDisabled: () {
-          final updatedLibrary = library.copyWith(
-            isPrivate: false,
-            isPrivateActivated: false,
-          );
-          ref
-              .read(libraryActionsProvider.notifier)
-              .updateLibrary(updatedLibrary);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('已关闭漫画库 "${library.name}" 的隐私保护')),
-          );
-        },
+      builder: (context) => AlertDialog(
+        title: const Text('需要设置密码'),
+        content: const Text(
+          '启用隐私模式前，请先在设置中设置隐私密码。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: 导航到隐私设置页面
+              // Navigator.of(context).pushNamed('/settings/privacy');
+            },
+            child: const Text('去设置'),
+          ),
+        ],
       ),
     );
   }

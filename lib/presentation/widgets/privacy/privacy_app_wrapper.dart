@@ -19,17 +19,23 @@ class PrivacyAppWrapper extends ConsumerStatefulWidget {
 }
 
 class _PrivacyAppWrapperState extends ConsumerState<PrivacyAppWrapper> {
+  bool _isInitialized = false;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     
-    // 初始化应用生命周期管理器
-    _initializeLifecycleManager();
+    // 确保只初始化一次
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _initializeLifecycleManager();
+    }
   }
   
   Future<void> _initializeLifecycleManager() async {
     try {
-      await AppLifecycleManager.instance.initialize();
+      final container = ProviderScope.containerOf(context);
+      await AppLifecycleManager.instance.initialize(container);
     } catch (e) {
       // 忽略初始化错误，但记录日志
       debugPrint('应用生命周期管理器初始化失败: $e');
@@ -189,20 +195,34 @@ class PrivacyOverlay extends ConsumerWidget {
 
   /// 显示认证对话框
   Future<void> _showAuthDialog(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const GeneralAuthDialog(
-        title: '身份验证',
-        message: '请验证身份以解除隐私保护',
-        canCancel: false,
-      ),
-    );
-
-    if (result == true) {
-      // 认证成功，清除保护状态
+    final privacyState = ref.read(privacyNotifierProvider);
+    
+    // 如果有激活的隐私库，使用增强的认证对话框
+    if (privacyState.activatedLibraries.isNotEmpty) {
       final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
-      privacyNotifier.clearAuthenticationRequest();
+      final result = await privacyNotifier.onAppResumed(context);
+      
+      if (result) {
+        // 验证成功，清除保护状态
+        privacyNotifier.clearAuthenticationRequest();
+      }
+    } else {
+      // 没有激活的隐私库，使用通用认证对话框
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const GeneralAuthDialog(
+          title: '身份验证',
+          message: '请验证身份以解除隐私保护',
+          canCancel: false,
+        ),
+      );
+
+      if (result == true) {
+        // 认证成功，清除保护状态
+        final privacyNotifier = ref.read(privacyNotifierProvider.notifier);
+        privacyNotifier.clearAuthenticationRequest();
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/privacy_service.dart';
 import '../../../data/models/library.dart';
 import 'privacy_access_handler.dart';
 
@@ -12,7 +13,6 @@ class LibraryCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onSettings;
   final VoidCallback? onPrivacySettings;
-  final VoidCallback? onTap;
   final VoidCallback? onAccessGranted;
 
   const LibraryCard({
@@ -25,7 +25,6 @@ class LibraryCard extends StatelessWidget {
     required this.onDelete,
     this.onSettings,
     this.onPrivacySettings,
-    this.onTap,
     this.onAccessGranted,
   });
 
@@ -42,11 +41,8 @@ class LibraryCard extends StatelessWidget {
               library: library,
               onAccessGranted: () {
                 onAccessGranted?.call();
-                onTap?.call();
               },
             );
-          } else {
-            onTap?.call();
           }
         },
         child: Padding(
@@ -107,9 +103,15 @@ class LibraryCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   if (library.isPrivate)
                     _buildInfoChip(
-                      icon: Icons.lock,
-                      label: '隐私保护',
-                      color: Colors.red,
+                      icon: library.isEnabled 
+                          ? Icons.lock 
+                          : Icons.lock_outline,
+                      label: library.isEnabled 
+                          ? '隐私已激活' 
+                          : '隐私未激活',
+                      color: library.isEnabled 
+                          ? Colors.red 
+                          : Colors.grey,
                     ),
                   const SizedBox(width: 8),
                   if (library.lastScanAt != null)

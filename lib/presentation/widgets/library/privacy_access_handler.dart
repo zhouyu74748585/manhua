@@ -34,25 +34,6 @@ class PrivacyAccessHandler {
       return true;
     }
 
-    // 显示验证对话框
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PrivacyVerificationDialog(
-        libraryId: library.id,
-        libraryName: library.name,
-        authMethod: authMethod,
-        onVerified: () {
-          Navigator.of(context).pop(true);
-        },
-      ),
-    );
-
-    if (result == true) {
-      onAccessGranted?.call();
-      return true;
-    }
-
     return false;
   }
 

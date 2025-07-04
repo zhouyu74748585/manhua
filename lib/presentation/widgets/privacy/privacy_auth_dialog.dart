@@ -7,6 +7,8 @@ import '../../../core/services/privacy_service.dart';
 class PrivacyAuthDialog extends StatefulWidget {
   final String libraryId;
   final String libraryName;
+  final String? title;
+  final String? message;
   final VoidCallback? onSuccess;
   final VoidCallback? onCancel;
 
@@ -14,6 +16,8 @@ class PrivacyAuthDialog extends StatefulWidget {
     super.key,
     required this.libraryId,
     required this.libraryName,
+    this.title,
+    this.message,
     this.onSuccess,
     this.onCancel,
   });
@@ -76,14 +80,13 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
     });
 
     try {
-      final success = await PrivacyService.activatePrivateLibrary(
-        widget.libraryId,
-        password: _passwordController.text,
+      final success = await PrivacyService.verifyPassword(
+        _passwordController.text,
       );
 
       if (success) {
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true);
           widget.onSuccess?.call();
         }
       } else {
@@ -111,12 +114,11 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
     });
 
     try {
-      final success =
-          await PrivacyService.activatePrivateLibrary(widget.libraryId);
+      final success = await PrivacyService.authenticateWithBiometric();
 
       if (success) {
         if (mounted) {
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true);
           widget.onSuccess?.call();
         }
       } else {
@@ -166,7 +168,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '访问隐私库',
+              widget.title ?? '访问隐私库',
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -179,7 +181,7 @@ class _PrivacyAuthDialogState extends State<PrivacyAuthDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '"${widget.libraryName}" 是隐私库，需要验证身份才能访问。',
+              widget.message ?? '"${widget.libraryName}" 是隐私库，需要验证身份才能访问。',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),

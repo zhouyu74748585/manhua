@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/library.dart';
 import '../../providers/privacy_provider.dart';
-import '../privacy/privacy_auth_dialog.dart';
+import '../privacy/unified_password_dialog.dart';
 
 /// 库隐私模式设置组件
 class LibraryPrivacyTile extends ConsumerWidget {
@@ -37,11 +37,11 @@ class LibraryPrivacyTile extends ConsumerWidget {
         ),
         subtitle: Text(
           library.isPrivate
-              ? (library.isPrivateActivated ? '隐私模式 - 已激活' : '隐私模式 - 未激活')
+              ? (library.isEnabled ? '隐私模式 - 已激活' : '隐私模式 - 未激活')
               : '普通模式',
           style: TextStyle(
             color: library.isPrivate
-                ? (library.isPrivateActivated ? Colors.green : Colors.orange)
+                ? (library.isEnabled ? Colors.green : Colors.orange)
                 : Colors.grey,
           ),
         ),
@@ -70,24 +70,24 @@ class LibraryPrivacyTile extends ConsumerWidget {
                   // 激活状态显示
                   ListTile(
                     leading: Icon(
-                      library.isPrivateActivated
+                      library.isEnabled
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
-                      color: library.isPrivateActivated
+                      color: library.isEnabled
                           ? Colors.green
                           : Colors.grey,
                     ),
                     title: Text(
-                      library.isPrivateActivated ? '已激活' : '未激活',
+                      library.isEnabled ? '已激活' : '未激活',
                       style: TextStyle(
-                        color: library.isPrivateActivated
+                        color: library.isEnabled
                             ? Colors.green
                             : Colors.grey,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     subtitle: Text(
-                      library.isPrivateActivated
+                      library.isEnabled
                           ? '当前可以访问此隐私库的内容'
                           : '需要验证身份才能访问此隐私库',
                     ),
@@ -98,7 +98,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        if (!library.isPrivateActivated) ...[
+                        if (!library.isEnabled) ...[
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () => _activateLibrary(
@@ -190,6 +190,12 @@ class LibraryPrivacyTile extends ConsumerWidget {
         _showPasswordRequiredDialog(context);
         return;
       }
+    } else {
+      // 取消隐私模式需要身份验证和确认
+      final authResult = await _showDisablePrivacyDialog(context);
+      if (!authResult) {
+        return; // 用户取消或验证失败
+      }
     }
 
     // 显示加载对话框
@@ -249,16 +255,15 @@ class LibraryPrivacyTile extends ConsumerWidget {
     WidgetRef ref,
     PrivacyNotifier privacyNotifier,
   ) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => PrivacyAuthDialog(
-        libraryId: library.id,
-        libraryName: library.name,
-      ),
+    final result = await showPasswordVerifyDialog(
+      context,
+      libraryId: library.id,
+      libraryName: library.name,
     );
 
     if (result == true) {
-      final success = await privacyNotifier.activatePrivateLibrary(library.id);
+      // 直接更新库的 isEnabled 状态
+      final success = await privacyNotifier.updateLibraryEnabled(library.id, true);
 
       if (context.mounted) {
         if (success) {
@@ -287,47 +292,187 @@ class LibraryPrivacyTile extends ConsumerWidget {
     WidgetRef ref,
     PrivacyNotifier privacyNotifier,
   ) async {
+    // 首先需要验证身份
+    final authResult = await showPasswordVerifyDialog(
+      context,
+      libraryId: library.id,
+      libraryName: library.name,
+      title: '取消激活隐私库',
+      message: '请验证身份以取消激活隐私库 "${library.name}"',
+    );
+
+    if (authResult == true) {
+      // 验证成功后，再次确认操作
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('取消激活'),
+          content: Text('确定要取消激活隐私库 "${library.name}" 吗？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        // 直接更新库的 isEnabled 状态
+        final success = await privacyNotifier.updateLibraryEnabled(library.id, false);
+
+        if (context.mounted) {
+          if (success) {
+            onChanged?.call();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('隐私库已取消激活'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('取消激活失败，请重试'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// 显示取消隐私模式的确认对话框
+  Future<bool> _showDisablePrivacyDialog(BuildContext context) async {
+    // 首先显示身份验证对话框
+    final authResult = await showPasswordVerifyDialog(
+      context,
+      libraryId: library.id,
+      libraryName: library.name,
+      title: '取消隐私模式',
+      message: '请验证身份以取消漫画库 "${library.name}" 的隐私模式',
+    );
+
+    if (authResult != true) {
+      return false; // 身份验证失败或取消
+    }
+
+    // 身份验证成功后，显示美观的确认对话框
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('取消激活'),
-        content: Text('确定要取消激活隐私库 "${library.name}" 吗？'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.security,
+              color: Colors.orange[700],
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              '取消隐私模式',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '确定要取消漫画库 "${library.name}" 的隐私模式吗？',
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.orange[200]!,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.orange[700],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      '取消后，该漫画库将不再受隐私保护',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+            child: const Text(
+              '取消',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确定'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[600],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              '确定取消',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      final success =
-          await privacyNotifier.deactivatePrivateLibrary(library.id);
-
-      if (context.mounted) {
-        if (success) {
-          onChanged?.call();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('隐私库已取消激活'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('取消激活失败，请重试'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
+    return confirmed == true;
   }
 
   /// 显示需要设置密码的对话框
@@ -344,13 +489,7 @@ class LibraryPrivacyTile extends ConsumerWidget {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('取消'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: 导航到隐私设置页面
-            },
-            child: const Text('去设置'),
-          ),
+         
         ],
       ),
     );

@@ -8,7 +8,7 @@ import '../../core/services/app_lifecycle_manager.dart';
 import '../../core/services/privacy_service.dart';
 import '../../data/models/library.dart';
 import '../../data/repositories/library_repository.dart';
-import '../widgets/privacy/enhanced_privacy_auth_dialog.dart';
+import '../widgets/privacy/unified_password_dialog.dart';
 
 part 'privacy_provider.g.dart';
 
@@ -193,9 +193,24 @@ class PrivacyNotifier extends _$PrivacyNotifier {
   }
 
   /// 激活隐私库
-  Future<bool> activatePrivateLibrary(String libraryId) async {
+  /// 需要密码或生物识别验证
+  Future<bool> activatePrivateLibrary(String libraryId, {String? password}) async {
     try {
-      await PrivacyService.activatePrivateLibrary(libraryId);
+      bool authenticated = false;
+      
+      // 验证身份
+      if (password != null) {
+        authenticated = await verifyPassword(password);
+      } else {
+        authenticated = await authenticateWithBiometric();
+      }
+      
+      if (!authenticated) {
+        log('激活隐私库验证失败: $libraryId');
+        return false;
+      }
+      
+      await PrivacyService.activatePrivateLibrary(libraryId, password: password);
 
       // 更新库仓库中的激活状态
       final libraryRepo = ref.read(libraryRepositoryProvider);
@@ -237,8 +252,25 @@ class PrivacyNotifier extends _$PrivacyNotifier {
   }
 
   /// 设置库为隐私模式
-  Future<bool> setLibraryPrivate(String libraryId, bool isPrivate) async {
+  /// 取消隐私模式需要验证身份
+  Future<bool> setLibraryPrivate(String libraryId, bool isPrivate, {String? password}) async {
     try {
+      // 如果是取消隐私模式，需要验证身份
+      if (!isPrivate) {
+        bool authenticated = false;
+        
+        if (password != null) {
+          authenticated = await verifyPassword(password);
+        } else {
+          authenticated = await authenticateWithBiometric();
+        }
+        
+        if (!authenticated) {
+          log('取消隐私模式验证失败: $libraryId');
+          return false;
+        }
+      }
+      
       final libraryRepo = ref.read(libraryRepositoryProvider);
       await libraryRepo.setLibraryPrivate(libraryId, isPrivate);
 
@@ -258,6 +290,34 @@ class PrivacyNotifier extends _$PrivacyNotifier {
   /// 检查库是否已激活
   bool isLibraryActivated(String libraryId) {
     return state.activatedLibraries.contains(libraryId);
+  }
+
+  /// 更新库的启用状态
+  /// 根据用户需求，直接通过 MangaLibrary.isEnabled 管理隐私库状态
+  Future<bool> updateLibraryEnabled(String libraryId, bool isEnabled) async {
+    try {
+      final libraryRepo = ref.read(libraryRepositoryProvider);
+      await libraryRepo.updateLibraryPrivateActivation(libraryId, isEnabled);
+      
+      // 更新本地状态
+      if (isEnabled) {
+        if (!state.activatedLibraries.contains(libraryId)) {
+          final updatedList = List<String>.from(state.activatedLibraries)
+            ..add(libraryId);
+          state = state.copyWith(activatedLibraries: updatedList);
+        }
+      } else {
+        final updatedList = List<String>.from(state.activatedLibraries)
+          ..remove(libraryId);
+        state = state.copyWith(activatedLibraries: updatedList);
+      }
+      
+      log('库启用状态更新成功: $libraryId, isEnabled: $isEnabled');
+      return true;
+    } catch (e, stackTrace) {
+      log('更新库启用状态失败: $libraryId, 错误: $e,堆栈:$stackTrace');
+      return false;
+    }
   }
 
   /// 清除认证需求
@@ -337,15 +397,11 @@ class PrivacyNotifier extends _$PrivacyNotifier {
   /// 显示增强的隐私验证对话框
   Future<bool> _showEnhancedPrivacyAuthDialog(BuildContext context) async {
     try {
-      final result = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => EnhancedPrivacyAuthDialog(
-          title: '隐私验证',
-          message: '检测到活跃的隐私库，请重新验证身份',
-          canCancel: false,
-          specificLibraryIds: state.activatedLibraries.toList(),
-        ),
+      final result = await showPasswordVerifyDialog(
+        context,
+        title: '隐私验证',
+        message: '检测到活跃的隐私库，请重新验证身份',
+        canCancel: false,
       );
       
       if (result == true) {
