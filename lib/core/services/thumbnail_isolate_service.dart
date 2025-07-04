@@ -155,6 +155,7 @@ class ThumbnailIsolateService {
         'results': results,
       });
     } catch (e, stackTrace) {
+      log('批量缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
       // 发送错误消息
       sendPort.send({
         'type': IsolateMessageType.error.index,
@@ -195,6 +196,7 @@ void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
       'type': IsolateMessageType.complete.index,
     });
   } catch (e, stackTrace) {
+    log('缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
     // 发送错误消息
     mainSendPort.send({
       'type': IsolateMessageType.error.index,

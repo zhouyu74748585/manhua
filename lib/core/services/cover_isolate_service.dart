@@ -145,6 +145,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
       type: IsolateMessageType.complete,
     ).toJson());
   } catch (e, stackTrace) {
+    log('封面生成Isolate执行失败: $e,堆栈:$stackTrace');
     // 发送错误消息
     mainSendPort.send(IsolateMessage(
       type: IsolateMessageType.error,
