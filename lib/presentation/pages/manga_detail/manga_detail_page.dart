@@ -360,14 +360,12 @@ class MangaDetailPage extends ConsumerWidget {
   }
 
   void _startReading(BuildContext context, Manga manga, int startPage) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ReaderPage(
-          mangaId: manga.id,
-          initialPage: startPage,
-        ),
-      ),
+    // 使用 GoRouter 跳转到阅读器页面，确保脱离主布局
+    final uri = Uri(
+      path: '/reader/${manga.id}',
+      queryParameters: {'page': startPage.toString()},
     );
+    context.go(uri.toString());
   }
 
   String _getStatusText(MangaStatus status) {

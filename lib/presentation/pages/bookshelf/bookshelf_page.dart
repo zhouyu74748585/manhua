@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:manhua_reader_flutter/presentation/widgets/manga/manga_list_tile.dart';
 
@@ -9,7 +10,6 @@ import '../../providers/library_provider.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/manga_card.dart';
 import '../manga_detail/manga_detail_page.dart';
-import '../reader/reader_page.dart';
 
 enum BookshelfViewMode { grid, list }
 
@@ -418,11 +418,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   }
 
   void _openMangaDetail(Manga manga) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => MangaDetailPage(mangaId: manga.id),
-      ),
-    );
+    context.go('/manga/${manga.id}');
   }
 
   void _startReading(Manga manga, ReadingProgress? progress) {
@@ -431,14 +427,12 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
     // 触发缩略图生成（如果需要的话）
     ref.read(mangaDetailWithCallbackProvider(manga.id));
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ReaderPage(
-          mangaId: manga.id,
-          initialPage: startPage,
-        ),
-      ),
+    // 使用 GoRouter 跳转到阅读器页面，确保脱离主布局
+    final uri = Uri(
+      path: '/reader/${manga.id}',
+      queryParameters: {'page': startPage.toString()},
     );
+    context.go(uri.toString());
   }
 
   void _toggleFavorite(Manga manga) {

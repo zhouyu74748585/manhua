@@ -8,6 +8,7 @@ import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/library/library_page.dart';
 import '../../presentation/pages/manga_detail/manga_detail_page.dart';
 import '../../presentation/pages/reader/reader_page.dart';
+import '../../presentation/pages/reader/double_page_reader.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/widgets/layout/main_layout.dart';
@@ -23,6 +24,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String mangaDetail = '/manga/:mangaId';
   static const String reader = '/reader/:mangaId';
+  static const String doublePageReader = '/reader/:mangaId/double';
 }
 
 @riverpod
@@ -100,6 +102,24 @@ GoRouter appRouter(AppRouterRef ref) {
               0;
 
           return ReaderPage(
+            mangaId: mangaId,
+            initialPage: pageIndex,
+          );
+        },
+      ),
+
+      // 双页阅读器（全屏）
+      GoRoute(
+        path: AppRoutes.doublePageReader,
+        name: 'doublePageReader',
+        builder: (context, state) {
+          final mangaId = state.pathParameters['mangaId']!;
+          final pageIndex = int.tryParse(
+                state.uri.queryParameters['page'] ?? '0',
+              ) ??
+              0;
+
+          return DoublePageReader(
             mangaId: mangaId,
             initialPage: pageIndex,
           );

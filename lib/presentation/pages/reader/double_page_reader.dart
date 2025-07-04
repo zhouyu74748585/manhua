@@ -198,6 +198,17 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
     }
   }
 
+  /// 智能返回逻辑
+  void _goBack(BuildContext context) {
+    // 检查是否可以使用浏览器的返回功能
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      // 如果无法返回，默认跳转到书架页面
+      context.go('/bookshelf');
+    }
+  }
+
   void _handleTapNavigation(TapDownDetails details, BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final tapPosition = details.globalPosition;
@@ -455,46 +466,8 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _showControls
-          ? AppBar(
-              backgroundColor: Colors.black.withValues(alpha: 0.7),
-              foregroundColor: Colors.white,
-              title: mangaAsync.when(
-                data: (manga) => Text(manga?.title ?? '双页阅读'),
-                loading: () => const Text('双页阅读'),
-                error: (_, __) => const Text('双页阅读'),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.library_books),
-                  onPressed: () {
-                    context.go('/bookshelf');
-                  },
-                  tooltip: '书架',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.view_agenda),
-                  onPressed: () {
-                    // 切换到单页模式
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (context) => ReaderPage(
-                          mangaId: widget.mangaId,
-                          initialPage: _currentPageIndex,
-                        ),
-                      ),
-                    );
-                  },
-                  tooltip: '切换到单页模式',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: _showReaderSettings,
-                  tooltip: '阅读设置',
-                ),
-              ],
-            )
-          : null,
+      // 完全移除 AppBar，使用自定义的浮动控制栏
+      appBar: null,
       body: pageAsync.when(
         data: (pages) {
           _initializeDoublePageGroups(pages.length);
@@ -545,7 +518,7 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                     onTapDown: (details) =>
                         _handleTapNavigation(details, context),
                     onSecondaryTap: () {
-                      context.go('/bookshelf');
+                      _goBack(context);
                     }, // 右键返回
                     child: _buildDoublePageView(pages),
                   ),
@@ -565,12 +538,15 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
                           icon:
                               const Icon(Icons.arrow_back, color: Colors.white),
                           onPressed: () {
-                            context.go('/bookshelf');
+                            _goBack(context);
                           },
                           tooltip: '返回',
                         ),
                       ),
                     ),
+                  // 自定义浮动控制栏（替代 AppBar）
+                  if (_showControls)
+                    _buildFloatingControlBar(context, mangaAsync),
                   // 统一的全屏/取消全屏按钮（右下方缩略图上方）
                   Positioned(
                     bottom: _showControls ? 140 : 20, // 根据控制条显示状态调整位置
@@ -776,6 +752,115 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
               }).toList(),
             ),
             const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建自定义浮动控制栏（替代传统 AppBar）
+  Widget _buildFloatingControlBar(BuildContext context, AsyncValue mangaAsync) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.8),
+              Colors.black.withValues(alpha: 0.4),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        padding: const EdgeInsets.only(
+          top: 40, // 状态栏高度
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
+        child: Row(
+          children: [
+            // 返回按钮
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  _goBack(context);
+                },
+                tooltip: '返回书架',
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 漫画标题
+            Expanded(
+              child: mangaAsync.when(
+                data: (manga) => Text(
+                  manga?.title ?? '双页阅读',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                loading: () => const Text(
+                  '双页阅读',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                error: (_, __) => const Text(
+                  '双页阅读',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 功能按钮组
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 单页模式切换
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.view_agenda, color: Colors.white),
+                    onPressed: () {
+                      // 使用 GoRouter 切换到单页模式
+                      final uri = Uri(
+                        path: '/reader/${widget.mangaId}',
+                        queryParameters: {'page': _currentPageIndex.toString()},
+                      );
+                      context.go(uri.toString());
+                    },
+                    tooltip: '单页模式',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 设置按钮
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: _showReaderSettings,
+                    tooltip: '阅读设置',
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
