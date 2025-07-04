@@ -124,7 +124,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
           border: Border.all(
             color: isCurrentPage
                 ? Theme.of(context).primaryColor
-                : Colors.grey.withValues(alpha: 0.3),
+                : Colors.grey.withValues(alpha:0.3),
             width: isCurrentPage ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -150,7 +150,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: Colors.black.withValues(alpha:0.7),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -219,7 +219,7 @@ class _LazyThumbnailGridState extends State<LazyThumbnailGrid> {
       }
 
       return _buildPlaceholder(pageNumber);
-    } catch (e, stackTrace) {
+    } catch (e) {
       // 捕获任何异常并返回占位符
       return _buildPlaceholder(pageNumber);
     }

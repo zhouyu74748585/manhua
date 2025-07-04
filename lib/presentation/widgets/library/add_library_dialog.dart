@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -275,7 +277,8 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
           _pathController.text = result;
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e,stackTrace) {
+      log('选择文件夹失败: $e, $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('选择文件夹失败: $e')),
