@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/services/app_lifecycle_manager.dart';
 import '../../core/services/privacy_service.dart';
 import '../../data/models/library.dart';
 import '../../data/repositories/library_repository.dart';
+import '../widgets/privacy/enhanced_privacy_auth_dialog.dart';
 
 part 'privacy_provider.g.dart';
 
@@ -279,6 +281,86 @@ class PrivacyNotifier extends _$PrivacyNotifier {
   /// 刷新状态
   Future<void> refresh() async {
     await _loadInitialState();
+  }
+
+  /// 处理应用启动事件
+  /// 根据PRD要求，应用重新进入时应停用隐私库
+  Future<void> onAppStarted() async {
+    await deactivateAllPrivateLibraries();
+    
+    // 重置认证状态
+    state = state.copyWith(
+      needsAuthentication: false,
+      isBlurred: false,
+    );
+  }
+  
+  /// 处理应用暂停事件
+  /// 根据PRD要求，如果有活跃的隐私库，应用进入后台时需要模糊屏幕
+  Future<void> onAppPaused() async {
+    final hasActivePrivateLibraries = state.activatedLibraries.isNotEmpty;
+    
+    if (hasActivePrivateLibraries) {
+      // 设置需要认证和模糊屏幕
+      state = state.copyWith(
+        needsAuthentication: true,
+        isBlurred: true,
+      );
+    }
+  }
+  
+  /// 处理应用恢复事件
+  /// 根据PRD要求，从后台恢复时需要重新验证隐私库
+  Future<bool> onAppResumed(BuildContext context) async {
+    final hasActivePrivateLibraries = state.activatedLibraries.isNotEmpty;
+    
+    if (hasActivePrivateLibraries) {
+      // 根据PRD要求，需要重新验证
+      // 显示增强的隐私验证对话框
+      return await _showEnhancedPrivacyAuthDialog(context);
+    }
+    
+    return true;
+  }
+  
+  /// 停用所有隐私库
+  Future<void> deactivateAllPrivateLibraries() async {
+    final activatedLibraries = List<String>.from(state.activatedLibraries);
+    
+    for (final libraryId in activatedLibraries) {
+      await deactivatePrivateLibrary(libraryId);
+    }
+    
+    log('所有隐私库已停用');
+  }
+
+  /// 显示增强的隐私验证对话框
+  Future<bool> _showEnhancedPrivacyAuthDialog(BuildContext context) async {
+    try {
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => EnhancedPrivacyAuthDialog(
+          title: '隐私验证',
+          message: '检测到活跃的隐私库，请重新验证身份',
+          canCancel: false,
+          specificLibraryIds: state.activatedLibraries.toList(),
+        ),
+      );
+      
+      if (result == true) {
+        // 验证成功，保持当前状态
+        return true;
+      } else {
+        // 验证失败或取消，停用所有隐私库
+        await deactivateAllPrivateLibraries();
+        return false;
+      }
+    } catch (e) {
+      // 发生错误，停用所有隐私库
+      await deactivateAllPrivateLibraries();
+      return false;
+    }
   }
 
   void dispose() {

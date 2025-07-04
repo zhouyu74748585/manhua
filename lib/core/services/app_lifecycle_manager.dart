@@ -36,9 +36,17 @@ class AppLifecycleManager extends WidgetsBindingObserver {
   bool get needsBlur => _needsBlur;
 
   /// 初始化生命周期管理器
-  void initialize() {
+  Future<void> initialize() async {
     WidgetsBinding.instance.addObserver(this);
     log('应用生命周期管理器已初始化');
+    
+    // 应用启动时，根据PRD要求停用所有隐私库
+    try {
+      await PrivacyService.deactivateAllLibraries();
+      log('应用启动时已停用所有隐私库');
+    } catch (e) {
+      log('应用启动时停用隐私库失败: $e');
+    }
   }
 
   /// 清理资源
@@ -79,14 +87,21 @@ class AppLifecycleManager extends WidgetsBindingObserver {
   Future<void> _onAppResumed() async {
     log('应用恢复到前台');
 
-    // 取消模糊化
-    _needsBlur = false;
-
-    // 检查是否需要隐私验证
-    final needsAuth = !await PrivacyService.onAppResumed();
-    if (needsAuth) {
-      log('需要隐私验证');
-      _privacyAuthController.add(true);
+    try {
+      // 检查是否需要隐私验证
+      final needsAuth = !await PrivacyService.onAppResumed();
+      if (needsAuth) {
+        _needsBlur = true;
+        log('需要隐私验证');
+        _privacyAuthController.add(true);
+      } else {
+        _needsBlur = false;
+        _privacyAuthController.add(false);
+      }
+    } catch (e) {
+      log('应用恢复处理错误: $e');
+      _needsBlur = false;
+      _privacyAuthController.add(false);
     }
   }
 
@@ -94,13 +109,18 @@ class AppLifecycleManager extends WidgetsBindingObserver {
   Future<void> _onAppPaused() async {
     log('应用进入后台');
 
-    // 如果有激活的隐私库，启用模糊化
-    if (PrivacyService.activatedLibraries.isNotEmpty) {
-      _needsBlur = true;
-      log('启用模糊化保护');
-    }
+    try {
+      // 如果有激活的隐私库，启用模糊化和认证需求
+      if (PrivacyService.activatedLibraries.isNotEmpty) {
+        _needsBlur = true;
+        log('启用模糊化保护');
+        _privacyAuthController.add(true);
+      }
 
-    await PrivacyService.onAppPaused();
+      await PrivacyService.onAppPaused();
+    } catch (e) {
+      log('应用暂停处理错误: $e');
+    }
   }
 
   /// 应用变为非活跃状态（如接听电话、下拉通知栏等）

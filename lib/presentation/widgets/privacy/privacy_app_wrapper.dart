@@ -22,8 +22,18 @@ class _PrivacyAppWrapperState extends ConsumerState<PrivacyAppWrapper> {
   @override
   void initState() {
     super.initState();
+    
     // 初始化应用生命周期管理器
-    AppLifecycleManager.instance.initialize();
+    _initializeLifecycleManager();
+  }
+  
+  Future<void> _initializeLifecycleManager() async {
+    try {
+      await AppLifecycleManager.instance.initialize();
+    } catch (e) {
+      // 忽略初始化错误，但记录日志
+      debugPrint('应用生命周期管理器初始化失败: $e');
+    }
   }
 
   @override

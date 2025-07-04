@@ -178,6 +178,23 @@ class PrivacyService {
     return true; // 没有激活的隐私库，无需验证
   }
 
+  /// 停用所有隐私库
+  /// 根据PRD要求，应用重新进入时应停用所有隐私库
+  static Future<void> deactivateAllLibraries() async {
+    try {
+      final librariesToDeactivate = List<String>.from(activatedLibraries);
+      
+      for (final libraryId in librariesToDeactivate) {
+        await deactivatePrivateLibrary(libraryId);
+      }
+      
+      log('已停用所有隐私库，共 ${librariesToDeactivate.length} 个');
+    } catch (e) {
+      log('停用所有隐私库时发生错误: $e');
+      rethrow;
+    }
+  }
+
   /// 应用重新启动时的处理
   static Future<void> onAppRestarted() async {
     // 应用重启时清空所有激活状态
