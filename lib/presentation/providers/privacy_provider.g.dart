@@ -48,7 +48,7 @@ final activatedPrivateLibrariesProvider =
 // ignore: unused_element
 typedef ActivatedPrivateLibrariesRef
     = AutoDisposeFutureProviderRef<List<MangaLibrary>>;
-String _$privacyNotifierHash() => r'f6fc791ad13b51bad568a59e61c89f629b2e5522';
+String _$privacyNotifierHash() => r'719065e091c98059fcd73fd364193cafe28a7e0b';
 
 /// 隐私模式状态管理器
 ///

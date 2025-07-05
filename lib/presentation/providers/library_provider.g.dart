@@ -454,7 +454,7 @@ final totalStatsProvider = AutoDisposeFutureProvider<Map<String, int>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalStatsRef = AutoDisposeFutureProviderRef<Map<String, int>>;
-String _$libraryActionsHash() => r'6d7f3fadfcbb6f2132bd4ff6d89c37d0299b7d1a';
+String _$libraryActionsHash() => r'e110ec6a1c9c9fe38bf5747a971ca27d878a3e1a';
 
 /// See also [LibraryActions].
 @ProviderFor(LibraryActions)

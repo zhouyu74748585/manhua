@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/services/privacy_service.dart';
 import '../../../data/models/library.dart';
@@ -163,6 +164,7 @@ class LibraryPage extends ConsumerWidget {
           onDelete: () => _deleteLibrary(context, ref, library),
           onSettings: () => _showLibrarySettings(context, ref, library),
           onPrivacySettings: () => _showPrivacySettings(context, ref, library),
+          onSync: () => _showLibrarySyncOptions(context, library),
         );
       },
     );
@@ -361,6 +363,58 @@ class LibraryPage extends ConsumerWidget {
             child: const Text('去设置'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLibrarySyncOptions(BuildContext context, MangaLibrary library) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '同步 "${library.name}"',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '选择要同步的内容和目标设备',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.library_books),
+              title: const Text('同步整个漫画库'),
+              subtitle: const Text('同步库中的所有漫画和设置'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/library-sync', extra: library);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('同步阅读进度'),
+              subtitle: const Text('仅同步此库中漫画的阅读进度'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/progress-sync', extra: library);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.devices),
+              title: const Text('设备管理'),
+              subtitle: const Text('查看和管理可用设备'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/device-management');
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

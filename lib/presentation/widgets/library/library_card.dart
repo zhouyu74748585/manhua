@@ -13,6 +13,7 @@ class LibraryCard extends StatelessWidget {
   final VoidCallback? onSettings;
   final VoidCallback? onPrivacySettings;
   final VoidCallback? onAccessGranted;
+  final VoidCallback? onSync;
 
   const LibraryCard({
     super.key,
@@ -25,6 +26,7 @@ class LibraryCard extends StatelessWidget {
     this.onSettings,
     this.onPrivacySettings,
     this.onAccessGranted,
+    this.onSync,
   });
 
   @override
@@ -144,6 +146,18 @@ class LibraryCard extends StatelessWidget {
                     icon: const Icon(Icons.edit, size: 16),
                     label: const Text('编辑'),
                   ),
+                  const SizedBox(width: 8),
+
+                  // 同步按钮
+                  if (onSync != null)
+                    OutlinedButton.icon(
+                      onPressed: library.isEnabled ? onSync : null,
+                      icon: const Icon(Icons.upload_sharp, size: 16),
+                      label: const Text('发送'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green,
+                      ),
+                    ),
                   const SizedBox(width: 8),
 
                   // 设置按钮

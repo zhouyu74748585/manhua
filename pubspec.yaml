@@ -43,18 +43,31 @@ dependencies:
   pdf_render: ^1.4.11
   tuple: ^2.0.0
   local_auth: ^2.1.6
+
+  # Networking for multi-device sharing
+  multicast_dns: ^0.3.2+4
+  dio: ^5.4.0
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  network_info_plus: ^4.1.0
+  device_info_plus: ^9.1.1
  
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
+
+  # Testing
+  mockito: ^5.4.4
+  integration_test:
+    sdk: flutter
+
   # Code Generation
   riverpod_generator: ^2.3.9
   build_runner: ^2.4.7
   json_serializable: ^6.7.1
   drift_dev: ^2.14.1
-  
+
   # Linting
   flutter_lints: ^3.0.1
 

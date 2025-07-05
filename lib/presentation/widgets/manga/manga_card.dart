@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../data/models/library.dart';
 
@@ -82,6 +83,13 @@ class _MangaCardState extends State<MangaCard> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.sync,
+                                          color: Colors.white, size: 20),
+                                      onPressed: () =>
+                                          _showSyncOptions(context),
+                                      tooltip: '同步进度',
+                                    ),
                                     IconButton(
                                       icon: const Icon(Icons.info_outline,
                                           color: Colors.white),
@@ -233,5 +241,43 @@ class _MangaCardState extends State<MangaCard> {
           },
         );
     }
+  }
+
+  void _showSyncOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '同步选项',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('同步阅读进度'),
+              subtitle: const Text('将此漫画的阅读进度同步到其他设备'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/device-management');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.library_books),
+              title: const Text('同步整个漫画库'),
+              subtitle: const Text('同步包含此漫画的整个漫画库'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/device-management');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -3,14 +3,21 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/navigation/global_navigator.dart';
+import '../../data/models/library.dart';
+import '../../data/models/sync/device_info.dart';
 import '../../presentation/pages/bookshelf/bookshelf_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/library/library_page.dart';
 import '../../presentation/pages/manga_detail/manga_detail_page.dart';
-import '../../presentation/pages/reader/reader_page.dart';
 import '../../presentation/pages/reader/double_page_reader.dart';
+import '../../presentation/pages/reader/reader_page.dart';
 import '../../presentation/pages/search/search_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
+import '../../presentation/pages/sync/device_management_page.dart';
+import '../../presentation/pages/sync/library_sync_page.dart';
+import '../../presentation/pages/sync/progress_sync_page.dart';
+import '../../presentation/pages/sync/sync_progress_page.dart';
+import '../../presentation/pages/sync/sync_settings_page.dart';
 import '../../presentation/widgets/layout/main_layout.dart';
 
 part 'app_router.g.dart';
@@ -25,6 +32,13 @@ class AppRoutes {
   static const String mangaDetail = '/manga/:mangaId';
   static const String reader = '/reader/:mangaId';
   static const String doublePageReader = '/reader/:mangaId/double';
+
+  // 同步相关路由
+  static const String syncDeviceManagement = '/sync/device-management';
+  static const String syncLibrarySync = '/sync/library-sync';
+  static const String syncProgressSync = '/sync/progress-sync';
+  static const String syncProgress = '/sync/progress';
+  static const String syncSettings = '/sync/settings';
 }
 
 @riverpod
@@ -124,6 +138,73 @@ GoRouter appRouter(AppRouterRef ref) {
             initialPage: pageIndex,
           );
         },
+      ),
+
+      // 同步相关路由
+      GoRoute(
+        path: AppRoutes.syncDeviceManagement,
+        name: 'syncDeviceManagement',
+        builder: (context, state) => const DeviceManagementPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.syncLibrarySync,
+        name: 'syncLibrarySync',
+        builder: (context, state) {
+          final library = state.extra as MangaLibrary?;
+          return LibrarySyncPage(
+            targetDevice: DeviceInfo(
+              id: 'temp',
+              name: 'Target Device',
+              platform: 'unknown',
+              version: '1.0.0',
+              ipAddress: '0.0.0.0',
+              port: 0,
+              lastSeen: DateTime.now(),
+              isOnline: true,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.syncProgressSync,
+        name: 'syncProgressSync',
+        builder: (context, state) {
+          final library = state.extra as MangaLibrary?;
+          return ProgressSyncPage(
+            targetDevice: DeviceInfo(
+              id: 'temp',
+              name: 'Target Device',
+              platform: 'unknown',
+              version: '1.0.0',
+              ipAddress: '0.0.0.0',
+              port: 0,
+              lastSeen: DateTime.now(),
+              isOnline: true,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.syncProgress,
+        name: 'syncProgress',
+        builder: (context, state) => SyncProgressPage(
+          sessionId: 'temp-session',
+          targetDevice: DeviceInfo(
+            id: 'temp',
+            name: 'Target Device',
+            platform: 'unknown',
+            version: '1.0.0',
+            ipAddress: '0.0.0.0',
+            port: 0,
+            lastSeen: DateTime.now(),
+            isOnline: true,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.syncSettings,
+        name: 'syncSettings',
+        builder: (context, state) => const SyncSettingsPage(),
       ),
     ],
 

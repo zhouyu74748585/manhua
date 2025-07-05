@@ -10,7 +10,6 @@ import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/lazy_thumbnail_grid.dart';
-import '../reader/reader_page.dart';
 
 class MangaDetailPage extends ConsumerWidget {
   final String mangaId;
@@ -131,6 +130,13 @@ class MangaDetailPage extends ConsumerWidget {
                 .read(mangaActionsProvider.notifier)
                 .toggleFavorite(manga.id, !manga.isFavorite);
           },
+        ),
+        IconButton(
+          icon: const Icon(Icons.sync, color: Colors.white),
+          onPressed: () {
+            _showSyncOptions(context, manga);
+          },
+          tooltip: '同步阅读进度',
         ),
         IconButton(
           icon: const Icon(Icons.share, color: Colors.white),
@@ -366,6 +372,53 @@ class MangaDetailPage extends ConsumerWidget {
       queryParameters: {'page': startPage.toString()},
     );
     context.go(uri.toString());
+  }
+
+  void _showSyncOptions(BuildContext context, Manga manga) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '同步选项',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('同步阅读进度'),
+              subtitle: const Text('将此漫画的阅读进度同步到其他设备'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/device-management');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.library_books),
+              title: const Text('同步整个漫画库'),
+              subtitle: const Text('同步包含此漫画的整个漫画库'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/device-management');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('同步设置'),
+              subtitle: const Text('管理多设备同步设置'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.push('/sync/settings');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _getStatusText(MangaStatus status) {

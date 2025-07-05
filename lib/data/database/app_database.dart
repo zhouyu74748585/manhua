@@ -11,14 +11,22 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Libraries, Mangas, MangaPages, ReadingProgresses])
+@DriftDatabase(tables: [
+  Libraries,
+  Mangas,
+  MangaPages,
+  ReadingProgresses,
+  Devices,
+  SyncSessions,
+  SyncConflicts
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forIsolate(DatabaseConnection connection) : super(connection);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -33,6 +41,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(libraries, libraries.isScanning);
           await m.addColumn(libraries, libraries.isPrivate);
           await m.addColumn(libraries, libraries.isPrivateActivated);
+        }
+        if (from < 3 && to >= 3) {
+          // Add new tables for version 3 (multi-device sharing)
+          await m.createTable(devices);
+          await m.createTable(syncSessions);
+          await m.createTable(syncConflicts);
         }
       },
     );

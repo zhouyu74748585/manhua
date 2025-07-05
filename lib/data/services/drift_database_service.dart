@@ -91,6 +91,11 @@ class DriftDatabaseService {
     await (db.delete(db.libraries)..where((tbl) => tbl.id.equals(id))).go();
   }
 
+  /// Insert or update library (alias for insertLibrary which uses insertOrReplace)
+  static Future<void> insertOrUpdateLibrary(MangaLibrary library) async {
+    await insertLibrary(library);
+  }
+
   // ==================== Manga Operations ====================
 
   /// Insert a new manga
@@ -158,6 +163,11 @@ class DriftDatabaseService {
   static Future<void> deleteManga(String id) async {
     final db = database;
     await (db.delete(db.mangas)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  /// Insert or update manga (alias for insertManga which uses insertOrReplace)
+  static Future<void> insertOrUpdateManga(model.Manga manga) async {
+    await insertManga(manga);
   }
 
   /// Get all manga from enabled libraries

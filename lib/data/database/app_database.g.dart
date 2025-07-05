@@ -2599,6 +2599,1833 @@ class ReadingProgressesCompanion
   }
 }
 
+class $DevicesTable extends Devices with TableInfo<$DevicesTable, Device> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DevicesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _platformMeta =
+      const VerificationMeta('platform');
+  @override
+  late final GeneratedColumn<String> platform = GeneratedColumn<String>(
+      'platform', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<String> version = GeneratedColumn<String>(
+      'version', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _ipAddressMeta =
+      const VerificationMeta('ipAddress');
+  @override
+  late final GeneratedColumn<String> ipAddress = GeneratedColumn<String>(
+      'ip_address', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _portMeta = const VerificationMeta('port');
+  @override
+  late final GeneratedColumn<int> port = GeneratedColumn<int>(
+      'port', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _lastSeenMeta =
+      const VerificationMeta('lastSeen');
+  @override
+  late final GeneratedColumn<DateTime> lastSeen = GeneratedColumn<DateTime>(
+      'last_seen', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isOnlineMeta =
+      const VerificationMeta('isOnline');
+  @override
+  late final GeneratedColumn<bool> isOnline = GeneratedColumn<bool>(
+      'is_online', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_online" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _capabilitiesMeta =
+      const VerificationMeta('capabilities');
+  @override
+  late final GeneratedColumn<String> capabilities = GeneratedColumn<String>(
+      'capabilities', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        platform,
+        version,
+        ipAddress,
+        port,
+        lastSeen,
+        isOnline,
+        capabilities
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'devices';
+  @override
+  VerificationContext validateIntegrity(Insertable<Device> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('platform')) {
+      context.handle(_platformMeta,
+          platform.isAcceptableOrUnknown(data['platform']!, _platformMeta));
+    } else if (isInserting) {
+      context.missing(_platformMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    } else if (isInserting) {
+      context.missing(_versionMeta);
+    }
+    if (data.containsKey('ip_address')) {
+      context.handle(_ipAddressMeta,
+          ipAddress.isAcceptableOrUnknown(data['ip_address']!, _ipAddressMeta));
+    } else if (isInserting) {
+      context.missing(_ipAddressMeta);
+    }
+    if (data.containsKey('port')) {
+      context.handle(
+          _portMeta, port.isAcceptableOrUnknown(data['port']!, _portMeta));
+    } else if (isInserting) {
+      context.missing(_portMeta);
+    }
+    if (data.containsKey('last_seen')) {
+      context.handle(_lastSeenMeta,
+          lastSeen.isAcceptableOrUnknown(data['last_seen']!, _lastSeenMeta));
+    } else if (isInserting) {
+      context.missing(_lastSeenMeta);
+    }
+    if (data.containsKey('is_online')) {
+      context.handle(_isOnlineMeta,
+          isOnline.isAcceptableOrUnknown(data['is_online']!, _isOnlineMeta));
+    }
+    if (data.containsKey('capabilities')) {
+      context.handle(
+          _capabilitiesMeta,
+          capabilities.isAcceptableOrUnknown(
+              data['capabilities']!, _capabilitiesMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Device map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Device(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      platform: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}platform'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}version'])!,
+      ipAddress: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}ip_address'])!,
+      port: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}port'])!,
+      lastSeen: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_seen'])!,
+      isOnline: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_online'])!,
+      capabilities: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}capabilities']),
+    );
+  }
+
+  @override
+  $DevicesTable createAlias(String alias) {
+    return $DevicesTable(attachedDatabase, alias);
+  }
+}
+
+class Device extends DataClass implements Insertable<Device> {
+  final String id;
+  final String name;
+  final String platform;
+  final String version;
+  final String ipAddress;
+  final int port;
+  final DateTime lastSeen;
+  final bool isOnline;
+  final String? capabilities;
+  const Device(
+      {required this.id,
+      required this.name,
+      required this.platform,
+      required this.version,
+      required this.ipAddress,
+      required this.port,
+      required this.lastSeen,
+      required this.isOnline,
+      this.capabilities});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['platform'] = Variable<String>(platform);
+    map['version'] = Variable<String>(version);
+    map['ip_address'] = Variable<String>(ipAddress);
+    map['port'] = Variable<int>(port);
+    map['last_seen'] = Variable<DateTime>(lastSeen);
+    map['is_online'] = Variable<bool>(isOnline);
+    if (!nullToAbsent || capabilities != null) {
+      map['capabilities'] = Variable<String>(capabilities);
+    }
+    return map;
+  }
+
+  DevicesCompanion toCompanion(bool nullToAbsent) {
+    return DevicesCompanion(
+      id: Value(id),
+      name: Value(name),
+      platform: Value(platform),
+      version: Value(version),
+      ipAddress: Value(ipAddress),
+      port: Value(port),
+      lastSeen: Value(lastSeen),
+      isOnline: Value(isOnline),
+      capabilities: capabilities == null && nullToAbsent
+          ? const Value.absent()
+          : Value(capabilities),
+    );
+  }
+
+  factory Device.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Device(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      platform: serializer.fromJson<String>(json['platform']),
+      version: serializer.fromJson<String>(json['version']),
+      ipAddress: serializer.fromJson<String>(json['ipAddress']),
+      port: serializer.fromJson<int>(json['port']),
+      lastSeen: serializer.fromJson<DateTime>(json['lastSeen']),
+      isOnline: serializer.fromJson<bool>(json['isOnline']),
+      capabilities: serializer.fromJson<String?>(json['capabilities']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'platform': serializer.toJson<String>(platform),
+      'version': serializer.toJson<String>(version),
+      'ipAddress': serializer.toJson<String>(ipAddress),
+      'port': serializer.toJson<int>(port),
+      'lastSeen': serializer.toJson<DateTime>(lastSeen),
+      'isOnline': serializer.toJson<bool>(isOnline),
+      'capabilities': serializer.toJson<String?>(capabilities),
+    };
+  }
+
+  Device copyWith(
+          {String? id,
+          String? name,
+          String? platform,
+          String? version,
+          String? ipAddress,
+          int? port,
+          DateTime? lastSeen,
+          bool? isOnline,
+          Value<String?> capabilities = const Value.absent()}) =>
+      Device(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        platform: platform ?? this.platform,
+        version: version ?? this.version,
+        ipAddress: ipAddress ?? this.ipAddress,
+        port: port ?? this.port,
+        lastSeen: lastSeen ?? this.lastSeen,
+        isOnline: isOnline ?? this.isOnline,
+        capabilities:
+            capabilities.present ? capabilities.value : this.capabilities,
+      );
+  Device copyWithCompanion(DevicesCompanion data) {
+    return Device(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      platform: data.platform.present ? data.platform.value : this.platform,
+      version: data.version.present ? data.version.value : this.version,
+      ipAddress: data.ipAddress.present ? data.ipAddress.value : this.ipAddress,
+      port: data.port.present ? data.port.value : this.port,
+      lastSeen: data.lastSeen.present ? data.lastSeen.value : this.lastSeen,
+      isOnline: data.isOnline.present ? data.isOnline.value : this.isOnline,
+      capabilities: data.capabilities.present
+          ? data.capabilities.value
+          : this.capabilities,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Device(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('platform: $platform, ')
+          ..write('version: $version, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('port: $port, ')
+          ..write('lastSeen: $lastSeen, ')
+          ..write('isOnline: $isOnline, ')
+          ..write('capabilities: $capabilities')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, platform, version, ipAddress, port,
+      lastSeen, isOnline, capabilities);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Device &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.platform == this.platform &&
+          other.version == this.version &&
+          other.ipAddress == this.ipAddress &&
+          other.port == this.port &&
+          other.lastSeen == this.lastSeen &&
+          other.isOnline == this.isOnline &&
+          other.capabilities == this.capabilities);
+}
+
+class DevicesCompanion extends UpdateCompanion<Device> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> platform;
+  final Value<String> version;
+  final Value<String> ipAddress;
+  final Value<int> port;
+  final Value<DateTime> lastSeen;
+  final Value<bool> isOnline;
+  final Value<String?> capabilities;
+  final Value<int> rowid;
+  const DevicesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.platform = const Value.absent(),
+    this.version = const Value.absent(),
+    this.ipAddress = const Value.absent(),
+    this.port = const Value.absent(),
+    this.lastSeen = const Value.absent(),
+    this.isOnline = const Value.absent(),
+    this.capabilities = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DevicesCompanion.insert({
+    required String id,
+    required String name,
+    required String platform,
+    required String version,
+    required String ipAddress,
+    required int port,
+    required DateTime lastSeen,
+    this.isOnline = const Value.absent(),
+    this.capabilities = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        platform = Value(platform),
+        version = Value(version),
+        ipAddress = Value(ipAddress),
+        port = Value(port),
+        lastSeen = Value(lastSeen);
+  static Insertable<Device> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? platform,
+    Expression<String>? version,
+    Expression<String>? ipAddress,
+    Expression<int>? port,
+    Expression<DateTime>? lastSeen,
+    Expression<bool>? isOnline,
+    Expression<String>? capabilities,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (platform != null) 'platform': platform,
+      if (version != null) 'version': version,
+      if (ipAddress != null) 'ip_address': ipAddress,
+      if (port != null) 'port': port,
+      if (lastSeen != null) 'last_seen': lastSeen,
+      if (isOnline != null) 'is_online': isOnline,
+      if (capabilities != null) 'capabilities': capabilities,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DevicesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? platform,
+      Value<String>? version,
+      Value<String>? ipAddress,
+      Value<int>? port,
+      Value<DateTime>? lastSeen,
+      Value<bool>? isOnline,
+      Value<String?>? capabilities,
+      Value<int>? rowid}) {
+    return DevicesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      platform: platform ?? this.platform,
+      version: version ?? this.version,
+      ipAddress: ipAddress ?? this.ipAddress,
+      port: port ?? this.port,
+      lastSeen: lastSeen ?? this.lastSeen,
+      isOnline: isOnline ?? this.isOnline,
+      capabilities: capabilities ?? this.capabilities,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (platform.present) {
+      map['platform'] = Variable<String>(platform.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<String>(version.value);
+    }
+    if (ipAddress.present) {
+      map['ip_address'] = Variable<String>(ipAddress.value);
+    }
+    if (port.present) {
+      map['port'] = Variable<int>(port.value);
+    }
+    if (lastSeen.present) {
+      map['last_seen'] = Variable<DateTime>(lastSeen.value);
+    }
+    if (isOnline.present) {
+      map['is_online'] = Variable<bool>(isOnline.value);
+    }
+    if (capabilities.present) {
+      map['capabilities'] = Variable<String>(capabilities.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DevicesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('platform: $platform, ')
+          ..write('version: $version, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('port: $port, ')
+          ..write('lastSeen: $lastSeen, ')
+          ..write('isOnline: $isOnline, ')
+          ..write('capabilities: $capabilities, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncSessionsTable extends SyncSessions
+    with TableInfo<$SyncSessionsTable, SyncSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceDeviceIdMeta =
+      const VerificationMeta('sourceDeviceId');
+  @override
+  late final GeneratedColumn<String> sourceDeviceId = GeneratedColumn<String>(
+      'source_device_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetDeviceIdMeta =
+      const VerificationMeta('targetDeviceId');
+  @override
+  late final GeneratedColumn<String> targetDeviceId = GeneratedColumn<String>(
+      'target_device_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _directionMeta =
+      const VerificationMeta('direction');
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+      'direction', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _libraryIdsMeta =
+      const VerificationMeta('libraryIds');
+  @override
+  late final GeneratedColumn<String> libraryIds = GeneratedColumn<String>(
+      'library_ids', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
+  @override
+  late final GeneratedColumn<DateTime> startTime = GeneratedColumn<DateTime>(
+      'start_time', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endTimeMeta =
+      const VerificationMeta('endTime');
+  @override
+  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
+      'end_time', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _totalItemsMeta =
+      const VerificationMeta('totalItems');
+  @override
+  late final GeneratedColumn<int> totalItems = GeneratedColumn<int>(
+      'total_items', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _processedItemsMeta =
+      const VerificationMeta('processedItems');
+  @override
+  late final GeneratedColumn<int> processedItems = GeneratedColumn<int>(
+      'processed_items', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _failedItemsMeta =
+      const VerificationMeta('failedItems');
+  @override
+  late final GeneratedColumn<int> failedItems = GeneratedColumn<int>(
+      'failed_items', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _errorMessageMeta =
+      const VerificationMeta('errorMessage');
+  @override
+  late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
+      'error_message', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _metadataMeta =
+      const VerificationMeta('metadata');
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+      'metadata', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sourceDeviceId,
+        targetDeviceId,
+        type,
+        direction,
+        status,
+        libraryIds,
+        startTime,
+        endTime,
+        totalItems,
+        processedItems,
+        failedItems,
+        errorMessage,
+        metadata
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_sessions';
+  @override
+  VerificationContext validateIntegrity(Insertable<SyncSession> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('source_device_id')) {
+      context.handle(
+          _sourceDeviceIdMeta,
+          sourceDeviceId.isAcceptableOrUnknown(
+              data['source_device_id']!, _sourceDeviceIdMeta));
+    } else if (isInserting) {
+      context.missing(_sourceDeviceIdMeta);
+    }
+    if (data.containsKey('target_device_id')) {
+      context.handle(
+          _targetDeviceIdMeta,
+          targetDeviceId.isAcceptableOrUnknown(
+              data['target_device_id']!, _targetDeviceIdMeta));
+    } else if (isInserting) {
+      context.missing(_targetDeviceIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('direction')) {
+      context.handle(_directionMeta,
+          direction.isAcceptableOrUnknown(data['direction']!, _directionMeta));
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('library_ids')) {
+      context.handle(
+          _libraryIdsMeta,
+          libraryIds.isAcceptableOrUnknown(
+              data['library_ids']!, _libraryIdsMeta));
+    } else if (isInserting) {
+      context.missing(_libraryIdsMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(_endTimeMeta,
+          endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta));
+    }
+    if (data.containsKey('total_items')) {
+      context.handle(
+          _totalItemsMeta,
+          totalItems.isAcceptableOrUnknown(
+              data['total_items']!, _totalItemsMeta));
+    }
+    if (data.containsKey('processed_items')) {
+      context.handle(
+          _processedItemsMeta,
+          processedItems.isAcceptableOrUnknown(
+              data['processed_items']!, _processedItemsMeta));
+    }
+    if (data.containsKey('failed_items')) {
+      context.handle(
+          _failedItemsMeta,
+          failedItems.isAcceptableOrUnknown(
+              data['failed_items']!, _failedItemsMeta));
+    }
+    if (data.containsKey('error_message')) {
+      context.handle(
+          _errorMessageMeta,
+          errorMessage.isAcceptableOrUnknown(
+              data['error_message']!, _errorMessageMeta));
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(_metadataMeta,
+          metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncSession(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      sourceDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}source_device_id'])!,
+      targetDeviceId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}target_device_id'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      direction: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}direction'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      libraryIds: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}library_ids'])!,
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_time'])!,
+      endTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_time']),
+      totalItems: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_items'])!,
+      processedItems: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}processed_items'])!,
+      failedItems: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}failed_items'])!,
+      errorMessage: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}error_message']),
+      metadata: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata']),
+    );
+  }
+
+  @override
+  $SyncSessionsTable createAlias(String alias) {
+    return $SyncSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncSession extends DataClass implements Insertable<SyncSession> {
+  final String id;
+  final String sourceDeviceId;
+  final String targetDeviceId;
+  final String type;
+  final String direction;
+  final String status;
+  final String libraryIds;
+  final DateTime startTime;
+  final DateTime? endTime;
+  final int totalItems;
+  final int processedItems;
+  final int failedItems;
+  final String? errorMessage;
+  final String? metadata;
+  const SyncSession(
+      {required this.id,
+      required this.sourceDeviceId,
+      required this.targetDeviceId,
+      required this.type,
+      required this.direction,
+      required this.status,
+      required this.libraryIds,
+      required this.startTime,
+      this.endTime,
+      required this.totalItems,
+      required this.processedItems,
+      required this.failedItems,
+      this.errorMessage,
+      this.metadata});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['source_device_id'] = Variable<String>(sourceDeviceId);
+    map['target_device_id'] = Variable<String>(targetDeviceId);
+    map['type'] = Variable<String>(type);
+    map['direction'] = Variable<String>(direction);
+    map['status'] = Variable<String>(status);
+    map['library_ids'] = Variable<String>(libraryIds);
+    map['start_time'] = Variable<DateTime>(startTime);
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<DateTime>(endTime);
+    }
+    map['total_items'] = Variable<int>(totalItems);
+    map['processed_items'] = Variable<int>(processedItems);
+    map['failed_items'] = Variable<int>(failedItems);
+    if (!nullToAbsent || errorMessage != null) {
+      map['error_message'] = Variable<String>(errorMessage);
+    }
+    if (!nullToAbsent || metadata != null) {
+      map['metadata'] = Variable<String>(metadata);
+    }
+    return map;
+  }
+
+  SyncSessionsCompanion toCompanion(bool nullToAbsent) {
+    return SyncSessionsCompanion(
+      id: Value(id),
+      sourceDeviceId: Value(sourceDeviceId),
+      targetDeviceId: Value(targetDeviceId),
+      type: Value(type),
+      direction: Value(direction),
+      status: Value(status),
+      libraryIds: Value(libraryIds),
+      startTime: Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      totalItems: Value(totalItems),
+      processedItems: Value(processedItems),
+      failedItems: Value(failedItems),
+      errorMessage: errorMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(errorMessage),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
+    );
+  }
+
+  factory SyncSession.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncSession(
+      id: serializer.fromJson<String>(json['id']),
+      sourceDeviceId: serializer.fromJson<String>(json['sourceDeviceId']),
+      targetDeviceId: serializer.fromJson<String>(json['targetDeviceId']),
+      type: serializer.fromJson<String>(json['type']),
+      direction: serializer.fromJson<String>(json['direction']),
+      status: serializer.fromJson<String>(json['status']),
+      libraryIds: serializer.fromJson<String>(json['libraryIds']),
+      startTime: serializer.fromJson<DateTime>(json['startTime']),
+      endTime: serializer.fromJson<DateTime?>(json['endTime']),
+      totalItems: serializer.fromJson<int>(json['totalItems']),
+      processedItems: serializer.fromJson<int>(json['processedItems']),
+      failedItems: serializer.fromJson<int>(json['failedItems']),
+      errorMessage: serializer.fromJson<String?>(json['errorMessage']),
+      metadata: serializer.fromJson<String?>(json['metadata']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sourceDeviceId': serializer.toJson<String>(sourceDeviceId),
+      'targetDeviceId': serializer.toJson<String>(targetDeviceId),
+      'type': serializer.toJson<String>(type),
+      'direction': serializer.toJson<String>(direction),
+      'status': serializer.toJson<String>(status),
+      'libraryIds': serializer.toJson<String>(libraryIds),
+      'startTime': serializer.toJson<DateTime>(startTime),
+      'endTime': serializer.toJson<DateTime?>(endTime),
+      'totalItems': serializer.toJson<int>(totalItems),
+      'processedItems': serializer.toJson<int>(processedItems),
+      'failedItems': serializer.toJson<int>(failedItems),
+      'errorMessage': serializer.toJson<String?>(errorMessage),
+      'metadata': serializer.toJson<String?>(metadata),
+    };
+  }
+
+  SyncSession copyWith(
+          {String? id,
+          String? sourceDeviceId,
+          String? targetDeviceId,
+          String? type,
+          String? direction,
+          String? status,
+          String? libraryIds,
+          DateTime? startTime,
+          Value<DateTime?> endTime = const Value.absent(),
+          int? totalItems,
+          int? processedItems,
+          int? failedItems,
+          Value<String?> errorMessage = const Value.absent(),
+          Value<String?> metadata = const Value.absent()}) =>
+      SyncSession(
+        id: id ?? this.id,
+        sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
+        targetDeviceId: targetDeviceId ?? this.targetDeviceId,
+        type: type ?? this.type,
+        direction: direction ?? this.direction,
+        status: status ?? this.status,
+        libraryIds: libraryIds ?? this.libraryIds,
+        startTime: startTime ?? this.startTime,
+        endTime: endTime.present ? endTime.value : this.endTime,
+        totalItems: totalItems ?? this.totalItems,
+        processedItems: processedItems ?? this.processedItems,
+        failedItems: failedItems ?? this.failedItems,
+        errorMessage:
+            errorMessage.present ? errorMessage.value : this.errorMessage,
+        metadata: metadata.present ? metadata.value : this.metadata,
+      );
+  SyncSession copyWithCompanion(SyncSessionsCompanion data) {
+    return SyncSession(
+      id: data.id.present ? data.id.value : this.id,
+      sourceDeviceId: data.sourceDeviceId.present
+          ? data.sourceDeviceId.value
+          : this.sourceDeviceId,
+      targetDeviceId: data.targetDeviceId.present
+          ? data.targetDeviceId.value
+          : this.targetDeviceId,
+      type: data.type.present ? data.type.value : this.type,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      status: data.status.present ? data.status.value : this.status,
+      libraryIds:
+          data.libraryIds.present ? data.libraryIds.value : this.libraryIds,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      totalItems:
+          data.totalItems.present ? data.totalItems.value : this.totalItems,
+      processedItems: data.processedItems.present
+          ? data.processedItems.value
+          : this.processedItems,
+      failedItems:
+          data.failedItems.present ? data.failedItems.value : this.failedItems,
+      errorMessage: data.errorMessage.present
+          ? data.errorMessage.value
+          : this.errorMessage,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncSession(')
+          ..write('id: $id, ')
+          ..write('sourceDeviceId: $sourceDeviceId, ')
+          ..write('targetDeviceId: $targetDeviceId, ')
+          ..write('type: $type, ')
+          ..write('direction: $direction, ')
+          ..write('status: $status, ')
+          ..write('libraryIds: $libraryIds, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('totalItems: $totalItems, ')
+          ..write('processedItems: $processedItems, ')
+          ..write('failedItems: $failedItems, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('metadata: $metadata')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      sourceDeviceId,
+      targetDeviceId,
+      type,
+      direction,
+      status,
+      libraryIds,
+      startTime,
+      endTime,
+      totalItems,
+      processedItems,
+      failedItems,
+      errorMessage,
+      metadata);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncSession &&
+          other.id == this.id &&
+          other.sourceDeviceId == this.sourceDeviceId &&
+          other.targetDeviceId == this.targetDeviceId &&
+          other.type == this.type &&
+          other.direction == this.direction &&
+          other.status == this.status &&
+          other.libraryIds == this.libraryIds &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.totalItems == this.totalItems &&
+          other.processedItems == this.processedItems &&
+          other.failedItems == this.failedItems &&
+          other.errorMessage == this.errorMessage &&
+          other.metadata == this.metadata);
+}
+
+class SyncSessionsCompanion extends UpdateCompanion<SyncSession> {
+  final Value<String> id;
+  final Value<String> sourceDeviceId;
+  final Value<String> targetDeviceId;
+  final Value<String> type;
+  final Value<String> direction;
+  final Value<String> status;
+  final Value<String> libraryIds;
+  final Value<DateTime> startTime;
+  final Value<DateTime?> endTime;
+  final Value<int> totalItems;
+  final Value<int> processedItems;
+  final Value<int> failedItems;
+  final Value<String?> errorMessage;
+  final Value<String?> metadata;
+  final Value<int> rowid;
+  const SyncSessionsCompanion({
+    this.id = const Value.absent(),
+    this.sourceDeviceId = const Value.absent(),
+    this.targetDeviceId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.status = const Value.absent(),
+    this.libraryIds = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.totalItems = const Value.absent(),
+    this.processedItems = const Value.absent(),
+    this.failedItems = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncSessionsCompanion.insert({
+    required String id,
+    required String sourceDeviceId,
+    required String targetDeviceId,
+    required String type,
+    required String direction,
+    required String status,
+    required String libraryIds,
+    required DateTime startTime,
+    this.endTime = const Value.absent(),
+    this.totalItems = const Value.absent(),
+    this.processedItems = const Value.absent(),
+    this.failedItems = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        sourceDeviceId = Value(sourceDeviceId),
+        targetDeviceId = Value(targetDeviceId),
+        type = Value(type),
+        direction = Value(direction),
+        status = Value(status),
+        libraryIds = Value(libraryIds),
+        startTime = Value(startTime);
+  static Insertable<SyncSession> custom({
+    Expression<String>? id,
+    Expression<String>? sourceDeviceId,
+    Expression<String>? targetDeviceId,
+    Expression<String>? type,
+    Expression<String>? direction,
+    Expression<String>? status,
+    Expression<String>? libraryIds,
+    Expression<DateTime>? startTime,
+    Expression<DateTime>? endTime,
+    Expression<int>? totalItems,
+    Expression<int>? processedItems,
+    Expression<int>? failedItems,
+    Expression<String>? errorMessage,
+    Expression<String>? metadata,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sourceDeviceId != null) 'source_device_id': sourceDeviceId,
+      if (targetDeviceId != null) 'target_device_id': targetDeviceId,
+      if (type != null) 'type': type,
+      if (direction != null) 'direction': direction,
+      if (status != null) 'status': status,
+      if (libraryIds != null) 'library_ids': libraryIds,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (totalItems != null) 'total_items': totalItems,
+      if (processedItems != null) 'processed_items': processedItems,
+      if (failedItems != null) 'failed_items': failedItems,
+      if (errorMessage != null) 'error_message': errorMessage,
+      if (metadata != null) 'metadata': metadata,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncSessionsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? sourceDeviceId,
+      Value<String>? targetDeviceId,
+      Value<String>? type,
+      Value<String>? direction,
+      Value<String>? status,
+      Value<String>? libraryIds,
+      Value<DateTime>? startTime,
+      Value<DateTime?>? endTime,
+      Value<int>? totalItems,
+      Value<int>? processedItems,
+      Value<int>? failedItems,
+      Value<String?>? errorMessage,
+      Value<String?>? metadata,
+      Value<int>? rowid}) {
+    return SyncSessionsCompanion(
+      id: id ?? this.id,
+      sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
+      targetDeviceId: targetDeviceId ?? this.targetDeviceId,
+      type: type ?? this.type,
+      direction: direction ?? this.direction,
+      status: status ?? this.status,
+      libraryIds: libraryIds ?? this.libraryIds,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      totalItems: totalItems ?? this.totalItems,
+      processedItems: processedItems ?? this.processedItems,
+      failedItems: failedItems ?? this.failedItems,
+      errorMessage: errorMessage ?? this.errorMessage,
+      metadata: metadata ?? this.metadata,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sourceDeviceId.present) {
+      map['source_device_id'] = Variable<String>(sourceDeviceId.value);
+    }
+    if (targetDeviceId.present) {
+      map['target_device_id'] = Variable<String>(targetDeviceId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (libraryIds.present) {
+      map['library_ids'] = Variable<String>(libraryIds.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<DateTime>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<DateTime>(endTime.value);
+    }
+    if (totalItems.present) {
+      map['total_items'] = Variable<int>(totalItems.value);
+    }
+    if (processedItems.present) {
+      map['processed_items'] = Variable<int>(processedItems.value);
+    }
+    if (failedItems.present) {
+      map['failed_items'] = Variable<int>(failedItems.value);
+    }
+    if (errorMessage.present) {
+      map['error_message'] = Variable<String>(errorMessage.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('sourceDeviceId: $sourceDeviceId, ')
+          ..write('targetDeviceId: $targetDeviceId, ')
+          ..write('type: $type, ')
+          ..write('direction: $direction, ')
+          ..write('status: $status, ')
+          ..write('libraryIds: $libraryIds, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('totalItems: $totalItems, ')
+          ..write('processedItems: $processedItems, ')
+          ..write('failedItems: $failedItems, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('metadata: $metadata, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncConflictsTable extends SyncConflicts
+    with TableInfo<$SyncConflictsTable, SyncConflict> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncConflictsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sessionIdMeta =
+      const VerificationMeta('sessionId');
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+      'session_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES sync_sessions (id) ON DELETE CASCADE'));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+      'item_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _itemTypeMeta =
+      const VerificationMeta('itemType');
+  @override
+  late final GeneratedColumn<String> itemType = GeneratedColumn<String>(
+      'item_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sourceDataMeta =
+      const VerificationMeta('sourceData');
+  @override
+  late final GeneratedColumn<String> sourceData = GeneratedColumn<String>(
+      'source_data', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetDataMeta =
+      const VerificationMeta('targetData');
+  @override
+  late final GeneratedColumn<String> targetData = GeneratedColumn<String>(
+      'target_data', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _resolutionMeta =
+      const VerificationMeta('resolution');
+  @override
+  late final GeneratedColumn<String> resolution = GeneratedColumn<String>(
+      'resolution', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _detectedAtMeta =
+      const VerificationMeta('detectedAt');
+  @override
+  late final GeneratedColumn<DateTime> detectedAt = GeneratedColumn<DateTime>(
+      'detected_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _resolvedAtMeta =
+      const VerificationMeta('resolvedAt');
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+      'resolved_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _resolvedByMeta =
+      const VerificationMeta('resolvedBy');
+  @override
+  late final GeneratedColumn<String> resolvedBy = GeneratedColumn<String>(
+      'resolved_by', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _resolvedDataMeta =
+      const VerificationMeta('resolvedData');
+  @override
+  late final GeneratedColumn<String> resolvedData = GeneratedColumn<String>(
+      'resolved_data', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isResolvedMeta =
+      const VerificationMeta('isResolved');
+  @override
+  late final GeneratedColumn<bool> isResolved = GeneratedColumn<bool>(
+      'is_resolved', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_resolved" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        sessionId,
+        type,
+        itemId,
+        itemType,
+        sourceData,
+        targetData,
+        resolution,
+        detectedAt,
+        resolvedAt,
+        resolvedBy,
+        resolvedData,
+        isResolved
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_conflicts';
+  @override
+  VerificationContext validateIntegrity(Insertable<SyncConflict> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(_sessionIdMeta,
+          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(_itemIdMeta,
+          itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('item_type')) {
+      context.handle(_itemTypeMeta,
+          itemType.isAcceptableOrUnknown(data['item_type']!, _itemTypeMeta));
+    } else if (isInserting) {
+      context.missing(_itemTypeMeta);
+    }
+    if (data.containsKey('source_data')) {
+      context.handle(
+          _sourceDataMeta,
+          sourceData.isAcceptableOrUnknown(
+              data['source_data']!, _sourceDataMeta));
+    } else if (isInserting) {
+      context.missing(_sourceDataMeta);
+    }
+    if (data.containsKey('target_data')) {
+      context.handle(
+          _targetDataMeta,
+          targetData.isAcceptableOrUnknown(
+              data['target_data']!, _targetDataMeta));
+    } else if (isInserting) {
+      context.missing(_targetDataMeta);
+    }
+    if (data.containsKey('resolution')) {
+      context.handle(
+          _resolutionMeta,
+          resolution.isAcceptableOrUnknown(
+              data['resolution']!, _resolutionMeta));
+    } else if (isInserting) {
+      context.missing(_resolutionMeta);
+    }
+    if (data.containsKey('detected_at')) {
+      context.handle(
+          _detectedAtMeta,
+          detectedAt.isAcceptableOrUnknown(
+              data['detected_at']!, _detectedAtMeta));
+    } else if (isInserting) {
+      context.missing(_detectedAtMeta);
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+          _resolvedAtMeta,
+          resolvedAt.isAcceptableOrUnknown(
+              data['resolved_at']!, _resolvedAtMeta));
+    }
+    if (data.containsKey('resolved_by')) {
+      context.handle(
+          _resolvedByMeta,
+          resolvedBy.isAcceptableOrUnknown(
+              data['resolved_by']!, _resolvedByMeta));
+    }
+    if (data.containsKey('resolved_data')) {
+      context.handle(
+          _resolvedDataMeta,
+          resolvedData.isAcceptableOrUnknown(
+              data['resolved_data']!, _resolvedDataMeta));
+    }
+    if (data.containsKey('is_resolved')) {
+      context.handle(
+          _isResolvedMeta,
+          isResolved.isAcceptableOrUnknown(
+              data['is_resolved']!, _isResolvedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncConflict map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncConflict(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      itemId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}item_id'])!,
+      itemType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}item_type'])!,
+      sourceData: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_data'])!,
+      targetData: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}target_data'])!,
+      resolution: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}resolution'])!,
+      detectedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}detected_at'])!,
+      resolvedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}resolved_at']),
+      resolvedBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}resolved_by']),
+      resolvedData: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}resolved_data']),
+      isResolved: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_resolved'])!,
+    );
+  }
+
+  @override
+  $SyncConflictsTable createAlias(String alias) {
+    return $SyncConflictsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncConflict extends DataClass implements Insertable<SyncConflict> {
+  final String id;
+  final String sessionId;
+  final String type;
+  final String itemId;
+  final String itemType;
+  final String sourceData;
+  final String targetData;
+  final String resolution;
+  final DateTime detectedAt;
+  final DateTime? resolvedAt;
+  final String? resolvedBy;
+  final String? resolvedData;
+  final bool isResolved;
+  const SyncConflict(
+      {required this.id,
+      required this.sessionId,
+      required this.type,
+      required this.itemId,
+      required this.itemType,
+      required this.sourceData,
+      required this.targetData,
+      required this.resolution,
+      required this.detectedAt,
+      this.resolvedAt,
+      this.resolvedBy,
+      this.resolvedData,
+      required this.isResolved});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['type'] = Variable<String>(type);
+    map['item_id'] = Variable<String>(itemId);
+    map['item_type'] = Variable<String>(itemType);
+    map['source_data'] = Variable<String>(sourceData);
+    map['target_data'] = Variable<String>(targetData);
+    map['resolution'] = Variable<String>(resolution);
+    map['detected_at'] = Variable<DateTime>(detectedAt);
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    if (!nullToAbsent || resolvedBy != null) {
+      map['resolved_by'] = Variable<String>(resolvedBy);
+    }
+    if (!nullToAbsent || resolvedData != null) {
+      map['resolved_data'] = Variable<String>(resolvedData);
+    }
+    map['is_resolved'] = Variable<bool>(isResolved);
+    return map;
+  }
+
+  SyncConflictsCompanion toCompanion(bool nullToAbsent) {
+    return SyncConflictsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      type: Value(type),
+      itemId: Value(itemId),
+      itemType: Value(itemType),
+      sourceData: Value(sourceData),
+      targetData: Value(targetData),
+      resolution: Value(resolution),
+      detectedAt: Value(detectedAt),
+      resolvedAt: resolvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedAt),
+      resolvedBy: resolvedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedBy),
+      resolvedData: resolvedData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedData),
+      isResolved: Value(isResolved),
+    );
+  }
+
+  factory SyncConflict.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncConflict(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      type: serializer.fromJson<String>(json['type']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      itemType: serializer.fromJson<String>(json['itemType']),
+      sourceData: serializer.fromJson<String>(json['sourceData']),
+      targetData: serializer.fromJson<String>(json['targetData']),
+      resolution: serializer.fromJson<String>(json['resolution']),
+      detectedAt: serializer.fromJson<DateTime>(json['detectedAt']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+      resolvedBy: serializer.fromJson<String?>(json['resolvedBy']),
+      resolvedData: serializer.fromJson<String?>(json['resolvedData']),
+      isResolved: serializer.fromJson<bool>(json['isResolved']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'type': serializer.toJson<String>(type),
+      'itemId': serializer.toJson<String>(itemId),
+      'itemType': serializer.toJson<String>(itemType),
+      'sourceData': serializer.toJson<String>(sourceData),
+      'targetData': serializer.toJson<String>(targetData),
+      'resolution': serializer.toJson<String>(resolution),
+      'detectedAt': serializer.toJson<DateTime>(detectedAt),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+      'resolvedBy': serializer.toJson<String?>(resolvedBy),
+      'resolvedData': serializer.toJson<String?>(resolvedData),
+      'isResolved': serializer.toJson<bool>(isResolved),
+    };
+  }
+
+  SyncConflict copyWith(
+          {String? id,
+          String? sessionId,
+          String? type,
+          String? itemId,
+          String? itemType,
+          String? sourceData,
+          String? targetData,
+          String? resolution,
+          DateTime? detectedAt,
+          Value<DateTime?> resolvedAt = const Value.absent(),
+          Value<String?> resolvedBy = const Value.absent(),
+          Value<String?> resolvedData = const Value.absent(),
+          bool? isResolved}) =>
+      SyncConflict(
+        id: id ?? this.id,
+        sessionId: sessionId ?? this.sessionId,
+        type: type ?? this.type,
+        itemId: itemId ?? this.itemId,
+        itemType: itemType ?? this.itemType,
+        sourceData: sourceData ?? this.sourceData,
+        targetData: targetData ?? this.targetData,
+        resolution: resolution ?? this.resolution,
+        detectedAt: detectedAt ?? this.detectedAt,
+        resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+        resolvedBy: resolvedBy.present ? resolvedBy.value : this.resolvedBy,
+        resolvedData:
+            resolvedData.present ? resolvedData.value : this.resolvedData,
+        isResolved: isResolved ?? this.isResolved,
+      );
+  SyncConflict copyWithCompanion(SyncConflictsCompanion data) {
+    return SyncConflict(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      type: data.type.present ? data.type.value : this.type,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      itemType: data.itemType.present ? data.itemType.value : this.itemType,
+      sourceData:
+          data.sourceData.present ? data.sourceData.value : this.sourceData,
+      targetData:
+          data.targetData.present ? data.targetData.value : this.targetData,
+      resolution:
+          data.resolution.present ? data.resolution.value : this.resolution,
+      detectedAt:
+          data.detectedAt.present ? data.detectedAt.value : this.detectedAt,
+      resolvedAt:
+          data.resolvedAt.present ? data.resolvedAt.value : this.resolvedAt,
+      resolvedBy:
+          data.resolvedBy.present ? data.resolvedBy.value : this.resolvedBy,
+      resolvedData: data.resolvedData.present
+          ? data.resolvedData.value
+          : this.resolvedData,
+      isResolved:
+          data.isResolved.present ? data.isResolved.value : this.isResolved,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncConflict(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('type: $type, ')
+          ..write('itemId: $itemId, ')
+          ..write('itemType: $itemType, ')
+          ..write('sourceData: $sourceData, ')
+          ..write('targetData: $targetData, ')
+          ..write('resolution: $resolution, ')
+          ..write('detectedAt: $detectedAt, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('resolvedBy: $resolvedBy, ')
+          ..write('resolvedData: $resolvedData, ')
+          ..write('isResolved: $isResolved')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      sessionId,
+      type,
+      itemId,
+      itemType,
+      sourceData,
+      targetData,
+      resolution,
+      detectedAt,
+      resolvedAt,
+      resolvedBy,
+      resolvedData,
+      isResolved);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncConflict &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.type == this.type &&
+          other.itemId == this.itemId &&
+          other.itemType == this.itemType &&
+          other.sourceData == this.sourceData &&
+          other.targetData == this.targetData &&
+          other.resolution == this.resolution &&
+          other.detectedAt == this.detectedAt &&
+          other.resolvedAt == this.resolvedAt &&
+          other.resolvedBy == this.resolvedBy &&
+          other.resolvedData == this.resolvedData &&
+          other.isResolved == this.isResolved);
+}
+
+class SyncConflictsCompanion extends UpdateCompanion<SyncConflict> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<String> type;
+  final Value<String> itemId;
+  final Value<String> itemType;
+  final Value<String> sourceData;
+  final Value<String> targetData;
+  final Value<String> resolution;
+  final Value<DateTime> detectedAt;
+  final Value<DateTime?> resolvedAt;
+  final Value<String?> resolvedBy;
+  final Value<String?> resolvedData;
+  final Value<bool> isResolved;
+  final Value<int> rowid;
+  const SyncConflictsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.itemType = const Value.absent(),
+    this.sourceData = const Value.absent(),
+    this.targetData = const Value.absent(),
+    this.resolution = const Value.absent(),
+    this.detectedAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.resolvedBy = const Value.absent(),
+    this.resolvedData = const Value.absent(),
+    this.isResolved = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncConflictsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required String type,
+    required String itemId,
+    required String itemType,
+    required String sourceData,
+    required String targetData,
+    required String resolution,
+    required DateTime detectedAt,
+    this.resolvedAt = const Value.absent(),
+    this.resolvedBy = const Value.absent(),
+    this.resolvedData = const Value.absent(),
+    this.isResolved = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        sessionId = Value(sessionId),
+        type = Value(type),
+        itemId = Value(itemId),
+        itemType = Value(itemType),
+        sourceData = Value(sourceData),
+        targetData = Value(targetData),
+        resolution = Value(resolution),
+        detectedAt = Value(detectedAt);
+  static Insertable<SyncConflict> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<String>? type,
+    Expression<String>? itemId,
+    Expression<String>? itemType,
+    Expression<String>? sourceData,
+    Expression<String>? targetData,
+    Expression<String>? resolution,
+    Expression<DateTime>? detectedAt,
+    Expression<DateTime>? resolvedAt,
+    Expression<String>? resolvedBy,
+    Expression<String>? resolvedData,
+    Expression<bool>? isResolved,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (type != null) 'type': type,
+      if (itemId != null) 'item_id': itemId,
+      if (itemType != null) 'item_type': itemType,
+      if (sourceData != null) 'source_data': sourceData,
+      if (targetData != null) 'target_data': targetData,
+      if (resolution != null) 'resolution': resolution,
+      if (detectedAt != null) 'detected_at': detectedAt,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+      if (resolvedBy != null) 'resolved_by': resolvedBy,
+      if (resolvedData != null) 'resolved_data': resolvedData,
+      if (isResolved != null) 'is_resolved': isResolved,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncConflictsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? sessionId,
+      Value<String>? type,
+      Value<String>? itemId,
+      Value<String>? itemType,
+      Value<String>? sourceData,
+      Value<String>? targetData,
+      Value<String>? resolution,
+      Value<DateTime>? detectedAt,
+      Value<DateTime?>? resolvedAt,
+      Value<String?>? resolvedBy,
+      Value<String?>? resolvedData,
+      Value<bool>? isResolved,
+      Value<int>? rowid}) {
+    return SyncConflictsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      type: type ?? this.type,
+      itemId: itemId ?? this.itemId,
+      itemType: itemType ?? this.itemType,
+      sourceData: sourceData ?? this.sourceData,
+      targetData: targetData ?? this.targetData,
+      resolution: resolution ?? this.resolution,
+      detectedAt: detectedAt ?? this.detectedAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      resolvedBy: resolvedBy ?? this.resolvedBy,
+      resolvedData: resolvedData ?? this.resolvedData,
+      isResolved: isResolved ?? this.isResolved,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (itemType.present) {
+      map['item_type'] = Variable<String>(itemType.value);
+    }
+    if (sourceData.present) {
+      map['source_data'] = Variable<String>(sourceData.value);
+    }
+    if (targetData.present) {
+      map['target_data'] = Variable<String>(targetData.value);
+    }
+    if (resolution.present) {
+      map['resolution'] = Variable<String>(resolution.value);
+    }
+    if (detectedAt.present) {
+      map['detected_at'] = Variable<DateTime>(detectedAt.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    if (resolvedBy.present) {
+      map['resolved_by'] = Variable<String>(resolvedBy.value);
+    }
+    if (resolvedData.present) {
+      map['resolved_data'] = Variable<String>(resolvedData.value);
+    }
+    if (isResolved.present) {
+      map['is_resolved'] = Variable<bool>(isResolved.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncConflictsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('type: $type, ')
+          ..write('itemId: $itemId, ')
+          ..write('itemType: $itemType, ')
+          ..write('sourceData: $sourceData, ')
+          ..write('targetData: $targetData, ')
+          ..write('resolution: $resolution, ')
+          ..write('detectedAt: $detectedAt, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('resolvedBy: $resolvedBy, ')
+          ..write('resolvedData: $resolvedData, ')
+          ..write('isResolved: $isResolved, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2607,12 +4434,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MangaPagesTable mangaPages = $MangaPagesTable(this);
   late final $ReadingProgressesTable readingProgresses =
       $ReadingProgressesTable(this);
+  late final $DevicesTable devices = $DevicesTable(this);
+  late final $SyncSessionsTable syncSessions = $SyncSessionsTable(this);
+  late final $SyncConflictsTable syncConflicts = $SyncConflictsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [libraries, mangas, mangaPages, readingProgresses];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        libraries,
+        mangas,
+        mangaPages,
+        readingProgresses,
+        devices,
+        syncSessions,
+        syncConflicts
+      ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
         [
@@ -2635,6 +4472,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('reading_progresses', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('sync_sessions',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('sync_conflicts', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -4355,6 +6199,1028 @@ typedef $$ReadingProgressesTableProcessedTableManager = ProcessedTableManager<
     (ReadingProgressesData, $$ReadingProgressesTableReferences),
     ReadingProgressesData,
     PrefetchHooks Function({bool mangaId})>;
+typedef $$DevicesTableCreateCompanionBuilder = DevicesCompanion Function({
+  required String id,
+  required String name,
+  required String platform,
+  required String version,
+  required String ipAddress,
+  required int port,
+  required DateTime lastSeen,
+  Value<bool> isOnline,
+  Value<String?> capabilities,
+  Value<int> rowid,
+});
+typedef $$DevicesTableUpdateCompanionBuilder = DevicesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> platform,
+  Value<String> version,
+  Value<String> ipAddress,
+  Value<int> port,
+  Value<DateTime> lastSeen,
+  Value<bool> isOnline,
+  Value<String?> capabilities,
+  Value<int> rowid,
+});
+
+class $$DevicesTableFilterComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get platform => $composableBuilder(
+      column: $table.platform, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ipAddress => $composableBuilder(
+      column: $table.ipAddress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get port => $composableBuilder(
+      column: $table.port, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSeen => $composableBuilder(
+      column: $table.lastSeen, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isOnline => $composableBuilder(
+      column: $table.isOnline, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get capabilities => $composableBuilder(
+      column: $table.capabilities, builder: (column) => ColumnFilters(column));
+}
+
+class $$DevicesTableOrderingComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get platform => $composableBuilder(
+      column: $table.platform, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ipAddress => $composableBuilder(
+      column: $table.ipAddress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get port => $composableBuilder(
+      column: $table.port, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSeen => $composableBuilder(
+      column: $table.lastSeen, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isOnline => $composableBuilder(
+      column: $table.isOnline, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get capabilities => $composableBuilder(
+      column: $table.capabilities,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$DevicesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DevicesTable> {
+  $$DevicesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get platform =>
+      $composableBuilder(column: $table.platform, builder: (column) => column);
+
+  GeneratedColumn<String> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get ipAddress =>
+      $composableBuilder(column: $table.ipAddress, builder: (column) => column);
+
+  GeneratedColumn<int> get port =>
+      $composableBuilder(column: $table.port, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSeen =>
+      $composableBuilder(column: $table.lastSeen, builder: (column) => column);
+
+  GeneratedColumn<bool> get isOnline =>
+      $composableBuilder(column: $table.isOnline, builder: (column) => column);
+
+  GeneratedColumn<String> get capabilities => $composableBuilder(
+      column: $table.capabilities, builder: (column) => column);
+}
+
+class $$DevicesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DevicesTable,
+    Device,
+    $$DevicesTableFilterComposer,
+    $$DevicesTableOrderingComposer,
+    $$DevicesTableAnnotationComposer,
+    $$DevicesTableCreateCompanionBuilder,
+    $$DevicesTableUpdateCompanionBuilder,
+    (Device, BaseReferences<_$AppDatabase, $DevicesTable, Device>),
+    Device,
+    PrefetchHooks Function()> {
+  $$DevicesTableTableManager(_$AppDatabase db, $DevicesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DevicesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DevicesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DevicesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> platform = const Value.absent(),
+            Value<String> version = const Value.absent(),
+            Value<String> ipAddress = const Value.absent(),
+            Value<int> port = const Value.absent(),
+            Value<DateTime> lastSeen = const Value.absent(),
+            Value<bool> isOnline = const Value.absent(),
+            Value<String?> capabilities = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DevicesCompanion(
+            id: id,
+            name: name,
+            platform: platform,
+            version: version,
+            ipAddress: ipAddress,
+            port: port,
+            lastSeen: lastSeen,
+            isOnline: isOnline,
+            capabilities: capabilities,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String platform,
+            required String version,
+            required String ipAddress,
+            required int port,
+            required DateTime lastSeen,
+            Value<bool> isOnline = const Value.absent(),
+            Value<String?> capabilities = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              DevicesCompanion.insert(
+            id: id,
+            name: name,
+            platform: platform,
+            version: version,
+            ipAddress: ipAddress,
+            port: port,
+            lastSeen: lastSeen,
+            isOnline: isOnline,
+            capabilities: capabilities,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DevicesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DevicesTable,
+    Device,
+    $$DevicesTableFilterComposer,
+    $$DevicesTableOrderingComposer,
+    $$DevicesTableAnnotationComposer,
+    $$DevicesTableCreateCompanionBuilder,
+    $$DevicesTableUpdateCompanionBuilder,
+    (Device, BaseReferences<_$AppDatabase, $DevicesTable, Device>),
+    Device,
+    PrefetchHooks Function()>;
+typedef $$SyncSessionsTableCreateCompanionBuilder = SyncSessionsCompanion
+    Function({
+  required String id,
+  required String sourceDeviceId,
+  required String targetDeviceId,
+  required String type,
+  required String direction,
+  required String status,
+  required String libraryIds,
+  required DateTime startTime,
+  Value<DateTime?> endTime,
+  Value<int> totalItems,
+  Value<int> processedItems,
+  Value<int> failedItems,
+  Value<String?> errorMessage,
+  Value<String?> metadata,
+  Value<int> rowid,
+});
+typedef $$SyncSessionsTableUpdateCompanionBuilder = SyncSessionsCompanion
+    Function({
+  Value<String> id,
+  Value<String> sourceDeviceId,
+  Value<String> targetDeviceId,
+  Value<String> type,
+  Value<String> direction,
+  Value<String> status,
+  Value<String> libraryIds,
+  Value<DateTime> startTime,
+  Value<DateTime?> endTime,
+  Value<int> totalItems,
+  Value<int> processedItems,
+  Value<int> failedItems,
+  Value<String?> errorMessage,
+  Value<String?> metadata,
+  Value<int> rowid,
+});
+
+final class $$SyncSessionsTableReferences
+    extends BaseReferences<_$AppDatabase, $SyncSessionsTable, SyncSession> {
+  $$SyncSessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$SyncConflictsTable, List<SyncConflict>>
+      _syncConflictsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.syncConflicts,
+              aliasName: $_aliasNameGenerator(
+                  db.syncSessions.id, db.syncConflicts.sessionId));
+
+  $$SyncConflictsTableProcessedTableManager get syncConflictsRefs {
+    final manager = $$SyncConflictsTableTableManager($_db, $_db.syncConflicts)
+        .filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_syncConflictsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$SyncSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncSessionsTable> {
+  $$SyncSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceDeviceId => $composableBuilder(
+      column: $table.sourceDeviceId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetDeviceId => $composableBuilder(
+      column: $table.targetDeviceId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get libraryIds => $composableBuilder(
+      column: $table.libraryIds, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalItems => $composableBuilder(
+      column: $table.totalItems, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get processedItems => $composableBuilder(
+      column: $table.processedItems,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get failedItems => $composableBuilder(
+      column: $table.failedItems, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get errorMessage => $composableBuilder(
+      column: $table.errorMessage, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> syncConflictsRefs(
+      Expression<bool> Function($$SyncConflictsTableFilterComposer f) f) {
+    final $$SyncConflictsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncConflicts,
+        getReferencedColumn: (t) => t.sessionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncConflictsTableFilterComposer(
+              $db: $db,
+              $table: $db.syncConflicts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SyncSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncSessionsTable> {
+  $$SyncSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceDeviceId => $composableBuilder(
+      column: $table.sourceDeviceId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetDeviceId => $composableBuilder(
+      column: $table.targetDeviceId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+      column: $table.direction, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get libraryIds => $composableBuilder(
+      column: $table.libraryIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalItems => $composableBuilder(
+      column: $table.totalItems, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get processedItems => $composableBuilder(
+      column: $table.processedItems,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get failedItems => $composableBuilder(
+      column: $table.failedItems, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get errorMessage => $composableBuilder(
+      column: $table.errorMessage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SyncSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncSessionsTable> {
+  $$SyncSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceDeviceId => $composableBuilder(
+      column: $table.sourceDeviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get targetDeviceId => $composableBuilder(
+      column: $table.targetDeviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get libraryIds => $composableBuilder(
+      column: $table.libraryIds, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<int> get totalItems => $composableBuilder(
+      column: $table.totalItems, builder: (column) => column);
+
+  GeneratedColumn<int> get processedItems => $composableBuilder(
+      column: $table.processedItems, builder: (column) => column);
+
+  GeneratedColumn<int> get failedItems => $composableBuilder(
+      column: $table.failedItems, builder: (column) => column);
+
+  GeneratedColumn<String> get errorMessage => $composableBuilder(
+      column: $table.errorMessage, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  Expression<T> syncConflictsRefs<T extends Object>(
+      Expression<T> Function($$SyncConflictsTableAnnotationComposer a) f) {
+    final $$SyncConflictsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.syncConflicts,
+        getReferencedColumn: (t) => t.sessionId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncConflictsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncConflicts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SyncSessionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SyncSessionsTable,
+    SyncSession,
+    $$SyncSessionsTableFilterComposer,
+    $$SyncSessionsTableOrderingComposer,
+    $$SyncSessionsTableAnnotationComposer,
+    $$SyncSessionsTableCreateCompanionBuilder,
+    $$SyncSessionsTableUpdateCompanionBuilder,
+    (SyncSession, $$SyncSessionsTableReferences),
+    SyncSession,
+    PrefetchHooks Function({bool syncConflictsRefs})> {
+  $$SyncSessionsTableTableManager(_$AppDatabase db, $SyncSessionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> sourceDeviceId = const Value.absent(),
+            Value<String> targetDeviceId = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> direction = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String> libraryIds = const Value.absent(),
+            Value<DateTime> startTime = const Value.absent(),
+            Value<DateTime?> endTime = const Value.absent(),
+            Value<int> totalItems = const Value.absent(),
+            Value<int> processedItems = const Value.absent(),
+            Value<int> failedItems = const Value.absent(),
+            Value<String?> errorMessage = const Value.absent(),
+            Value<String?> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncSessionsCompanion(
+            id: id,
+            sourceDeviceId: sourceDeviceId,
+            targetDeviceId: targetDeviceId,
+            type: type,
+            direction: direction,
+            status: status,
+            libraryIds: libraryIds,
+            startTime: startTime,
+            endTime: endTime,
+            totalItems: totalItems,
+            processedItems: processedItems,
+            failedItems: failedItems,
+            errorMessage: errorMessage,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String sourceDeviceId,
+            required String targetDeviceId,
+            required String type,
+            required String direction,
+            required String status,
+            required String libraryIds,
+            required DateTime startTime,
+            Value<DateTime?> endTime = const Value.absent(),
+            Value<int> totalItems = const Value.absent(),
+            Value<int> processedItems = const Value.absent(),
+            Value<int> failedItems = const Value.absent(),
+            Value<String?> errorMessage = const Value.absent(),
+            Value<String?> metadata = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncSessionsCompanion.insert(
+            id: id,
+            sourceDeviceId: sourceDeviceId,
+            targetDeviceId: targetDeviceId,
+            type: type,
+            direction: direction,
+            status: status,
+            libraryIds: libraryIds,
+            startTime: startTime,
+            endTime: endTime,
+            totalItems: totalItems,
+            processedItems: processedItems,
+            failedItems: failedItems,
+            errorMessage: errorMessage,
+            metadata: metadata,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SyncSessionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({syncConflictsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (syncConflictsRefs) db.syncConflicts
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (syncConflictsRefs)
+                    await $_getPrefetchedData<SyncSession, $SyncSessionsTable,
+                            SyncConflict>(
+                        currentTable: table,
+                        referencedTable: $$SyncSessionsTableReferences
+                            ._syncConflictsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SyncSessionsTableReferences(db, table, p0)
+                                .syncConflictsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.sessionId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SyncSessionsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SyncSessionsTable,
+    SyncSession,
+    $$SyncSessionsTableFilterComposer,
+    $$SyncSessionsTableOrderingComposer,
+    $$SyncSessionsTableAnnotationComposer,
+    $$SyncSessionsTableCreateCompanionBuilder,
+    $$SyncSessionsTableUpdateCompanionBuilder,
+    (SyncSession, $$SyncSessionsTableReferences),
+    SyncSession,
+    PrefetchHooks Function({bool syncConflictsRefs})>;
+typedef $$SyncConflictsTableCreateCompanionBuilder = SyncConflictsCompanion
+    Function({
+  required String id,
+  required String sessionId,
+  required String type,
+  required String itemId,
+  required String itemType,
+  required String sourceData,
+  required String targetData,
+  required String resolution,
+  required DateTime detectedAt,
+  Value<DateTime?> resolvedAt,
+  Value<String?> resolvedBy,
+  Value<String?> resolvedData,
+  Value<bool> isResolved,
+  Value<int> rowid,
+});
+typedef $$SyncConflictsTableUpdateCompanionBuilder = SyncConflictsCompanion
+    Function({
+  Value<String> id,
+  Value<String> sessionId,
+  Value<String> type,
+  Value<String> itemId,
+  Value<String> itemType,
+  Value<String> sourceData,
+  Value<String> targetData,
+  Value<String> resolution,
+  Value<DateTime> detectedAt,
+  Value<DateTime?> resolvedAt,
+  Value<String?> resolvedBy,
+  Value<String?> resolvedData,
+  Value<bool> isResolved,
+  Value<int> rowid,
+});
+
+final class $$SyncConflictsTableReferences
+    extends BaseReferences<_$AppDatabase, $SyncConflictsTable, SyncConflict> {
+  $$SyncConflictsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SyncSessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.syncSessions.createAlias(
+          $_aliasNameGenerator(db.syncConflicts.sessionId, db.syncSessions.id));
+
+  $$SyncSessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$SyncSessionsTableTableManager($_db, $_db.syncSessions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SyncConflictsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncConflictsTable> {
+  $$SyncConflictsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get itemType => $composableBuilder(
+      column: $table.itemType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceData => $composableBuilder(
+      column: $table.sourceData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get targetData => $composableBuilder(
+      column: $table.targetData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get resolution => $composableBuilder(
+      column: $table.resolution, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get detectedAt => $composableBuilder(
+      column: $table.detectedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get resolvedBy => $composableBuilder(
+      column: $table.resolvedBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get resolvedData => $composableBuilder(
+      column: $table.resolvedData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isResolved => $composableBuilder(
+      column: $table.isResolved, builder: (column) => ColumnFilters(column));
+
+  $$SyncSessionsTableFilterComposer get sessionId {
+    final $$SyncSessionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.syncSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncSessionsTableFilterComposer(
+              $db: $db,
+              $table: $db.syncSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SyncConflictsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncConflictsTable> {
+  $$SyncConflictsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get itemType => $composableBuilder(
+      column: $table.itemType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceData => $composableBuilder(
+      column: $table.sourceData, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get targetData => $composableBuilder(
+      column: $table.targetData, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get resolution => $composableBuilder(
+      column: $table.resolution, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get detectedAt => $composableBuilder(
+      column: $table.detectedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get resolvedBy => $composableBuilder(
+      column: $table.resolvedBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get resolvedData => $composableBuilder(
+      column: $table.resolvedData,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isResolved => $composableBuilder(
+      column: $table.isResolved, builder: (column) => ColumnOrderings(column));
+
+  $$SyncSessionsTableOrderingComposer get sessionId {
+    final $$SyncSessionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.syncSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncSessionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.syncSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SyncConflictsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncConflictsTable> {
+  $$SyncConflictsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemType =>
+      $composableBuilder(column: $table.itemType, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceData => $composableBuilder(
+      column: $table.sourceData, builder: (column) => column);
+
+  GeneratedColumn<String> get targetData => $composableBuilder(
+      column: $table.targetData, builder: (column) => column);
+
+  GeneratedColumn<String> get resolution => $composableBuilder(
+      column: $table.resolution, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get detectedAt => $composableBuilder(
+      column: $table.detectedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+      column: $table.resolvedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get resolvedBy => $composableBuilder(
+      column: $table.resolvedBy, builder: (column) => column);
+
+  GeneratedColumn<String> get resolvedData => $composableBuilder(
+      column: $table.resolvedData, builder: (column) => column);
+
+  GeneratedColumn<bool> get isResolved => $composableBuilder(
+      column: $table.isResolved, builder: (column) => column);
+
+  $$SyncSessionsTableAnnotationComposer get sessionId {
+    final $$SyncSessionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sessionId,
+        referencedTable: $db.syncSessions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SyncSessionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.syncSessions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SyncConflictsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SyncConflictsTable,
+    SyncConflict,
+    $$SyncConflictsTableFilterComposer,
+    $$SyncConflictsTableOrderingComposer,
+    $$SyncConflictsTableAnnotationComposer,
+    $$SyncConflictsTableCreateCompanionBuilder,
+    $$SyncConflictsTableUpdateCompanionBuilder,
+    (SyncConflict, $$SyncConflictsTableReferences),
+    SyncConflict,
+    PrefetchHooks Function({bool sessionId})> {
+  $$SyncConflictsTableTableManager(_$AppDatabase db, $SyncConflictsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncConflictsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncConflictsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncConflictsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> sessionId = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> itemId = const Value.absent(),
+            Value<String> itemType = const Value.absent(),
+            Value<String> sourceData = const Value.absent(),
+            Value<String> targetData = const Value.absent(),
+            Value<String> resolution = const Value.absent(),
+            Value<DateTime> detectedAt = const Value.absent(),
+            Value<DateTime?> resolvedAt = const Value.absent(),
+            Value<String?> resolvedBy = const Value.absent(),
+            Value<String?> resolvedData = const Value.absent(),
+            Value<bool> isResolved = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncConflictsCompanion(
+            id: id,
+            sessionId: sessionId,
+            type: type,
+            itemId: itemId,
+            itemType: itemType,
+            sourceData: sourceData,
+            targetData: targetData,
+            resolution: resolution,
+            detectedAt: detectedAt,
+            resolvedAt: resolvedAt,
+            resolvedBy: resolvedBy,
+            resolvedData: resolvedData,
+            isResolved: isResolved,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String sessionId,
+            required String type,
+            required String itemId,
+            required String itemType,
+            required String sourceData,
+            required String targetData,
+            required String resolution,
+            required DateTime detectedAt,
+            Value<DateTime?> resolvedAt = const Value.absent(),
+            Value<String?> resolvedBy = const Value.absent(),
+            Value<String?> resolvedData = const Value.absent(),
+            Value<bool> isResolved = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncConflictsCompanion.insert(
+            id: id,
+            sessionId: sessionId,
+            type: type,
+            itemId: itemId,
+            itemType: itemType,
+            sourceData: sourceData,
+            targetData: targetData,
+            resolution: resolution,
+            detectedAt: detectedAt,
+            resolvedAt: resolvedAt,
+            resolvedBy: resolvedBy,
+            resolvedData: resolvedData,
+            isResolved: isResolved,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$SyncConflictsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sessionId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sessionId,
+                    referencedTable:
+                        $$SyncConflictsTableReferences._sessionIdTable(db),
+                    referencedColumn:
+                        $$SyncConflictsTableReferences._sessionIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SyncConflictsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SyncConflictsTable,
+    SyncConflict,
+    $$SyncConflictsTableFilterComposer,
+    $$SyncConflictsTableOrderingComposer,
+    $$SyncConflictsTableAnnotationComposer,
+    $$SyncConflictsTableCreateCompanionBuilder,
+    $$SyncConflictsTableUpdateCompanionBuilder,
+    (SyncConflict, $$SyncConflictsTableReferences),
+    SyncConflict,
+    PrefetchHooks Function({bool sessionId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4367,4 +7233,10 @@ class $AppDatabaseManager {
       $$MangaPagesTableTableManager(_db, _db.mangaPages);
   $$ReadingProgressesTableTableManager get readingProgresses =>
       $$ReadingProgressesTableTableManager(_db, _db.readingProgresses);
+  $$DevicesTableTableManager get devices =>
+      $$DevicesTableTableManager(_db, _db.devices);
+  $$SyncSessionsTableTableManager get syncSessions =>
+      $$SyncSessionsTableTableManager(_db, _db.syncSessions);
+  $$SyncConflictsTableTableManager get syncConflicts =>
+      $$SyncConflictsTableTableManager(_db, _db.syncConflicts);
 }
