@@ -14,7 +14,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../data/models/reading_progress.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/double_page_thumbnail_list.dart';
-import 'reader_page.dart';
 
 class DoublePageReader extends ConsumerStatefulWidget {
   final String mangaId;
@@ -288,49 +287,64 @@ class _DoublePageReaderState extends ConsumerState<DoublePageReader> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 80,
-            height: double.infinity,
-            alignment: Alignment.center,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: IconButton(
-                iconSize: 40,
-                icon: Icon(
-                  _readingDirection == ReadingDirection.leftToRight
-                      ? Icons.keyboard_arrow_left
-                      : Icons.keyboard_arrow_right,
-                  color: Colors.white,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final buttonSize = constraints.maxWidth < 400 ? 60.0 : 80.0;
+              final iconSize = constraints.maxWidth < 400 ? 30.0 : 40.0;
+
+              return Container(
+                width: buttonSize,
+                height: double.infinity,
+                alignment: Alignment.center,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(buttonSize / 2),
+                  ),
+                  child: IconButton(
+                    iconSize: iconSize,
+                    icon: Icon(
+                      _readingDirection == ReadingDirection.leftToRight
+                          ? Icons.keyboard_arrow_left
+                          : Icons.keyboard_arrow_right,
+                      color: Colors.white,
+                    ),
+                    onPressed:
+                        _currentGroupIndex > 0 ? _goToPreviousPage : null,
+                  ),
                 ),
-                onPressed: _currentGroupIndex > 0 ? _goToPreviousPage : null,
-              ),
-            ),
+              );
+            },
           ),
-          Container(
-            width: 80,
-            height: double.infinity,
-            alignment: Alignment.center,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: IconButton(
-                iconSize: 40,
-                icon: Icon(
-                  _readingDirection == ReadingDirection.leftToRight
-                      ? Icons.keyboard_arrow_right
-                      : Icons.keyboard_arrow_left,
-                  color: Colors.white,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final buttonSize = constraints.maxWidth < 400 ? 60.0 : 80.0;
+              final iconSize = constraints.maxWidth < 400 ? 30.0 : 40.0;
+
+              return Container(
+                width: buttonSize,
+                height: double.infinity,
+                alignment: Alignment.center,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(buttonSize / 2),
+                  ),
+                  child: IconButton(
+                    iconSize: iconSize,
+                    icon: Icon(
+                      _readingDirection == ReadingDirection.leftToRight
+                          ? Icons.keyboard_arrow_right
+                          : Icons.keyboard_arrow_left,
+                      color: Colors.white,
+                    ),
+                    onPressed: _currentGroupIndex < _doublePageGroups.length - 1
+                        ? _goToNextPage
+                        : null,
+                  ),
                 ),
-                onPressed: _currentGroupIndex < _doublePageGroups.length - 1
-                    ? _goToNextPage
-                    : null,
-              ),
-            ),
+              );
+            },
           ),
         ],
       );

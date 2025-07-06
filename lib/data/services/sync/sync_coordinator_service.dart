@@ -229,6 +229,59 @@ class SyncCoordinatorService {
     }
   }
 
+  /// Synchronize reading progress for multiple manga
+  Future<SyncResult> syncMultipleReadingProgress({
+    required DeviceInfo targetDevice,
+    required List<String> mangaIds,
+    bool useLatestWins = true,
+    bool syncFavorites = false,
+    bool syncBookmarks = false,
+  }) async {
+    try {
+      log('Starting multiple reading progress sync for ${mangaIds.length} manga');
+
+      final startTime = DateTime.now();
+      final sessionId = 'multi_progress_sync_${startTime.millisecondsSinceEpoch}';
+
+      int totalItems = mangaIds.length;
+      int processedItems = 0;
+      List<String> errors = [];
+
+      for (final mangaId in mangaIds) {
+        try {
+          await _librarySyncService.syncReadingProgress(
+            targetDevice: targetDevice,
+            mangaId: mangaId,
+            useLatestWins: useLatestWins,
+          );
+          processedItems++;
+        } catch (e) {
+          errors.add('Failed to sync manga $mangaId: $e');
+        }
+      }
+
+      final result = SyncResult(
+        sessionId: sessionId,
+        status: errors.isEmpty ? SyncStatus.completed : SyncStatus.partiallyCompleted,
+        totalItems: totalItems,
+        processedItems: processedItems,
+        errorMessage: errors.isNotEmpty ? errors.join('; ') : null,
+        startTime: startTime,
+        endTime: DateTime.now(),
+      );
+
+      _eventController
+          .add(SyncCoordinatorEvent.progressSyncCompleted('multiple', result));
+
+      return result;
+    } catch (e, stackTrace) {
+      log('Multiple reading progress sync failed: $e', stackTrace: stackTrace);
+      _eventController
+          .add(SyncCoordinatorEvent.error('Multiple progress sync failed: $e'));
+      rethrow;
+    }
+  }
+
   /// Resolve a specific conflict
   Future<void> resolveConflict(
       SyncConflict conflict, ConflictResolution resolution) async {

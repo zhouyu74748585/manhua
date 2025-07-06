@@ -23,6 +23,11 @@ SyncSession _$SyncSessionFromJson(Map<String, dynamic> json) => SyncSession(
       totalItems: (json['totalItems'] as num?)?.toInt() ?? 0,
       processedItems: (json['processedItems'] as num?)?.toInt() ?? 0,
       failedItems: (json['failedItems'] as num?)?.toInt() ?? 0,
+      currentItem: json['currentItem'] as String?,
+      errors: (json['errors'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       errorMessage: json['errorMessage'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>? ?? const {},
     );
@@ -41,6 +46,8 @@ Map<String, dynamic> _$SyncSessionToJson(SyncSession instance) =>
       'totalItems': instance.totalItems,
       'processedItems': instance.processedItems,
       'failedItems': instance.failedItems,
+      'currentItem': instance.currentItem,
+      'errors': instance.errors,
       'errorMessage': instance.errorMessage,
       'metadata': instance.metadata,
     };

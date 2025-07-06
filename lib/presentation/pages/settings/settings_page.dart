@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/theme_provider.dart';
 import 'about_page.dart';
+import 'permission_diagnostic_page.dart';
+import 'permission_management_page.dart';
 import 'privacy_settings_page.dart';
 import 'reader_settings_page.dart';
 import 'storage_settings_page.dart';
@@ -33,6 +35,12 @@ class SettingsPage extends ConsumerWidget {
           // 隐私设置
           _buildSectionHeader(context, '隐私'),
           _buildPrivacySettings(context, ref),
+
+          const Divider(),
+
+          // 权限设置
+          _buildSectionHeader(context, '权限'),
+          _buildPermissionSettings(context, ref),
 
           const Divider(),
 
@@ -113,6 +121,39 @@ class SettingsPage extends ConsumerWidget {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const PrivacySettingsPage(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPermissionSettings(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.security),
+          title: const Text('权限诊断'),
+          subtitle: const Text('检查和修复文件访问权限问题'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const PermissionDiagnosticPage(),
+              ),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.folder_open),
+          title: const Text('权限管理'),
+          subtitle: const Text('管理已授权的文件夹路径'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const PermissionManagementPage(),
               ),
             );
           },

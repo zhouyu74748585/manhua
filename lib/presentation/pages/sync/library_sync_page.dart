@@ -13,10 +13,12 @@ import '../../providers/sync_providers.dart';
 /// 漫画库同步页面 - 选择要同步的库和同步选项
 class LibrarySyncPage extends ConsumerStatefulWidget {
   final DeviceInfo targetDevice;
+  final String? preSelectedLibraryId; // 预选择的漫画库ID
 
   const LibrarySyncPage({
     super.key,
     required this.targetDevice,
+    this.preSelectedLibraryId,
   });
 
   @override
@@ -30,6 +32,15 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
   bool _syncThumbnails = true;
   bool _syncMetadata = true;
   bool _syncProgress = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // 如果有预选择的漫画库，自动选中
+    if (widget.preSelectedLibraryId != null) {
+      _selectedLibraryIds.add(widget.preSelectedLibraryId!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +146,16 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
   }
 
   Widget _buildMangaSelection(List<MangaLibrary> libraries) {
+    // 如果有预选择的库，只显示该库的漫画选择
+    if (widget.preSelectedLibraryId != null) {
+      final preSelectedLibrary = libraries.firstWhere(
+        (lib) => lib.id == widget.preSelectedLibraryId,
+        orElse: () => throw StateError('预选择的漫画库不存在'),
+      );
+      return _buildSingleLibraryMangaSelection(preSelectedLibrary);
+    }
+
+    // 否则显示所有库的选择界面
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -156,6 +177,48 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
             else
               ...libraries
                   .map((library) => _buildLibraryExpansionTile(library)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleLibraryMangaSelection(MangaLibrary library) {
+    final mangaAsync = ref.watch(mangaByLibraryProvider(library.id));
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.library_books, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        library.name,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '选择要同步的漫画',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            mangaAsync.when(
+              data: (mangaList) => _buildMangaList(library.id, mangaList),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Text('加载漫画失败: $error'),
+            ),
           ],
         ),
       ),

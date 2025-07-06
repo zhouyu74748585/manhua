@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../data/models/sync/device_info.dart';
+
 import '../../../data/models/manga.dart';
 import '../../../data/models/reading_progress.dart';
+import '../../../data/models/sync/device_info.dart';
 import '../../providers/manga_provider.dart';
 import '../../providers/sync_providers.dart';
 
@@ -50,7 +51,8 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
 
   Widget _buildSpecificMangaSyncPage() {
     final mangaAsync = ref.watch(mangaDetailProvider(widget.specificMangaId!));
-    final progressAsync = ref.watch(mangaProgressProvider(widget.specificMangaId!));
+    final progressAsync =
+        ref.watch(mangaProgressProvider(widget.specificMangaId!));
 
     return Scaffold(
       appBar: AppBar(
@@ -69,12 +71,12 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
           children: [
             // 目标设备信息
             _buildTargetDeviceCard(),
-            
+
             const SizedBox(height: 24),
-            
+
             // 漫画信息
             mangaAsync.when(
-              data: (manga) => manga != null 
+              data: (manga) => manga != null
                   ? _buildMangaInfoCard(manga, progressAsync.value)
                   : const Card(
                       child: Padding(
@@ -95,14 +97,14 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // 同步选项
             _buildSyncOptionsCard(),
-            
+
             const SizedBox(height: 32),
-            
+
             // 开始同步按钮
             _buildSyncButton(),
           ],
@@ -198,9 +200,9 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
                     ),
                     child: const Icon(Icons.book, size: 40),
                   ),
-                
+
                 const SizedBox(width: 16),
-                
+
                 // 漫画详情
                 Expanded(
                   child: Column(
@@ -221,7 +223,8 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
                       Text('总页数: ${manga.totalPages}'),
                       if (progress != null) ...[
                         Text('当前页: ${progress.currentPage}'),
-                        Text('进度: ${(progress.progressPercentage * 100).toStringAsFixed(1)}%'),
+                        Text(
+                            '进度: ${(progress.progressPercentage * 100).toStringAsFixed(1)}%'),
                         Text('最后阅读: ${_formatDateTime(progress.lastReadAt)}'),
                       ] else
                         const Text('尚未开始阅读'),
@@ -300,7 +303,7 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
 
     try {
       final syncService = ref.read(syncCoordinatorServiceProvider);
-      
+
       if (widget.specificMangaId != null) {
         // 同步特定漫画的进度
         final result = await syncService.syncReadingProgress(
@@ -322,10 +325,22 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
           }
         }
       } else {
-        // TODO: 实现批量同步
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('批量同步功能待实现')),
+        // 批量同步选中的漫画进度
+        final result = await syncService.syncMultipleReadingProgress(
+          targetDevice: widget.targetDevice,
+          mangaIds: _selectedMangaIds.toList(),
+          useLatestWins: _useLatestWins,
+          syncFavorites: _syncFavorites,
+          syncBookmarks: _syncBookmarks,
         );
+
+        if (mounted) {
+          // 导航到同步进度页面
+          context.pushReplacement('/sync/progress', extra: {
+            'sessionId': result.sessionId,
+            'targetDevice': widget.targetDevice,
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -338,38 +353,39 @@ class _ProgressSyncPageState extends ConsumerState<ProgressSyncPage> {
 
   Future<bool> _showSyncConfirmationDialog() async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认同步'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('即将同步阅读进度到设备：'),
-            Text('• ${widget.targetDevice.name}'),
-            const SizedBox(height: 16),
-            if (_useLatestWins) const Text('• 使用最新进度解决冲突'),
-            if (_syncFavorites) const Text('• 包含收藏状态'),
-            if (_syncBookmarks) const Text('• 包含书签信息'),
-            const SizedBox(height: 16),
-            const Text(
-              '确定要继续吗？',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('确认同步'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('即将同步阅读进度到设备：'),
+                Text('• ${widget.targetDevice.name}'),
+                const SizedBox(height: 16),
+                if (_useLatestWins) const Text('• 使用最新进度解决冲突'),
+                if (_syncFavorites) const Text('• 包含收藏状态'),
+                if (_syncBookmarks) const Text('• 包含书签信息'),
+                const SizedBox(height: 16),
+                const Text(
+                  '确定要继续吗？',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('确认同步'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('确认同步'),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   String _formatDateTime(DateTime dateTime) {

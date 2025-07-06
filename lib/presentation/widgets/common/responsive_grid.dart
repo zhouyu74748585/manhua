@@ -27,6 +27,7 @@ class ResponsiveGrid<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
+    final gridSpacing = PlatformUtils.getResponsiveGridSpacing(screenWidth);
     final displayItems =
         maxItems != null ? items.take(maxItems!).toList() : items;
 
@@ -45,8 +46,8 @@ class ResponsiveGrid<T> extends StatelessWidget {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
           childAspectRatio: aspectRatio ?? AppConstants.gridAspectRatio,
-          mainAxisSpacing: mainAxisSpacing ?? 16.0,
-          crossAxisSpacing: crossAxisSpacing ?? 16.0,
+          mainAxisSpacing: mainAxisSpacing ?? gridSpacing,
+          crossAxisSpacing: crossAxisSpacing ?? gridSpacing,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -89,6 +90,7 @@ class ResponsiveGridView<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
+    final gridSpacing = PlatformUtils.getResponsiveGridSpacing(screenWidth);
     final displayItems =
         maxItems != null ? items.take(maxItems!).toList() : items;
 
@@ -106,8 +108,8 @@ class ResponsiveGridView<T> extends StatelessWidget {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
         childAspectRatio: aspectRatio ?? AppConstants.gridAspectRatio,
-        mainAxisSpacing: mainAxisSpacing ?? 16.0,
-        crossAxisSpacing: crossAxisSpacing ?? 16.0,
+        mainAxisSpacing: mainAxisSpacing ?? gridSpacing,
+        crossAxisSpacing: crossAxisSpacing ?? gridSpacing,
       ),
       itemCount: displayItems.length,
       itemBuilder: (context, index) {
@@ -140,6 +142,7 @@ class ResponsiveStaggeredGrid<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final columns = PlatformUtils.getResponsiveColumns(screenWidth);
+    final gridSpacing = PlatformUtils.getResponsiveGridSpacing(screenWidth);
     final displayItems =
         maxItems != null ? items.take(maxItems!).toList() : items;
 
@@ -159,8 +162,8 @@ class ResponsiveStaggeredGrid<T> extends StatelessWidget {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
           childAspectRatio: 0.8, // 瀑布流使用不同的宽高比
-          mainAxisSpacing: mainAxisSpacing ?? 16.0,
-          crossAxisSpacing: crossAxisSpacing ?? 16.0,
+          mainAxisSpacing: mainAxisSpacing ?? gridSpacing,
+          crossAxisSpacing: crossAxisSpacing ?? gridSpacing,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {

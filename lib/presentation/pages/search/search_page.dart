@@ -32,15 +32,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          decoration: const InputDecoration(
-            hintText: '搜索漫画...',
-            border: InputBorder.none,
+        title: Expanded(
+          child: TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              hintText: '搜索漫画...',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 8),
+            ),
+            onSubmitted: (query) {
+              // TODO: 执行搜索
+            },
           ),
-          onSubmitted: (query) {
-            // TODO: 执行搜索
-          },
         ),
         actions: [
           IconButton(
@@ -48,6 +51,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             onPressed: () {
               // TODO: 执行搜索
             },
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(
+              minWidth: 40,
+              minHeight: 40,
+            ),
           ),
         ],
       ),

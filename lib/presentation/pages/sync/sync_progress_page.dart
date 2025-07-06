@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/models/sync/device_info.dart';
-// import '../../../data/models/sync/sync_result.dart';
+import '../../../data/models/sync/sync_session.dart';
+import '../../providers/sync_providers.dart';
 
 /// 同步进度显示页面 - 实时显示同步进度和状态
 class SyncProgressPage extends ConsumerStatefulWidget {
@@ -68,42 +69,69 @@ class _SyncProgressPageState extends ConsumerState<SyncProgressPage>
   }
 
   void _startListeningToProgress() {
-    // TODO: 监听实际的同步进度
-    // 这里模拟进度更新
-    _simulateProgress();
+    // 监听实际的同步进度
+    ref.listen<AsyncValue<SyncSession?>>(
+      syncSessionProvider(widget.sessionId),
+      (previous, next) {
+        next.when(
+          data: (session) {
+            if (session != null) {
+              _updateProgressFromSession(session);
+            }
+          },
+          loading: () {
+            setState(() {
+              _currentStatus = '正在连接设备...';
+            });
+          },
+          error: (error, stack) {
+            setState(() {
+              _errors.add('同步错误: $error');
+              _currentStatus = '同步失败';
+            });
+          },
+        );
+      },
+    );
   }
 
-  void _simulateProgress() async {
+  void _updateProgressFromSession(SyncSession session) {
     setState(() {
-      _currentStatus = '正在连接设备...';
-      _totalItems = 100;
+      _currentStatus = _getStatusText(session.status);
+      _totalItems = session.totalItems;
+      _processedItems = session.processedItems;
+      _progress = session.totalItems > 0
+          ? session.processedItems / session.totalItems
+          : 0.0;
+      _currentItem = session.currentItem ?? '';
+      _errors = session.errors.toList();
+      _isCompleted = session.status == SyncStatus.completed ||
+          session.status == SyncStatus.failed;
+
+      if (_isCompleted) {
+        _pulseAnimationController.stop();
+      }
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    _progressAnimationController.animateTo(_progress);
+  }
 
-    setState(() {
-      _currentStatus = '正在同步数据...';
-    });
-
-    // 模拟进度更新
-    for (int i = 0; i <= 100; i++) {
-      if (!mounted) break;
-
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      setState(() {
-        _processedItems = i;
-        _progress = i / 100.0;
-        _currentItem = '正在处理项目 $i';
-
-        if (i == 100) {
-          _isCompleted = true;
-          _currentStatus = '同步完成';
-          _pulseAnimationController.stop();
-        }
-      });
-
-      _progressAnimationController.animateTo(_progress);
+  String _getStatusText(SyncStatus status) {
+    switch (status) {
+      case SyncStatus.pending:
+        return '等待开始...';
+      case SyncStatus.inProgress:
+        return '正在同步数据...';
+      case SyncStatus.completed:
+        return '同步完成';
+      case SyncStatus.failed:
+        return '同步失败';
+      case SyncStatus.cancelled:
+        return '同步已取消';
+      case SyncStatus.conflicted:
+        return '存在冲突';
+      case SyncStatus.partiallyCompleted:
+        return '部分完成';
     }
   }
 
@@ -338,12 +366,16 @@ class _SyncProgressPageState extends ConsumerState<SyncProgressPage>
               children: [
                 Icon(Icons.error, color: Colors.red[700]),
                 const SizedBox(width: 8),
-                Text(
-                  '错误信息 (${_errors.length})',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red[700],
+                Expanded(
+                  child: Text(
+                    '错误信息 (${_errors.length})',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red[700],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -354,6 +386,8 @@ class _SyncProgressPageState extends ConsumerState<SyncProgressPage>
                   child: Text(
                     '• $error',
                     style: TextStyle(color: Colors.red[600]),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ))),
             if (_errors.length > 3)

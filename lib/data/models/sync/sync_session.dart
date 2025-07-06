@@ -63,6 +63,8 @@ class SyncSession {
   final int totalItems;
   final int processedItems;
   final int failedItems;
+  final String? currentItem;
+  final List<String> errors;
   final String? errorMessage;
   final Map<String, dynamic> metadata;
 
@@ -79,6 +81,8 @@ class SyncSession {
     this.totalItems = 0,
     this.processedItems = 0,
     this.failedItems = 0,
+    this.currentItem,
+    this.errors = const [],
     this.errorMessage,
     this.metadata = const {},
   });
@@ -100,6 +104,8 @@ class SyncSession {
     int? totalItems,
     int? processedItems,
     int? failedItems,
+    String? currentItem,
+    List<String>? errors,
     String? errorMessage,
     Map<String, dynamic>? metadata,
   }) {
@@ -116,6 +122,8 @@ class SyncSession {
       totalItems: totalItems ?? this.totalItems,
       processedItems: processedItems ?? this.processedItems,
       failedItems: failedItems ?? this.failedItems,
+      currentItem: currentItem ?? this.currentItem,
+      errors: errors ?? this.errors,
       errorMessage: errorMessage ?? this.errorMessage,
       metadata: metadata ?? this.metadata,
     );

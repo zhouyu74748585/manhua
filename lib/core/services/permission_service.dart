@@ -35,12 +35,50 @@ class PermissionService {
     // 检查Android版本
     final androidInfo = await _getAndroidVersion();
 
-    if (androidInfo >= 30) {
+    if (androidInfo >= 33) {
+      // Android 13+ 使用细粒度媒体权限
+      return await _requestAndroid13Permission();
+    } else if (androidInfo >= 30) {
       // Android 11+ 使用作用域存储
       return await _requestScopedStoragePermission();
     } else {
       // Android 10及以下使用传统权限
       return await _requestLegacyStoragePermission();
+    }
+  }
+
+  /// Android 13+ 细粒度权限请求
+  static Future<bool> _requestAndroid13Permission() async {
+    try {
+      // Android 13+ 需要请求特定的媒体权限
+      final permissions = [
+        Permission.photos,
+        Permission.videos,
+        Permission.audio,
+      ];
+
+      // 检查当前权限状态
+      Map<Permission, PermissionStatus> statuses = await permissions.request();
+
+      // 检查是否有任何权限被授予
+      bool hasAnyPermission = statuses.values.any((status) => status.isGranted);
+
+      if (!hasAnyPermission) {
+        // 尝试请求管理外部存储权限
+        final manageStorageStatus =
+            await Permission.manageExternalStorage.request();
+        hasAnyPermission = manageStorageStatus.isGranted;
+      }
+
+      if (hasAnyPermission) {
+        await _savePermissionStatus(true);
+        return true;
+      }
+
+      return false;
+    } catch (e, stackTrace) {
+      log('请求Android 13+权限失败: $e', stackTrace: stackTrace);
+      return false;
     }
   }
 
@@ -159,15 +197,89 @@ class PermissionService {
   static Future<bool> _checkAndroidPermission() async {
     final androidInfo = await _getAndroidVersion();
 
-    if (androidInfo >= 30) {
-      // Android 11+
-      final manageStatus = await Permission.manageExternalStorage.status;
-      final storageStatus = await Permission.storage.status;
-      return manageStatus.isGranted || storageStatus.isGranted;
-    } else {
-      // Android 10及以下
-      final status = await Permission.storage.status;
-      return status.isGranted;
+    try {
+      if (androidInfo >= 33) {
+        // Android 13+ 检查细粒度权限
+        final permissions = [
+          Permission.photos,
+          Permission.videos,
+          Permission.audio,
+        ];
+
+        final statuses = await Future.wait(
+          permissions.map((p) => p.status),
+        );
+
+        bool hasAnyPermission = statuses.any((status) => status.isGranted);
+
+        if (!hasAnyPermission) {
+          final manageStatus = await Permission.manageExternalStorage.status;
+          hasAnyPermission = manageStatus.isGranted;
+        }
+
+        // 验证实际文件访问能力
+        if (hasAnyPermission) {
+          return await _verifyFileAccess();
+        }
+
+        return false;
+      } else if (androidInfo >= 30) {
+        // Android 11+
+        final manageStatus = await Permission.manageExternalStorage.status;
+        final storageStatus = await Permission.storage.status;
+        bool hasPermission = manageStatus.isGranted || storageStatus.isGranted;
+
+        if (hasPermission) {
+          return await _verifyFileAccess();
+        }
+
+        return false;
+      } else {
+        // Android 10及以下
+        final status = await Permission.storage.status;
+        bool hasPermission = status.isGranted;
+
+        if (hasPermission) {
+          return await _verifyFileAccess();
+        }
+
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('检查Android权限状态失败: $e', stackTrace: stackTrace);
+      return false;
+    }
+  }
+
+  /// 验证实际文件访问能力
+  static Future<bool> _verifyFileAccess() async {
+    try {
+      // 尝试访问常见的存储路径
+      final testPaths = [
+        '/storage/emulated/0/Download',
+        '/storage/emulated/0/Pictures',
+        '/storage/emulated/0/Documents',
+        '/storage/emulated/0/DCIM',
+      ];
+
+      for (final path in testPaths) {
+        try {
+          final directory = Directory(path);
+          if (await directory.exists()) {
+            final files = await directory.list().take(1).toList();
+            // 如果能够列出文件，说明有访问权限
+            return true;
+          }
+        } catch (e) {
+          // 继续尝试下一个路径
+          continue;
+        }
+      }
+
+      return false;
+    } catch (e, stackTrace) {
+      log('验证文件访问失败: $e', stackTrace: stackTrace);
+      return false;
     }
   }
 
@@ -239,7 +351,8 @@ class PermissionService {
 
       final grantedPaths = await getGrantedPaths();
       return grantedPaths.any((grantedPath) =>
-          normalizedPath.startsWith(grantedPath) || grantedPath.startsWith(normalizedPath));
+          normalizedPath.startsWith(grantedPath) ||
+          grantedPath.startsWith(normalizedPath));
     } catch (e, stackTrace) {
       log('检查路径授权失败: $e', stackTrace: stackTrace);
       return false;

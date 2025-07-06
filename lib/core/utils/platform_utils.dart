@@ -67,21 +67,36 @@ class PlatformUtils {
   }
 
   // 获取断点
-  static bool isMobileBreakpoint(double width) => width < 768;
+  static bool isExtraSmallBreakpoint(double width) => width < 360;
+  static bool isSmallBreakpoint(double width) => width >= 360 && width < 480;
+  static bool isMobileBreakpoint(double width) => width >= 480 && width < 768;
   static bool isTabletBreakpoint(double width) => width >= 768 && width < 1024;
   static bool isDesktopBreakpoint(double width) => width >= 1024;
 
   // 获取响应式列数
   static int getResponsiveColumns(double width) {
-    if (isMobileBreakpoint(width)) return 2;
-    if (isTabletBreakpoint(width)) return 3;
-    return 4;
+    if (isExtraSmallBreakpoint(width)) return 1; // 超小屏幕使用1列
+    if (isSmallBreakpoint(width)) return 2; // 小屏幕使用2列
+    if (isMobileBreakpoint(width)) return 2; // 移动端使用2列
+    if (isTabletBreakpoint(width)) return 3; // 平板使用3列
+    return 4; // 桌面使用4列
   }
 
   // 获取响应式间距
   static double getResponsivePadding(double width) {
-    if (isMobileBreakpoint(width)) return 16.0;
-    if (isTabletBreakpoint(width)) return 24.0;
-    return 32.0;
+    if (isExtraSmallBreakpoint(width)) return 8.0; // 超小屏幕减少间距
+    if (isSmallBreakpoint(width)) return 12.0; // 小屏幕减少间距
+    if (isMobileBreakpoint(width)) return 16.0; // 移动端标准间距
+    if (isTabletBreakpoint(width)) return 24.0; // 平板增加间距
+    return 32.0; // 桌面最大间距
+  }
+
+  // 获取响应式网格间距
+  static double getResponsiveGridSpacing(double width) {
+    if (isExtraSmallBreakpoint(width)) return 4.0; // 超小屏幕最小间距
+    if (isSmallBreakpoint(width)) return 8.0; // 小屏幕减少间距
+    if (isMobileBreakpoint(width)) return 10.0; // 移动端标准间距
+    if (isTabletBreakpoint(width)) return 16.0; // 平板增加间距
+    return 20.0; // 桌面最大间距
   }
 }

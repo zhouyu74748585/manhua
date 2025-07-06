@@ -48,8 +48,7 @@ class NetworkFileSystemFactory {
       NetworkProtocol.webdav,
       NetworkProtocol.smb,
       NetworkProtocol.sftp,
-      // 以下协议暂时不完全支持
-      // NetworkProtocol.nfs,
+      NetworkProtocol.nfs, // 启用NFS协议支持
     ];
   }
 

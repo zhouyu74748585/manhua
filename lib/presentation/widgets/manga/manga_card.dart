@@ -79,22 +79,37 @@ class _MangaCardState extends State<MangaCard> {
                             children: [
                               // 顶部操作按钮
                               Padding(
-                                padding: const EdgeInsets.all(8.0),
+                                padding: const EdgeInsets.all(4.0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min, // 防止溢出
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.sync,
-                                          color: Colors.white, size: 20),
-                                      onPressed: () =>
-                                          _showSyncOptions(context),
-                                      tooltip: '同步进度',
+                                    Flexible(
+                                      child: IconButton(
+                                        icon: const Icon(Icons.sync,
+                                            color: Colors.white, size: 18),
+                                        onPressed: () =>
+                                            _showSyncOptions(context),
+                                        tooltip: '同步进度',
+                                        padding: const EdgeInsets.all(4),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                      ),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.info_outline,
-                                          color: Colors.white),
-                                      onPressed: widget.onLongPress,
-                                      tooltip: '查看详情',
+                                    Flexible(
+                                      child: IconButton(
+                                        icon: const Icon(Icons.info_outline,
+                                            color: Colors.white, size: 18),
+                                        onPressed: widget.onLongPress,
+                                        tooltip: '查看详情',
+                                        padding: const EdgeInsets.all(4),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -104,19 +119,25 @@ class _MangaCardState extends State<MangaCard> {
                                   widget.currentPage != null)
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8.0,
+                                    vertical: 4.0,
+                                  ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (widget.currentPage != null)
                                         Text(
                                           '${widget.currentPage}/${widget.totalPages} 页',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 12,
+                                            fontSize: 11,
                                             fontWeight: FontWeight.bold,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       if (widget.progress != null) ...[
                                         const SizedBox(height: 4),
@@ -158,20 +179,24 @@ class _MangaCardState extends State<MangaCard> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              widget.title,
-              style: Theme.of(context).textTheme.titleSmall,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            Flexible(
+              child: Text(
+                widget.title,
+                style: Theme.of(context).textTheme.titleSmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             if (widget.subtitle != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: Text(
-                  widget.subtitle!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2.0),
+                  child: Text(
+                    widget.subtitle!,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
           ],

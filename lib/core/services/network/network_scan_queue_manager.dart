@@ -27,20 +27,18 @@ class NetworkScanQueueManager {
   /// [config] 网络配置
   /// 返回扫描任务ID
   Future<String> startScan(MangaLibrary library, NetworkConfig config) async {
-    final taskId = '${library.id}_${DateTime.now().millisecondsSinceEpoch}';
-
     // 检查是否已有相同库的扫描任务
-    final existingTask = _activeTasks.values.firstWhere(
-      (task) => task.libraryId == library.id,
-      orElse: () => throw StateError('No existing task'),
-    );
+    final existingTask = _activeTasks.values
+        .where(
+          (task) => task.libraryId == library.id,
+        )
+        .firstOrNull;
 
-    try {
-      existingTask;
+    if (existingTask != null) {
       throw NetworkScanException('漫画库 ${library.name} 正在扫描中，请等待完成');
-    } catch (e) {
-      // 没有现有任务，继续
     }
+
+    final taskId = '${library.id}_${DateTime.now().millisecondsSinceEpoch}';
 
     // 创建新的扫描任务
     final task = NetworkScanTask(
@@ -144,6 +142,7 @@ class NetworkScanQueueManager {
 void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
   final sendPort = message.sendPort;
   final task = message.task;
+  NetworkFileSystem? fileSystem;
 
   try {
     // 发送开始扫描消息
@@ -155,10 +154,10 @@ void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
     ));
 
     // 创建网络文件系统
-    final fileSystem = NetworkFileSystemFactory.create(task.config);
+    fileSystem = NetworkFileSystemFactory.create(task.config);
 
-    // 连接到服务器
-    await fileSystem.connect();
+    // 连接到服务器（带重试机制）
+    await _connectWithRetry(fileSystem, task, sendPort);
 
     sendPort.send(NetworkScanProgress(
       taskId: task.id,
@@ -170,9 +169,6 @@ void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
     // 扫描根目录
     final results = await _scanDirectory(fileSystem, '/', task, sendPort);
 
-    // 断开连接
-    await fileSystem.disconnect();
-
     // 发送完成消息
     sendPort.send(NetworkScanProgress(
       taskId: task.id,
@@ -180,6 +176,7 @@ void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
       status: NetworkScanStatus.completed,
       message: '扫描完成，发现 ${results.length} 个漫画',
       foundMangas: results,
+      scannedCount: results.length,
     ));
   } catch (e) {
     sendPort.send(NetworkScanProgress(
@@ -188,6 +185,15 @@ void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
       status: NetworkScanStatus.failed,
       message: '扫描失败: $e',
     ));
+  } finally {
+    // 确保断开连接
+    if (fileSystem != null) {
+      try {
+        await fileSystem.disconnect();
+      } catch (e) {
+        // 忽略断开连接时的错误
+      }
+    }
   }
 }
 
@@ -201,7 +207,16 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
   final results = <NetworkMangaInfo>[];
 
   try {
+    // 发送当前扫描目录信息
+    sendPort.send(NetworkScanProgress(
+      taskId: task.id,
+      libraryId: task.libraryId,
+      status: NetworkScanStatus.scanning,
+      message: '正在扫描目录: $path',
+    ));
+
     final files = await fileSystem.listDirectory(path);
+    int processedFiles = 0;
 
     for (final file in files) {
       // 检查是否取消
@@ -209,7 +224,18 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
         break;
       }
 
+      processedFiles++;
+
       if (file.isDirectory) {
+        // 发送子目录扫描信息
+        sendPort.send(NetworkScanProgress(
+          taskId: task.id,
+          libraryId: task.libraryId,
+          status: NetworkScanStatus.scanning,
+          message: '扫描子目录: ${file.name}',
+          scannedCount: results.length,
+        ));
+
         // 递归扫描子目录
         final subResults =
             await _scanDirectory(fileSystem, file.path, task, sendPort);
@@ -228,7 +254,7 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
           taskId: task.id,
           libraryId: task.libraryId,
           status: NetworkScanStatus.scanning,
-          message: '发现漫画: ${file.name}',
+          message: '发现漫画文件: ${file.name}',
           scannedCount: results.length,
         ));
       }
@@ -238,12 +264,26 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
     if (NetworkFileSystem.isPotentialMangaDirectory(files)) {
       final imageFiles = files.where((f) => f.isImageFile).toList();
       if (imageFiles.isNotEmpty) {
+        final directoryName =
+            path.split('/').last.isEmpty ? 'Root' : path.split('/').last;
+
         results.add(NetworkMangaInfo(
-          name: path.split('/').last,
+          name: directoryName,
           path: path,
           size: imageFiles.fold(0, (sum, f) => sum + f.size),
           isDirectory: true,
           imageCount: imageFiles.length,
+          lastModified:
+              imageFiles.isNotEmpty ? imageFiles.first.lastModified : null,
+        ));
+
+        // 发送漫画目录发现信息
+        sendPort.send(NetworkScanProgress(
+          taskId: task.id,
+          libraryId: task.libraryId,
+          status: NetworkScanStatus.scanning,
+          message: '发现漫画目录: $directoryName (${imageFiles.length}张图片)',
+          scannedCount: results.length,
         ));
       }
     }
@@ -258,6 +298,42 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
   }
 
   return results;
+}
+
+/// 带重试机制的连接方法
+Future<void> _connectWithRetry(NetworkFileSystem fileSystem,
+    NetworkScanTask task, SendPort sendPort) async {
+  const maxRetries = 3;
+  const retryDelay = Duration(seconds: 2);
+
+  for (int attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      sendPort.send(NetworkScanProgress(
+        taskId: task.id,
+        libraryId: task.libraryId,
+        status: NetworkScanStatus.scanning,
+        message: '正在连接服务器... (尝试 $attempt/$maxRetries)',
+      ));
+
+      await fileSystem.connect();
+      return; // 连接成功，退出重试循环
+    } catch (e) {
+      if (attempt == maxRetries) {
+        // 最后一次尝试失败，抛出异常
+        throw Exception('连接失败，已重试 $maxRetries 次: $e');
+      }
+
+      sendPort.send(NetworkScanProgress(
+        taskId: task.id,
+        libraryId: task.libraryId,
+        status: NetworkScanStatus.scanning,
+        message: '连接失败，${retryDelay.inSeconds}秒后重试... ($e)',
+      ));
+
+      // 等待后重试
+      await Future.delayed(retryDelay);
+    }
+  }
 }
 
 /// Isolate消息类

@@ -44,9 +44,11 @@ class App extends ConsumerWidget {
       // 构建器
       builder: (context, child) {
         return MediaQuery(
-          // 禁用系统字体缩放
+          // 限制文本缩放范围，防止UI破坏，但允许适度缩放
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.noScaling,
+            textScaler: TextScaler.linear(
+              (MediaQuery.of(context).textScaler.scale(1.0)).clamp(0.8, 1.3),
+            ),
           ),
           child: PrivacyAppWrapper(
             child: child ?? const SizedBox.shrink(),

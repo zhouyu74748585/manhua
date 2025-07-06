@@ -173,6 +173,169 @@ final activeSyncSessionsProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ActiveSyncSessionsRef = AutoDisposeStreamProviderRef<List<SyncSession>>;
+String _$syncSessionHash() => r'e1e3a35fdc86b2857bacf042d5a1f4ecd423d685';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
+
+/// 同步会话提供者
+///
+/// Copied from [syncSession].
+@ProviderFor(syncSession)
+const syncSessionProvider = SyncSessionFamily();
+
+/// 同步会话提供者
+///
+/// Copied from [syncSession].
+class SyncSessionFamily extends Family<AsyncValue<SyncSession?>> {
+  /// 同步会话提供者
+  ///
+  /// Copied from [syncSession].
+  const SyncSessionFamily();
+
+  /// 同步会话提供者
+  ///
+  /// Copied from [syncSession].
+  SyncSessionProvider call(
+    String sessionId,
+  ) {
+    return SyncSessionProvider(
+      sessionId,
+    );
+  }
+
+  @override
+  SyncSessionProvider getProviderOverride(
+    covariant SyncSessionProvider provider,
+  ) {
+    return call(
+      provider.sessionId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'syncSessionProvider';
+}
+
+/// 同步会话提供者
+///
+/// Copied from [syncSession].
+class SyncSessionProvider extends AutoDisposeFutureProvider<SyncSession?> {
+  /// 同步会话提供者
+  ///
+  /// Copied from [syncSession].
+  SyncSessionProvider(
+    String sessionId,
+  ) : this._internal(
+          (ref) => syncSession(
+            ref as SyncSessionRef,
+            sessionId,
+          ),
+          from: syncSessionProvider,
+          name: r'syncSessionProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$syncSessionHash,
+          dependencies: SyncSessionFamily._dependencies,
+          allTransitiveDependencies:
+              SyncSessionFamily._allTransitiveDependencies,
+          sessionId: sessionId,
+        );
+
+  SyncSessionProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.sessionId,
+  }) : super.internal();
+
+  final String sessionId;
+
+  @override
+  Override overrideWith(
+    FutureOr<SyncSession?> Function(SyncSessionRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: SyncSessionProvider._internal(
+        (ref) => create(ref as SyncSessionRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        sessionId: sessionId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<SyncSession?> createElement() {
+    return _SyncSessionProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SyncSessionProvider && other.sessionId == sessionId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, sessionId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin SyncSessionRef on AutoDisposeFutureProviderRef<SyncSession?> {
+  /// The parameter `sessionId` of this provider.
+  String get sessionId;
+}
+
+class _SyncSessionProviderElement
+    extends AutoDisposeFutureProviderElement<SyncSession?> with SyncSessionRef {
+  _SyncSessionProviderElement(super.provider);
+
+  @override
+  String get sessionId => (origin as SyncSessionProvider).sessionId;
+}
+
 String _$syncProgressProviderHash() =>
     r'b0769d56d280f10d542164b3bade2fe31bd6d1a8';
 
@@ -192,23 +355,25 @@ final syncProgressProviderProvider = AutoDisposeNotifierProvider<
 );
 
 typedef _$SyncProgressProvider = AutoDisposeNotifier<Map<String, double>>;
-String _$syncStatusHash() => r'a70079a3d53ca9e749e8723921573b27b31d3240';
+String _$syncStatusProviderHash() =>
+    r'8d84acb53bbe7fdeab48e9ca413fbd561143b065';
 
 /// 同步状态提供者
 ///
-/// Copied from [SyncStatus].
-@ProviderFor(SyncStatus)
-final syncStatusProvider =
-    AutoDisposeNotifierProvider<SyncStatus, Map<String, String>>.internal(
-  SyncStatus.new,
-  name: r'syncStatusProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$syncStatusHash,
+/// Copied from [SyncStatusProvider].
+@ProviderFor(SyncStatusProvider)
+final syncStatusProviderProvider = AutoDisposeNotifierProvider<
+    SyncStatusProvider, Map<String, String>>.internal(
+  SyncStatusProvider.new,
+  name: r'syncStatusProviderProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$syncStatusProviderHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$SyncStatus = AutoDisposeNotifier<Map<String, String>>;
+typedef _$SyncStatusProvider = AutoDisposeNotifier<Map<String, String>>;
 String _$deviceConnectionStatusHash() =>
     r'22a0420fbd97663bfbb1abb7799f3846f23a31fd';
 

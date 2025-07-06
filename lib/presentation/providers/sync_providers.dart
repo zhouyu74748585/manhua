@@ -88,7 +88,7 @@ class SyncProgressProvider extends _$SyncProgressProvider {
 
 /// 同步状态提供者
 @riverpod
-class SyncStatus extends _$SyncStatus {
+class SyncStatusProvider extends _$SyncStatusProvider {
   @override
   Map<String, String> build() {
     return {};
@@ -410,6 +410,18 @@ extension ConflictResolutionStrategyExtension on ConflictResolutionStrategy {
       case ConflictResolutionStrategy.targetWins:
         return '始终保留接收设备的数据';
     }
+  }
+}
+
+/// 同步会话提供者
+@riverpod
+Future<SyncSession?> syncSession(SyncSessionRef ref, String sessionId) async {
+  final service = ref.watch(multiDeviceSyncServiceProvider);
+  final sessions = service.getActiveSyncSessions();
+  try {
+    return sessions.firstWhere((session) => session.id == sessionId);
+  } catch (e) {
+    return null;
   }
 }
 

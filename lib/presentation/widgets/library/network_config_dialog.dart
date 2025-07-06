@@ -69,10 +69,16 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth > 600 ? 500.0 : screenWidth * 0.9;
+
     return AlertDialog(
       title: const Text('网络配置'),
-      content: SizedBox(
-        width: 500,
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxWidth: dialogWidth,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -100,13 +106,19 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(protocol.displayName),
+                          Text(
+                            protocol.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           Text(
                             protocol.description,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Colors.grey[600],
                                     ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -299,6 +311,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
 
                 // 连接预览
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
@@ -319,6 +332,8 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                           fontFamily: 'monospace',
                           fontSize: 12,
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
