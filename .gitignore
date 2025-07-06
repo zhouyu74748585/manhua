@@ -34,10 +34,6 @@ thumbs.db
 # Android specific
 linux/
 web/
-windows/
-macos/
-ios/
-android/
 
 # VS Code specific
 .vscode/

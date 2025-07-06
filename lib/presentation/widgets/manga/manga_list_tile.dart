@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../data/models/library.dart';
 
@@ -100,6 +102,10 @@ class MangaListTile extends StatelessWidget {
   }
 
   Widget _buildCoverImageContent() {
+    // 判断是否为网络图片
+    final isNetworkImage =
+        coverPath!.startsWith('http://') || coverPath!.startsWith('https://');
+
     switch (coverDisplayMode) {
       case CoverDisplayMode.leftHalf:
         return ClipRect(
@@ -109,15 +115,7 @@ class MangaListTile extends StatelessWidget {
             child: Transform.scale(
               scale: coverScale,
               alignment: Alignment(-coverOffsetX, 0),
-              child: Image.network(
-                coverPath!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(Icons.image_not_supported, color: Colors.grey),
-                  );
-                },
-              ),
+              child: _buildImageWidget(isNetworkImage),
             ),
           ),
         );
@@ -129,21 +127,38 @@ class MangaListTile extends StatelessWidget {
             child: Transform.scale(
               scale: coverScale,
               alignment: Alignment(coverOffsetX, 0),
-              child: Image.network(
-                coverPath!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Icon(Icons.image_not_supported, color: Colors.grey),
-                  );
-                },
-              ),
+              child: _buildImageWidget(isNetworkImage),
             ),
           ),
         );
       case CoverDisplayMode.defaultMode:
-        return Image.network(
-          coverPath!,
+        return _buildImageWidget(isNetworkImage);
+    }
+  }
+
+  Widget _buildImageWidget(bool isNetworkImage) {
+    if (isNetworkImage) {
+      return CachedNetworkImage(
+        imageUrl: coverPath!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        placeholder: (context, url) => Container(
+          color: Colors.grey[300],
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        errorWidget: (context, url, error) => const Center(
+          child: Icon(Icons.image_not_supported, color: Colors.grey),
+        ),
+      );
+    } else {
+      // 本地文件
+      final file = File(coverPath!);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
@@ -153,6 +168,11 @@ class MangaListTile extends StatelessWidget {
             );
           },
         );
+      } else {
+        return const Center(
+          child: Icon(Icons.image_not_supported, color: Colors.grey),
+        );
+      }
     }
   }
 }

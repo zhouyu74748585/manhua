@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 import 'package:manhua_reader_flutter/presentation/widgets/manga/manga_list_tile.dart';
 
-import '../../../core/utils/platform_utils.dart';
 import '../../../data/models/library.dart';
 import '../../../data/models/manga.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/manga_card.dart';
+import '../manga_detail/manga_detail_page.dart';
 
 enum BookshelfViewMode { grid, list }
 
@@ -279,39 +279,34 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
   }
 
   GridConfig _getGridConfig(GridSize size) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     switch (size) {
       case GridSize.small:
-        return GridConfig(
-          crossAxisCount:
-              PlatformUtils.isExtraSmallBreakpoint(screenWidth) ? 2 : 4,
+        return const GridConfig(
+          crossAxisCount: 4,
           childAspectRatio: 0.6,
-          crossAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
-          mainAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
         );
       case GridSize.medium:
-        return GridConfig(
-          crossAxisCount:
-              PlatformUtils.isExtraSmallBreakpoint(screenWidth) ? 2 : 3,
+        return const GridConfig(
+          crossAxisCount: 3,
           childAspectRatio: 0.65,
-          crossAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
-          mainAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
         );
       case GridSize.large:
-        return GridConfig(
-          crossAxisCount:
-              PlatformUtils.isExtraSmallBreakpoint(screenWidth) ? 1 : 2,
+        return const GridConfig(
+          crossAxisCount: 2,
           childAspectRatio: 0.7,
-          crossAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
-          mainAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
         );
       case GridSize.extraLarge:
-        return GridConfig(
+        return const GridConfig(
           crossAxisCount: 1,
           childAspectRatio: 0.65, // 调整为更大的比例以填充宽度
-          crossAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
-          mainAxisSpacing: PlatformUtils.getResponsiveGridSpacing(screenWidth),
+          crossAxisSpacing: 10, // 消除横向间距
+          mainAxisSpacing: 10, // 消除纵向间距
         );
     }
   }

@@ -95,7 +95,7 @@ class PlatformUtils {
   static double getResponsiveGridSpacing(double width) {
     if (isExtraSmallBreakpoint(width)) return 4.0; // 超小屏幕最小间距
     if (isSmallBreakpoint(width)) return 8.0; // 小屏幕减少间距
-    if (isMobileBreakpoint(width)) return 10.0; // 移动端标准间距
+    if (isMobileBreakpoint(width)) return 12.0; // 移动端标准间距
     if (isTabletBreakpoint(width)) return 16.0; // 平板增加间距
     return 20.0; // 桌面最大间距
   }

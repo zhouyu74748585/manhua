@@ -89,7 +89,7 @@ class NetworkMangaCacheService {
 
       // 获取封面图片
       String? coverImagePath;
-      if (manga.type == MangaType.folder) {
+      if (manga.type == MangaType.directory) {
         // 目录类型：获取第一张图片作为封面
         coverImagePath =
             await _getFirstImageFromDirectory(fileSystem, manga.path);
@@ -186,7 +186,7 @@ class NetworkMangaCacheService {
       // 获取网络文件系统
       final fileSystem = await _getFileSystem(config);
 
-      if (manga.type == MangaType.folder) {
+      if (manga.type == MangaType.directory) {
         // 目录类型：获取指定索引的图片
         final imagePath =
             await _getImageFromDirectory(fileSystem, manga.path, pageIndex);
