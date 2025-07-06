@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/theme_provider.dart';
+import 'about_page.dart';
 import 'privacy_settings_page.dart';
+import 'reader_settings_page.dart';
+import 'storage_settings_page.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -83,29 +86,15 @@ class SettingsPage extends ConsumerWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.chrome_reader_mode),
-          title: const Text('阅读模式'),
-          subtitle: const Text('单页'),
+          title: const Text('阅读器设置'),
+          subtitle: const Text('阅读模式、显示设置、交互设置'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 阅读模式设置
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.swap_horiz),
-          title: const Text('阅读方向'),
-          subtitle: const Text('从左到右'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: 阅读方向设置
-          },
-        ),
-        SwitchListTile(
-          secondary: const Icon(Icons.screen_lock_rotation),
-          title: const Text('保持屏幕常亮'),
-          subtitle: const Text('阅读时防止屏幕自动关闭'),
-          value: true,
-          onChanged: (value) {
-            // TODO: 屏幕常亮设置
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const ReaderSettingsPage(),
+              ),
+            );
           },
         ),
       ],
@@ -136,29 +125,16 @@ class SettingsPage extends ConsumerWidget {
     return Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.folder),
-          title: const Text('缓存目录'),
-          subtitle: const Text('/storage/emulated/0/MangaReader'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: 缓存目录设置
-          },
-        ),
-        ListTile(
           leading: const Icon(Icons.storage),
-          title: const Text('缓存大小'),
-          subtitle: const Text('128 MB'),
+          title: const Text('存储管理'),
+          subtitle: const Text('缓存管理、存储位置设置'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 缓存管理
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.clear_all),
-          title: const Text('清除缓存'),
-          subtitle: const Text('清除所有图片缓存'),
-          onTap: () {
-            _showClearCacheDialog(context);
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const StorageSettingsPage(),
+              ),
+            );
           },
         ),
       ],
@@ -170,31 +146,15 @@ class SettingsPage extends ConsumerWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.info),
-          title: const Text('版本信息'),
-          subtitle: const Text('1.0.0'),
+          title: const Text('关于应用'),
+          subtitle: const Text('版本信息、开发者信息、许可证'),
+          trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 版本信息
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.update),
-          title: const Text('检查更新'),
-          onTap: () {
-            // TODO: 检查更新
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.help),
-          title: const Text('帮助与反馈'),
-          onTap: () {
-            // TODO: 帮助页面
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.privacy_tip),
-          title: const Text('隐私政策'),
-          onTap: () {
-            // TODO: 隐私政策
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const AboutPage(),
+              ),
+            );
           },
         ),
       ],

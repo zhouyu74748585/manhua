@@ -10,6 +10,7 @@ import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../data/models/reading_progress.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/double_page_thumbnail_list.dart';

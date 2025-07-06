@@ -10,16 +10,11 @@ import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../data/models/reading_progress.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/lazy_thumbnail_list.dart';
 import 'double_page_reader.dart';
-
-enum ReadingDirection {
-  leftToRight,
-  rightToLeft,
-  topToBottom,
-}
 
 class ReaderPage extends ConsumerStatefulWidget {
   final String mangaId;

@@ -33,6 +33,24 @@ class AppSettingsNotifier extends _$AppSettingsNotifier {
     await updateSettings(newSettings);
   }
 
+  Future<void> updateReaderSettings(ReaderSettings readerSettings) async {
+    final currentSettings = await future;
+    final newSettings = currentSettings.copyWith(readerSettings: readerSettings);
+    await updateSettings(newSettings);
+  }
+
+  Future<void> updateLibrarySettings(LibraryViewSettings librarySettings) async {
+    final currentSettings = await future;
+    final newSettings = currentSettings.copyWith(librarySettings: librarySettings);
+    await updateSettings(newSettings);
+  }
+
+  Future<void> updateDownloadSettings(DownloadSettings downloadSettings) async {
+    final currentSettings = await future;
+    final newSettings = currentSettings.copyWith(downloadSettings: downloadSettings);
+    await updateSettings(newSettings);
+  }
+
   Future<void> updateLocale(Locale locale) async {
     final currentSettings = await future;
     final newSettings = currentSettings.copyWith(locale: locale);

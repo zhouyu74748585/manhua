@@ -57,6 +57,10 @@ dependencies:
   smb_connect: ^0.0.9
   dartssh2: ^2.13.0
   # 其他协议客户端暂时使用自实现方式避免依赖冲突
+
+  # 设置页面相关
+  package_info_plus: ^8.0.0
+  url_launcher: ^6.3.0
  
 
 dev_dependencies:

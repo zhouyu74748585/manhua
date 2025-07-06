@@ -99,6 +99,7 @@ const _$ReadingModeEnumMap = {
 const _$ReadingDirectionEnumMap = {
   ReadingDirection.leftToRight: 'leftToRight',
   ReadingDirection.rightToLeft: 'rightToLeft',
+  ReadingDirection.topToBottom: 'topToBottom',
 };
 
 const _$ImageFitModeEnumMap = {

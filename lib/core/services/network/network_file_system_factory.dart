@@ -1,9 +1,8 @@
-import 'dart:typed_data';
-
 import '../../../data/models/network_config.dart';
 import 'ftp_file_system.dart';
 import 'http_file_system.dart';
 import 'network_file_system.dart';
+import 'nfs_file_system.dart';
 import 'sftp_file_system.dart';
 import 'smb_file_system.dart';
 import 'webdav_file_system.dart';
@@ -33,8 +32,7 @@ class NetworkFileSystemFactory {
         return SFTPFileSystem(config);
 
       case NetworkProtocol.nfs:
-        // NFS协议暂时使用占位实现
-        return _NFSFileSystemPlaceholder(config);
+        return NFSFileSystem(config);
 
       default:
         throw NetworkFileSystemException('不支持的网络协议: ${config.protocol}');
@@ -119,64 +117,5 @@ class NetworkFileSystemFactory {
       default:
         return true;
     }
-  }
-}
-
-/// NFS文件系统占位实现
-class _NFSFileSystemPlaceholder extends NetworkFileSystem {
-  _NFSFileSystemPlaceholder(super.config);
-
-  @override
-  Future<void> connect() async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中，请使用其他协议');
-  }
-
-  @override
-  Future<void> disconnect() async {}
-
-  @override
-  Future<bool> ping() async => false;
-
-  @override
-  Future<List<NetworkFileInfo>> listDirectory([String path = '/']) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<bool> exists(String path) async => false;
-
-  @override
-  Future<NetworkFileInfo?> getFileInfo(String path) async => null;
-
-  @override
-  Future<Uint8List> downloadFile(String path) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<void> downloadFileToLocal(String remotePath, String localPath,
-      {Function(int downloaded, int total)? onProgress}) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<void> uploadFile(String localPath, String remotePath,
-      {Function(int uploaded, int total)? onProgress}) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<void> createDirectory(String path) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<void> delete(String path) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
-  }
-
-  @override
-  Future<void> rename(String oldPath, String newPath) async {
-    throw NetworkFileSystemException('NFS协议支持正在开发中');
   }
 }
