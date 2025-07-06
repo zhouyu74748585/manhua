@@ -32,12 +32,12 @@ thumbs.db
 *.swp
 
 # Android specific
-android/
-ios/
 linux/
-macos/
 web/
 windows/
+macos/
+ios/
+android/
 
 # VS Code specific
 .vscode/

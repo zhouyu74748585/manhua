@@ -100,15 +100,6 @@ class SettingsPage extends ConsumerWidget {
           },
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.fullscreen),
-          title: const Text('全屏阅读'),
-          subtitle: const Text('隐藏状态栏和导航栏'),
-          value: false,
-          onChanged: (value) {
-            // TODO: 全屏设置
-          },
-        ),
-        SwitchListTile(
           secondary: const Icon(Icons.screen_lock_rotation),
           title: const Text('保持屏幕常亮'),
           subtitle: const Text('阅读时防止屏幕自动关闭'),

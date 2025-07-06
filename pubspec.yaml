@@ -26,7 +26,8 @@ dependencies:
   go_router: ^12.1.3
   
   # File System
-  file_picker: ^6.1.1
+  file_picker: ^8.1.2
+  permission_handler: ^11.3.1
   archive: ^4.0.7
   path: ^1.8.3
   image: ^4.1.0
@@ -40,7 +41,6 @@ dependencies:
   path_provider: ^2.1.1
   crypto: ^3.0.3
   pdfx: ^2.9.2
-  pdf_render: ^1.4.11
   tuple: ^2.0.0
   local_auth: ^2.1.6
 
@@ -50,7 +50,13 @@ dependencies:
   shelf: ^1.4.1
   shelf_router: ^1.1.4
   network_info_plus: ^4.1.0
-  device_info_plus: ^9.1.1
+  device_info_plus: ^11.5.0
+
+  # Network protocol clients
+  webdav_client: ^1.2.2 # WebDAV client
+  smb_connect: ^0.0.9
+  dartssh2: ^2.13.0
+  # 其他协议客户端暂时使用自实现方式避免依赖冲突
  
 
 dev_dependencies:

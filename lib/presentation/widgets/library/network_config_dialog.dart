@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../data/models/network_config.dart';
+import 'network_connection_test_dialog.dart';
 
 class NetworkConfigDialog extends StatefulWidget {
   final NetworkConfig? initialConfig;
@@ -332,6 +333,10 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('取消'),
         ),
+        OutlinedButton(
+          onPressed: _testConnection,
+          child: const Text('测试连接'),
+        ),
         ElevatedButton(
           onPressed: _saveConfig,
           child: const Text('保存'),
@@ -370,7 +375,52 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
         return '$scheme://$username@$host:$port${remotePath.isNotEmpty ? '/$remotePath' : ''}';
       case NetworkProtocol.nfs:
         return 'nfs://$host:$port$exportPath${remotePath.isNotEmpty ? '/$remotePath' : ''}';
+      case NetworkProtocol.http:
+        return 'http://$username@$host:$port${remotePath.isNotEmpty ? '/$remotePath' : ''}';
+      case NetworkProtocol.https:
+        return 'https://$username@$host:$port${remotePath.isNotEmpty ? '/$remotePath' : ''}';
     }
+  }
+
+  Future<void> _testConnection() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final config = _buildNetworkConfig();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => NetworkConnectionTestDialog(config: config),
+    );
+  }
+
+  NetworkConfig _buildNetworkConfig() {
+    return NetworkConfig(
+      protocol: _selectedProtocol,
+      host: _hostController.text.trim(),
+      port: _portController.text.trim().isNotEmpty
+          ? int.tryParse(_portController.text.trim()) ??
+              _getDefaultPort(_selectedProtocol)
+          : _getDefaultPort(_selectedProtocol),
+      username: _usernameController.text.trim().isEmpty
+          ? null
+          : _usernameController.text.trim(),
+      password: _passwordController.text.trim().isEmpty
+          ? null
+          : _passwordController.text.trim(),
+      shareName: _shareNameController.text.trim().isEmpty
+          ? null
+          : _shareNameController.text.trim(),
+      exportPath: _exportPathController.text.trim().isEmpty
+          ? null
+          : _exportPathController.text.trim(),
+      remotePath: _remotePathController.text.trim().isEmpty
+          ? null
+          : _remotePathController.text.trim(),
+      useSSL: _useSSL,
+    );
   }
 
   void _saveConfig() {
@@ -378,29 +428,7 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
       return;
     }
 
-    final config = NetworkConfig(
-      protocol: _selectedProtocol,
-      host: _hostController.text.trim(),
-      port: _portController.text.trim().isNotEmpty
-          ? int.tryParse(_portController.text.trim())
-          : null,
-      username: _usernameController.text.trim().isNotEmpty
-          ? _usernameController.text.trim()
-          : null,
-      password: _passwordController.text.trim().isNotEmpty
-          ? _passwordController.text.trim()
-          : null,
-      shareName: _shareNameController.text.trim().isNotEmpty
-          ? _shareNameController.text.trim()
-          : null,
-      exportPath: _exportPathController.text.trim().isNotEmpty
-          ? _exportPathController.text.trim()
-          : null,
-      remotePath: _remotePathController.text.trim().isNotEmpty
-          ? _remotePathController.text.trim()
-          : null,
-      useSSL: _useSSL,
-    );
+    final config = _buildNetworkConfig();
 
     if (!config.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -411,5 +439,24 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
 
     widget.onSave(config);
     Navigator.of(context).pop();
+  }
+
+  int _getDefaultPort(NetworkProtocol protocol) {
+    switch (protocol) {
+      case NetworkProtocol.http:
+        return 80;
+      case NetworkProtocol.https:
+        return 443;
+      case NetworkProtocol.ftp:
+        return 21;
+      case NetworkProtocol.sftp:
+        return 22;
+      case NetworkProtocol.smb:
+        return 445;
+      case NetworkProtocol.webdav:
+        return 80;
+      case NetworkProtocol.nfs:
+        return 2049;
+    }
   }
 }

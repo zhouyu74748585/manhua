@@ -17,6 +17,7 @@ NetworkConfig _$NetworkConfigFromJson(Map<String, dynamic> json) =>
       exportPath: json['exportPath'] as String?,
       remotePath: json['remotePath'] as String?,
       useSSL: json['useSSL'] as bool? ?? false,
+      timeout: (json['timeout'] as num?)?.toInt() ?? 30,
       additionalSettings:
           json['additionalSettings'] as Map<String, dynamic>? ?? const {},
     );
@@ -32,10 +33,13 @@ Map<String, dynamic> _$NetworkConfigToJson(NetworkConfig instance) =>
       'exportPath': instance.exportPath,
       'remotePath': instance.remotePath,
       'useSSL': instance.useSSL,
+      'timeout': instance.timeout,
       'additionalSettings': instance.additionalSettings,
     };
 
 const _$NetworkProtocolEnumMap = {
+  NetworkProtocol.http: 'http',
+  NetworkProtocol.https: 'https',
   NetworkProtocol.smb: 'smb',
   NetworkProtocol.ftp: 'ftp',
   NetworkProtocol.sftp: 'sftp',

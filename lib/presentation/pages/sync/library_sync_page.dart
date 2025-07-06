@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../data/models/library.dart';
+import '../../../data/models/manga.dart';
 import '../../../data/models/sync/device_info.dart';
 import '../../../data/models/sync/sync_session.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/manga_provider.dart';
 import '../../providers/sync_providers.dart';
 
 /// 漫画库同步页面 - 选择要同步的库和同步选项
@@ -23,11 +25,11 @@ class LibrarySyncPage extends ConsumerStatefulWidget {
 
 class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
   final Set<String> _selectedLibraryIds = {};
-  SyncDirection _syncDirection = SyncDirection.bidirectional;
+  final Map<String, Set<String>> _selectedMangaIds = {}; // 库ID -> 选中的漫画ID集合
+  SyncDirection _syncDirection = SyncDirection.toRemote; // 默认只发送到目标设备
   bool _syncThumbnails = true;
   bool _syncMetadata = true;
   bool _syncProgress = true;
-  bool _resolveConflictsAutomatically = true;
 
   @override
   Widget build(BuildContext context) {
@@ -78,13 +80,13 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
 
           const SizedBox(height: 24),
 
-          // 选择漫画库
-          _buildLibrarySelection(enabledLibraries),
+          // 选择漫画
+          _buildMangaSelection(enabledLibraries),
 
           const SizedBox(height: 24),
 
-          // 同步方向选择
-          _buildSyncDirectionSelection(),
+          // 同步提示信息
+          _buildSyncDirectionInfo(),
 
           const SizedBox(height: 24),
 
@@ -93,8 +95,8 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
 
           const SizedBox(height: 24),
 
-          // 冲突解决选项
-          _buildConflictResolutionSection(),
+          // 冲突解决提示
+          _buildConflictResolutionInfo(),
 
           const SizedBox(height: 32),
 
@@ -132,83 +134,153 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
     );
   }
 
-  Widget _buildLibrarySelection(List<MangaLibrary> libraries) {
+  Widget _buildMangaSelection(List<MangaLibrary> libraries) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Text(
-                  '选择漫画库',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      if (_selectedLibraryIds.length == libraries.length) {
-                        _selectedLibraryIds.clear();
-                      } else {
-                        _selectedLibraryIds
-                            .addAll(libraries.map((lib) => lib.id));
-                      }
-                    });
-                  },
-                  child: Text(_selectedLibraryIds.length == libraries.length
-                      ? '取消全选'
-                      : '全选'),
-                ),
-              ],
+            const Text(
+              '选择要同步的漫画',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '请先选择漫画库，然后选择要同步的具体漫画',
+              style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 12),
             if (libraries.isEmpty)
               const Text('没有可用的漫画库')
             else
-              ...libraries.map((library) => _buildLibraryTile(library)),
+              ...libraries
+                  .map((library) => _buildLibraryExpansionTile(library)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLibraryTile(MangaLibrary library) {
+  Widget _buildLibraryExpansionTile(MangaLibrary library) {
     final isSelected = _selectedLibraryIds.contains(library.id);
+    final mangaAsync = ref.watch(mangaByLibraryProvider(library.id));
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ExpansionTile(
+        leading: Checkbox(
+          value: isSelected,
+          onChanged: (selected) {
+            setState(() {
+              if (selected == true) {
+                _selectedLibraryIds.add(library.id);
+              } else {
+                _selectedLibraryIds.remove(library.id);
+                _selectedMangaIds.remove(library.id);
+              }
+            });
+          },
+        ),
+        title: Text(library.name),
+        subtitle: Text(library.path),
+        children: [
+          if (isSelected)
+            mangaAsync.when(
+              data: (mangaList) => _buildMangaList(library.id, mangaList),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, stack) => Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text('加载漫画失败: $error'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMangaList(String libraryId, List<Manga> mangaList) {
+    final selectedMangaIds = _selectedMangaIds[libraryId] ?? <String>{};
+
+    if (mangaList.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('该库中没有漫画'),
+      );
+    }
+
+    return Column(
+      children: [
+        // 全选/取消全选按钮
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    if (selectedMangaIds.length == mangaList.length) {
+                      _selectedMangaIds[libraryId] = <String>{};
+                    } else {
+                      _selectedMangaIds[libraryId] =
+                          mangaList.map((m) => m.id).toSet();
+                    }
+                  });
+                },
+                child: Text(selectedMangaIds.length == mangaList.length
+                    ? '取消全选'
+                    : '全选'),
+              ),
+              const Spacer(),
+              Text('已选择 ${selectedMangaIds.length} / ${mangaList.length}'),
+            ],
+          ),
+        ),
+        // 漫画列表
+        ...mangaList.map((manga) => _buildMangaTile(libraryId, manga)),
+      ],
+    );
+  }
+
+  Widget _buildMangaTile(String libraryId, Manga manga) {
+    final selectedMangaIds = _selectedMangaIds[libraryId] ?? <String>{};
+    final isSelected = selectedMangaIds.contains(manga.id);
 
     return CheckboxListTile(
       value: isSelected,
       onChanged: (selected) {
         setState(() {
+          final currentSelected = _selectedMangaIds[libraryId] ?? <String>{};
           if (selected == true) {
-            _selectedLibraryIds.add(library.id);
+            currentSelected.add(manga.id);
           } else {
-            _selectedLibraryIds.remove(library.id);
+            currentSelected.remove(manga.id);
           }
+          _selectedMangaIds[libraryId] = currentSelected;
         });
       },
-      title: Text(library.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('路径: ${library.path}'),
-          Text('类型: ${library.type.displayName}'),
-          Text('漫画数量: ${library.mangaCount}'),
-        ],
-      ),
-      secondary: Icon(
-        library.type == LibraryType.local
-            ? Icons.folder
-            : library.type == LibraryType.network
-                ? Icons.cloud
-                : Icons.cloud_queue,
-        color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
-      ),
+      title: Text(manga.title),
+      subtitle: Text('${manga.totalPages} 页'),
+      secondary: manga.coverPath?.isNotEmpty == true
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                manga.coverPath!,
+                width: 40,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.book, size: 40),
+              ),
+            )
+          : const Icon(Icons.book, size: 40),
     );
   }
 
-  Widget _buildSyncDirectionSelection() {
+  Widget _buildSyncDirectionInfo() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -220,26 +292,38 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            RadioListTile<SyncDirection>(
-              value: SyncDirection.bidirectional,
-              groupValue: _syncDirection,
-              onChanged: (value) => setState(() => _syncDirection = value!),
-              title: const Text('双向同步'),
-              subtitle: const Text('同步两个设备之间的所有差异'),
-            ),
-            RadioListTile<SyncDirection>(
-              value: SyncDirection.toRemote,
-              groupValue: _syncDirection,
-              onChanged: (value) => setState(() => _syncDirection = value!),
-              title: const Text('发送到目标设备'),
-              subtitle: const Text('只将本地数据发送到目标设备'),
-            ),
-            RadioListTile<SyncDirection>(
-              value: SyncDirection.fromRemote,
-              groupValue: _syncDirection,
-              onChanged: (value) => setState(() => _syncDirection = value!),
-              title: const Text('从目标设备接收'),
-              subtitle: const Text('只从目标设备接收数据'),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.send, color: Colors.blue[700]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '发送到目标设备',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '将选中的漫画数据发送到目标设备，目标设备将接收并保存这些数据',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -283,7 +367,7 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
     );
   }
 
-  Widget _buildConflictResolutionSection() {
+  Widget _buildConflictResolutionInfo() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -291,16 +375,42 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '冲突解决',
+              '冲突解决策略',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            SwitchListTile(
-              value: _resolveConflictsAutomatically,
-              onChanged: (value) =>
-                  setState(() => _resolveConflictsAutomatically = value),
-              title: const Text('自动解决冲突'),
-              subtitle: const Text('使用最新数据自动解决冲突，否则需要手动选择'),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_fix_high, color: Colors.green[700]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '自动解决冲突',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '当发现数据冲突时，系统将自动选择最新的数据版本，无需手动干预',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -309,12 +419,15 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
   }
 
   Widget _buildSyncButton() {
+    final totalSelectedManga = _selectedMangaIds.values
+        .fold<int>(0, (sum, mangaIds) => sum + mangaIds.length);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: _selectedLibraryIds.isEmpty ? null : _startSync,
+        onPressed: totalSelectedManga == 0 ? null : _startSync,
         icon: const Icon(Icons.sync),
-        label: Text('开始同步 (${_selectedLibraryIds.length} 个库)'),
+        label: Text('开始同步 ($totalSelectedManga 部漫画)'),
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
@@ -334,7 +447,7 @@ class _LibrarySyncPageState extends ConsumerState<LibrarySyncPage> {
         targetDevice: widget.targetDevice,
         libraryIds: _selectedLibraryIds.toList(),
         direction: _syncDirection,
-        resolveConflictsAutomatically: _resolveConflictsAutomatically,
+        resolveConflictsAutomatically: true, // 自动解决冲突
       );
 
       if (mounted) {

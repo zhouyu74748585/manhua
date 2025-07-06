@@ -21,6 +21,7 @@ abstract class MangaRepository {
   Future<List<ReadingProgress>> getAllMangaReadingProgress();
   Future<List<Manga>> searchManga(String query);
   Future<List<Manga>> getMangaByCategory(String category);
+  Future<List<Manga>> getMangaByLibraryId(String libraryId);
   Future<List<Manga>> getFavoriteManga();
   Future<List<Manga>> getRecentlyReadManga();
   Future<List<Manga>> getRecentlyUpdatedManga();
@@ -160,6 +161,11 @@ class LocalMangaRepository implements MangaRepository {
   @override
   Future<List<Manga>> getMangaByCategory(String category) async {
     return await DriftDatabaseService.getMangaByCategory(category);
+  }
+
+  @override
+  Future<List<Manga>> getMangaByLibraryId(String libraryId) async {
+    return await DriftDatabaseService.getMangaByLibraryId(libraryId);
   }
 
   @override

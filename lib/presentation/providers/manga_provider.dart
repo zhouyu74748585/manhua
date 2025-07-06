@@ -117,6 +117,13 @@ Future<List<MangaPage>> mangaPages(MangaPagesRef ref, String mangaId) async {
   return repository.getPageByMangaId(mangaId);
 }
 
+// 根据库ID获取漫画列表提供者
+@riverpod
+Future<List<Manga>> mangaByLibrary(MangaByLibraryRef ref, String libraryId) async {
+  final repository = ref.watch(mangaRepositoryProvider);
+  return repository.getMangaByLibraryId(libraryId);
+}
+
 // 搜索结果提供者
 @riverpod
 Future<List<Manga>> searchManga(SearchMangaRef ref, String query) async {

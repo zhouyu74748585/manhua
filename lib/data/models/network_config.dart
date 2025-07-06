@@ -6,6 +6,10 @@ part 'network_config.g.dart';
 
 /// 网络协议类型
 enum NetworkProtocol {
+  @JsonValue('http')
+  http,
+  @JsonValue('https')
+  https,
   @JsonValue('smb')
   smb,
   @JsonValue('ftp')
@@ -21,6 +25,10 @@ enum NetworkProtocol {
 extension NetworkProtocolExtension on NetworkProtocol {
   String get displayName {
     switch (this) {
+      case NetworkProtocol.http:
+        return 'HTTP';
+      case NetworkProtocol.https:
+        return 'HTTPS';
       case NetworkProtocol.smb:
         return 'SMB/CIFS';
       case NetworkProtocol.ftp:
@@ -36,6 +44,10 @@ extension NetworkProtocolExtension on NetworkProtocol {
 
   String get description {
     switch (this) {
+      case NetworkProtocol.http:
+        return 'HTTP 网络协议';
+      case NetworkProtocol.https:
+        return 'HTTPS 安全网络协议';
       case NetworkProtocol.smb:
         return 'Windows 共享文件夹';
       case NetworkProtocol.ftp:
@@ -51,6 +63,10 @@ extension NetworkProtocolExtension on NetworkProtocol {
 
   String get defaultPort {
     switch (this) {
+      case NetworkProtocol.http:
+        return '80';
+      case NetworkProtocol.https:
+        return '443';
       case NetworkProtocol.smb:
         return '445';
       case NetworkProtocol.ftp:
@@ -66,6 +82,9 @@ extension NetworkProtocolExtension on NetworkProtocol {
 
   List<String> get requiredFields {
     switch (this) {
+      case NetworkProtocol.http:
+      case NetworkProtocol.https:
+        return ['host'];
       case NetworkProtocol.smb:
         return ['host', 'username', 'password', 'shareName'];
       case NetworkProtocol.ftp:
@@ -91,6 +110,7 @@ class NetworkConfig {
   final String? exportPath; // NFS 导出路径
   final String? remotePath; // 远程路径
   final bool useSSL; // WebDAV 是否使用 HTTPS
+  final int timeout; // 连接超时时间（秒）
   final Map<String, dynamic> additionalSettings;
 
   const NetworkConfig({
@@ -103,6 +123,7 @@ class NetworkConfig {
     this.exportPath,
     this.remotePath,
     this.useSSL = false,
+    this.timeout = 30,
     this.additionalSettings = const {},
   });
 
@@ -117,6 +138,12 @@ class NetworkConfig {
       NetworkProtocol protocol;
 
       switch (uri.scheme.toLowerCase()) {
+        case 'http':
+          protocol = NetworkProtocol.http;
+          break;
+        case 'https':
+          protocol = NetworkProtocol.https;
+          break;
         case 'smb':
           protocol = NetworkProtocol.smb;
           break;
@@ -126,15 +153,14 @@ class NetworkConfig {
         case 'sftp':
           protocol = NetworkProtocol.sftp;
           break;
-        case 'http':
-        case 'https':
+        case 'webdav':
           protocol = NetworkProtocol.webdav;
           break;
         case 'nfs':
           protocol = NetworkProtocol.nfs;
           break;
         default:
-          protocol = NetworkProtocol.smb;
+          protocol = NetworkProtocol.http;
       }
 
       String? shareName;
@@ -195,6 +221,7 @@ class NetworkConfig {
     String? exportPath,
     String? remotePath,
     bool? useSSL,
+    int? timeout,
     Map<String, dynamic>? additionalSettings,
   }) {
     return NetworkConfig(
@@ -207,6 +234,7 @@ class NetworkConfig {
       exportPath: exportPath ?? this.exportPath,
       remotePath: remotePath ?? this.remotePath,
       useSSL: useSSL ?? this.useSSL,
+      timeout: timeout ?? this.timeout,
       additionalSettings: additionalSettings ?? this.additionalSettings,
     );
   }
@@ -217,6 +245,10 @@ class NetworkConfig {
     final pathStr = remotePath ?? '';
 
     switch (protocol) {
+      case NetworkProtocol.http:
+        return 'http://$host$portStr$pathStr';
+      case NetworkProtocol.https:
+        return 'https://$host$portStr$pathStr';
       case NetworkProtocol.smb:
         return 'smb://$host$portStr/$shareName$pathStr';
       case NetworkProtocol.ftp:

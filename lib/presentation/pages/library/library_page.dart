@@ -357,8 +357,7 @@ class LibraryPage extends ConsumerWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // TODO: 导航到隐私设置页面
-              // Navigator.of(context).pushNamed('/settings/privacy');
+              Navigator.of(context).pushNamed('/settings/privacy');
             },
             child: const Text('去设置'),
           ),
@@ -388,8 +387,8 @@ class LibraryPage extends ConsumerWidget {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.library_books),
-              title: const Text('同步整个漫画库'),
-              subtitle: const Text('同步库中的所有漫画和设置'),
+              title: const Text('同步漫画库'),
+              subtitle: const Text('同步库中的漫画和设置'),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push('/sync/library-sync', extra: library);
@@ -398,7 +397,7 @@ class LibraryPage extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.sync),
               title: const Text('同步阅读进度'),
-              subtitle: const Text('仅同步此库中漫画的阅读进度'),
+              subtitle: const Text('同步此库中漫画的阅读进度'),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push('/sync/progress-sync', extra: library);

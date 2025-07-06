@@ -642,6 +642,137 @@ class _MangaPagesProviderElement
   String get mangaId => (origin as MangaPagesProvider).mangaId;
 }
 
+String _$mangaByLibraryHash() => r'af917a1df21aed5fcb93ca26b96b9d6cdbfc68df';
+
+/// See also [mangaByLibrary].
+@ProviderFor(mangaByLibrary)
+const mangaByLibraryProvider = MangaByLibraryFamily();
+
+/// See also [mangaByLibrary].
+class MangaByLibraryFamily extends Family<AsyncValue<List<Manga>>> {
+  /// See also [mangaByLibrary].
+  const MangaByLibraryFamily();
+
+  /// See also [mangaByLibrary].
+  MangaByLibraryProvider call(
+    String libraryId,
+  ) {
+    return MangaByLibraryProvider(
+      libraryId,
+    );
+  }
+
+  @override
+  MangaByLibraryProvider getProviderOverride(
+    covariant MangaByLibraryProvider provider,
+  ) {
+    return call(
+      provider.libraryId,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'mangaByLibraryProvider';
+}
+
+/// See also [mangaByLibrary].
+class MangaByLibraryProvider extends AutoDisposeFutureProvider<List<Manga>> {
+  /// See also [mangaByLibrary].
+  MangaByLibraryProvider(
+    String libraryId,
+  ) : this._internal(
+          (ref) => mangaByLibrary(
+            ref as MangaByLibraryRef,
+            libraryId,
+          ),
+          from: mangaByLibraryProvider,
+          name: r'mangaByLibraryProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$mangaByLibraryHash,
+          dependencies: MangaByLibraryFamily._dependencies,
+          allTransitiveDependencies:
+              MangaByLibraryFamily._allTransitiveDependencies,
+          libraryId: libraryId,
+        );
+
+  MangaByLibraryProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.libraryId,
+  }) : super.internal();
+
+  final String libraryId;
+
+  @override
+  Override overrideWith(
+    FutureOr<List<Manga>> Function(MangaByLibraryRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: MangaByLibraryProvider._internal(
+        (ref) => create(ref as MangaByLibraryRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        libraryId: libraryId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<List<Manga>> createElement() {
+    return _MangaByLibraryProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is MangaByLibraryProvider && other.libraryId == libraryId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, libraryId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin MangaByLibraryRef on AutoDisposeFutureProviderRef<List<Manga>> {
+  /// The parameter `libraryId` of this provider.
+  String get libraryId;
+}
+
+class _MangaByLibraryProviderElement
+    extends AutoDisposeFutureProviderElement<List<Manga>>
+    with MangaByLibraryRef {
+  _MangaByLibraryProviderElement(super.provider);
+
+  @override
+  String get libraryId => (origin as MangaByLibraryProvider).libraryId;
+}
+
 String _$searchMangaHash() => r'ee3687ab0b4efc463c5bcd280e3ce127d144bc30';
 
 /// See also [searchManga].

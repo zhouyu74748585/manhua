@@ -1,25 +1,35 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/services/network/network_file_system_factory.dart';
+import '../../core/services/network/network_scan_queue_manager.dart';
+import '../../presentation/providers/manga_provider.dart';
 import '../models/library.dart';
 import '../models/manga.dart';
+import '../models/manga_page.dart';
+import '../models/network_config.dart';
 import '../repositories/library_repository.dart';
+import '../repositories/manga_repository.dart';
 
 part 'library_service.g.dart';
 
 @riverpod
 LibraryService libraryService(Ref ref) {
-  return LibraryService(ref.read(libraryRepositoryProvider));
+  return LibraryService(
+    ref.read(libraryRepositoryProvider),
+    ref.read(mangaRepositoryProvider),
+  );
 }
 
 class LibraryService {
   final LibraryRepository _repository;
+  final MangaRepository _mangaRepository;
 
-  LibraryService(this._repository);
+  LibraryService(this._repository, this._mangaRepository);
 
   Future<List<MangaLibrary>> getAllLibraries() async {
     return await _repository.getAllLibraries();
@@ -98,7 +108,7 @@ class LibraryService {
         await scanLibrary(library.id);
       } catch (e, stackTrace) {
         // 记录错误但继续扫描其他库
-        log('扫描库 ${library.name} 失败: $e,堆栈:$stackTrace');
+        dev.log('扫描库 ${library.name} 失败: $e,堆栈:$stackTrace');
       }
     }
   }
@@ -108,7 +118,7 @@ class LibraryService {
       await _validateLibraryPath(path, type);
       return true;
     } catch (e, stackTrace) {
-      log('验证路径失败: $e, 堆栈: $stackTrace');
+      dev.log('验证路径失败: $e, 堆栈: $stackTrace');
       return false;
     }
   }
@@ -150,7 +160,7 @@ class LibraryService {
       try {
         await directory.list().take(1).toList();
       } catch (e, stackTrace) {
-        log('检查目录权限时出错: $e, 栈跟踪: $stackTrace');
+        dev.log('检查目录权限时出错: $e, 栈跟踪: $stackTrace');
         throw Exception('没有读取权限: $path');
       }
     } catch (e, stackTrace) {
@@ -262,20 +272,39 @@ class LibraryService {
 
   Future<int> _scanNetworkLibrary(MangaLibrary library) async {
     try {
-      final uri = Uri.parse(library.path);
+      // 解析网络配置
+      final config = NetworkConfig.fromConnectionString(library.path);
 
-      if (['http', 'https'].contains(uri.scheme.toLowerCase())) {
-        // HTTP/HTTPS 网络扫描
-        return await _scanHttpLibrary(uri);
-      } else if (uri.scheme.toLowerCase() == 'ftp') {
-        // FTP 扫描（暂时返回0，需要FTP客户端库支持）
-        throw Exception('FTP 协议暂不支持，请使用 HTTP/HTTPS');
-      } else if (uri.scheme.toLowerCase() == 'smb') {
-        // SMB 扫描（暂时返回0，需要SMB客户端库支持）
-        throw Exception('SMB 协议暂不支持，请使用 HTTP/HTTPS');
-      } else {
-        throw Exception('不支持的网络协议: ${uri.scheme}');
+      // 检查协议是否支持
+      if (!NetworkFileSystemFactory.isProtocolSupported(config.protocol)) {
+        throw Exception(
+            '协议 ${NetworkFileSystemFactory.getProtocolDisplayName(config.protocol)} 暂不支持');
       }
+
+      // 使用网络扫描队列管理器进行异步扫描
+      final taskId =
+          await NetworkScanQueueManager.instance.startScan(library, config);
+
+      // 监听扫描进度
+      int mangaCount = 0;
+      await for (final progress
+          in NetworkScanQueueManager.instance.progressStream) {
+        if (progress.taskId == taskId) {
+          if (progress.status == NetworkScanStatus.completed) {
+            mangaCount = progress.foundMangas?.length ?? 0;
+
+            // 保存扫描结果到数据库
+            if (progress.foundMangas != null) {
+              await _saveNetworkScanResults(library, progress.foundMangas!);
+            }
+            break;
+          } else if (progress.status == NetworkScanStatus.failed) {
+            throw Exception('网络扫描失败: ${progress.message}');
+          }
+        }
+      }
+
+      return mangaCount;
     } catch (e, stackTrace) {
       throw Exception('扫描网络库失败: $e,堆栈:$stackTrace');
     }
@@ -368,5 +397,167 @@ class LibraryService {
   Future<int> _scanAmazonS3(Uri uri) async {
     // Amazon S3 API 扫描
     throw Exception('Amazon S3 扫描需要配置 AWS 凭证，请联系开发者');
+  }
+
+  /// 保存网络扫描结果到数据库
+  Future<void> _saveNetworkScanResults(
+      MangaLibrary library, List<NetworkMangaInfo> mangaInfos) async {
+    final List<Manga> mangasToSave = [];
+    final List<MangaPage> pagesToSave = [];
+
+    for (final mangaInfo in mangaInfos) {
+      try {
+        // 检查漫画是否已存在
+        final existingManga = await _mangaRepository
+            .getMangaById(_generateMangaId(mangaInfo.name, mangaInfo.path));
+
+        if (existingManga != null) {
+          // 如果漫画已存在，检查是否需要更新
+          if (existingManga.updatedAt != mangaInfo.lastModified) {
+            final updatedManga = existingManga.copyWith(
+              fileSize: mangaInfo.size,
+              totalPages: mangaInfo.isDirectory
+                  ? mangaInfo.imageCount
+                  : existingManga.totalPages,
+              updatedAt: mangaInfo.lastModified,
+            );
+            await _mangaRepository.updateManga(updatedManga);
+            dev.log('更新网络漫画: ${mangaInfo.name}');
+          }
+          continue;
+        }
+
+        // 创建新的漫画对象
+        final manga = Manga(
+          id: _generateMangaId(mangaInfo.name, mangaInfo.path),
+          title: _extractTitleFromPath(mangaInfo.name),
+          path: mangaInfo.path,
+          libraryId: library.id,
+          type: _determineMangaType(mangaInfo),
+          totalPages: mangaInfo.isDirectory ? mangaInfo.imageCount : 1,
+          coverPath: '', // 网络漫画的封面路径稍后处理
+          fileSize: mangaInfo.size,
+          tags: [],
+          author: '',
+          description: '',
+          isFavorite: false,
+          updatedAt: mangaInfo.lastModified,
+          createdAt: DateTime.now(),
+        );
+
+        mangasToSave.add(manga);
+
+        // 如果是目录类型的漫画，创建页面占位符
+        if (mangaInfo.isDirectory && mangaInfo.imageCount > 0) {
+          for (int i = 0; i < mangaInfo.imageCount; i++) {
+            final page = MangaPage(
+              id: '${manga.id}_page_$i',
+              mangaId: manga.id,
+              pageIndex: i + 1,
+              localPath: '${mangaInfo.path}/page_${i + 1}', // 网络路径占位符
+            );
+            pagesToSave.add(page);
+          }
+        }
+
+        dev.log(
+            '准备保存网络漫画: ${mangaInfo.name}, 类型: ${manga.type}, 页数: ${manga.totalPages}');
+      } catch (e, stackTrace) {
+        dev.log('处理网络漫画失败: ${mangaInfo.name}, 错误: $e, 堆栈: $stackTrace');
+      }
+    }
+
+    // 批量保存漫画和页面
+    if (mangasToSave.isNotEmpty) {
+      try {
+        await _mangaRepository.saveMangaList(mangasToSave);
+        dev.log('批量保存 ${mangasToSave.length} 个网络漫画成功');
+      } catch (e, stackTrace) {
+        dev.log('批量保存网络漫画失败: $e, 堆栈: $stackTrace');
+        // 回退到单个保存
+        for (final manga in mangasToSave) {
+          try {
+            await _mangaRepository.saveManga(manga);
+          } catch (e) {
+            dev.log('单个保存网络漫画失败: ${manga.title}, 错误: $e');
+          }
+        }
+      }
+    }
+
+    if (pagesToSave.isNotEmpty) {
+      try {
+        await _mangaRepository.savePageList(pagesToSave);
+        dev.log('批量保存 ${pagesToSave.length} 个网络页面成功');
+      } catch (e, stackTrace) {
+        dev.log('批量保存网络页面失败: $e, 堆栈: $stackTrace');
+        // 回退到单个保存
+        for (final page in pagesToSave) {
+          try {
+            await _mangaRepository.savePage(page);
+          } catch (e) {
+            dev.log('单个保存网络页面失败: ${page.id}, 错误: $e');
+          }
+        }
+      }
+    }
+  }
+
+
+
+  /// 生成漫画ID
+  String _generateMangaId(String name, String path) {
+    // 使用路径和名称的哈希值生成稳定的ID，确保同一漫画的ID一致
+    final hash = (name + path).hashCode.abs();
+    return 'manga_network_$hash';
+  }
+
+  /// 从路径提取漫画标题
+  String _extractTitleFromPath(String pathOrName) {
+    // 移除路径分隔符，获取文件名或目录名
+    String title = pathOrName.split('/').last;
+
+    // 移除文件扩展名
+    if (title.contains('.')) {
+      final parts = title.split('.');
+      if (parts.length > 1) {
+        // 检查是否为已知的漫画文件扩展名
+        final extension = parts.last.toLowerCase();
+        if (['cbz', 'cbr', 'zip', 'rar', '7z', 'pdf', 'epub']
+            .contains(extension)) {
+          title = parts.sublist(0, parts.length - 1).join('.');
+        }
+      }
+    }
+
+    // 清理标题：移除特殊字符，替换下划线和连字符为空格
+    title = title.replaceAll(RegExp(r'[_-]+'), ' ');
+    title = title.replaceAll(RegExp(r'\s+'), ' ');
+
+    return title.trim().isEmpty ? pathOrName : title.trim();
+  }
+
+  /// 确定漫画类型
+  MangaType _determineMangaType(NetworkMangaInfo mangaInfo) {
+    if (mangaInfo.isDirectory) {
+      return MangaType.folder;
+    }
+
+    // 根据文件扩展名确定类型
+    final extension = mangaInfo.path.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'cbz':
+      case 'zip':
+      case 'cbr':
+      case 'rar':
+      case '7z':
+      case 'cb7':
+        return MangaType.archive;
+      case 'pdf':
+        return MangaType.pdf;
+      default:
+        // 如果是目录或其他格式，根据是否包含子目录判断
+        return mangaInfo.isDirectory ? MangaType.folder : MangaType.online;
+    }
   }
 }

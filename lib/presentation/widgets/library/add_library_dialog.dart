@@ -1,9 +1,8 @@
 import 'dart:developer';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-// import 'package:file_picker/file_picker.dart'; // 暂时注释掉以解决编译问题
+import '../../../core/services/enhanced_file_picker_service.dart';
 import '../../../data/models/library.dart';
 import '../../../data/models/network_config.dart';
 import 'network_config_dialog.dart';
@@ -271,17 +270,36 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
 
   Future<void> _selectFolder() async {
     try {
-      final result = await FilePicker.platform.getDirectoryPath();
+      final result =
+          await EnhancedFilePickerService.pickDirectoryWithPermission(
+        context: context,
+        dialogTitle: '选择漫画库文件夹',
+        initialDirectory:
+            _pathController.text.isNotEmpty ? _pathController.text : null,
+      );
+
       if (result != null) {
         setState(() {
           _pathController.text = result;
         });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('文件夹选择成功，权限已保存'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('选择文件夹失败: $e, $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('选择文件夹失败: $e')),
+          SnackBar(
+            content: Text('选择文件夹失败: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

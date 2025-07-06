@@ -55,17 +55,7 @@ class FileScannerService {
   /// 递归扫描目录
   static Future<void> _scanDirectoryRecursive(Directory directory,
       String libraryId, List<Manga> mangas, List<MangaPage> mangaPages) async {
-    // 首先检查当前目录是否包含图片文件
-    final hasImages = await _directoryContainsImages(directory);
-
-    if (hasImages) {
-      // 如果包含图片，将整个目录作为一个漫画对象，不再下钻
-      await _createMangaFromImageDirectory(
-          directory, libraryId, mangas, mangaPages);
-      return;
-    }
-
-    // 如果不包含图片，检查是否包含单体漫画文件，并继续下钻扫描子目录
+    // 检查是否包含单体漫画文件，并继续下钻扫描子目录
     await for (final entity in directory.list()) {
       if (entity is File) {
         final manga = await _scanMangaFile(entity, libraryId);
@@ -81,6 +71,16 @@ class FileScannerService {
           log('扫描子目录时出错: $e, 栈跟踪: $stackTrace');
         }
       }
+    }
+
+    // 检查当前目录是否包含图片文件
+    final hasImages = await _directoryContainsImages(directory);
+
+    if (hasImages) {
+      // 如果包含图片，将整个目录作为一个漫画对象，不再下钻
+      await _createMangaFromImageDirectory(
+          directory, libraryId, mangas, mangaPages);
+      return;
     }
   }
 
