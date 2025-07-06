@@ -9,7 +9,6 @@ import 'permission_service.dart';
 /// 增强的文件选择器服务
 /// 集成权限管理和路径持久化功能
 class EnhancedFilePickerService {
-  
   /// 选择文件夹并处理权限持久化
   /// 返回选择的文件夹路径，如果取消或失败返回null
   static Future<String?> pickDirectoryWithPermission({
@@ -19,7 +18,13 @@ class EnhancedFilePickerService {
     bool lockParentWindow = false,
   }) async {
     try {
-      // 首先检查并请求权限
+      // 显示权限说明对话框
+      final shouldProceed = await _showPermissionExplanationDialog(context);
+      if (!shouldProceed) {
+        return null;
+      }
+
+      // 首先检查并请求基础权限
       final hasPermission = await PermissionService.hasFilePermission();
       if (!hasPermission) {
         final granted = await _showPermissionDialog(context);
@@ -40,14 +45,15 @@ class EnhancedFilePickerService {
         final canAccess = await _verifyDirectoryAccess(result);
         if (!canAccess) {
           if (context.mounted) {
-            _showAccessErrorDialog(context, result);
+            // 显示详细的权限修复指导
+            await _showDetailedPermissionGuide(context, result);
           }
           return null;
         }
 
         // 保存已授权的路径
         await PermissionService.saveGrantedPath(result);
-        
+
         log('文件夹选择成功并保存权限: $result');
         return result;
       }
@@ -171,6 +177,64 @@ class EnhancedFilePickerService {
     }
   }
 
+  /// 显示权限说明对话框
+  static Future<bool> _showPermissionExplanationDialog(
+      BuildContext context) async {
+    if (!context.mounted) return false;
+
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('文件夹访问权限说明'),
+            content: const SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '为了访问您的漫画文件，应用需要以下权限：',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 12),
+                  Text('• 文件和媒体访问权限'),
+                  Text('• 选择文件夹的持久访问权限'),
+                  SizedBox(height: 12),
+                  Text(
+                    '操作步骤：',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text('1. 点击"继续"按钮'),
+                  Text('2. 在权限请求中选择"允许"'),
+                  Text('3. 在文件选择器中选择漫画文件夹'),
+                  Text('4. 确认选择以保存访问权限'),
+                  SizedBox(height: 12),
+                  Text(
+                    '注意：选择文件夹后，应用将获得该文件夹的持久访问权限。',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('继续'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   /// 显示权限请求对话框
   static Future<bool> _showPermissionDialog(BuildContext context) async {
     if (!context.mounted) return false;
@@ -205,29 +269,95 @@ class EnhancedFilePickerService {
   }
 
   /// 显示重新授权对话框
-  static Future<bool> _showReauthorizeDialog(BuildContext context, String path) async {
+  static Future<bool> _showReauthorizeDialog(
+      BuildContext context, String path) async {
     if (!context.mounted) return false;
 
     return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('需要重新授权'),
+            content: Text(
+              '无法访问路径：\n$path\n\n'
+              '可能是权限已过期或被撤销，是否重新授权？',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('重新授权'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  /// 显示详细的权限修复指导
+  static Future<void> _showDetailedPermissionGuide(
+      BuildContext context, String path) async {
+    if (!context.mounted) return;
+
+    await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('需要重新授权'),
-        content: Text(
-          '无法访问路径：\n$path\n\n'
-          '可能是权限已过期或被撤销，是否重新授权？',
+        title: const Text('权限配置指导'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('无法访问选择的路径：'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  path,
+                  style: const TextStyle(fontFamily: 'monospace'),
+                ),
+              ),
+              const Text(
+                '可能的解决方案：',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text('1. 手动授权应用权限：'),
+              const Text('   • 打开系统设置'),
+              const Text('   • 找到本应用'),
+              const Text('   • 开启"文件和媒体"权限'),
+              const SizedBox(height: 8),
+              const Text('2. 选择应用可访问的文件夹：'),
+              const Text('   • 选择Downloads、Documents等公共文件夹'),
+              const Text('   • 避免选择系统保护的文件夹'),
+              const SizedBox(height: 8),
+              const Text('3. 重新选择文件夹：'),
+              const Text('   • 返回重新选择其他位置'),
+              const Text('   • 确保文件夹包含漫画文件'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('我知道了'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('重新授权'),
+            onPressed: () {
+              Navigator.of(context).pop();
+              PermissionService.openAppSettings();
+            },
+            child: const Text('打开设置'),
           ),
         ],
       ),
-    ) ?? false;
+    );
   }
 
   /// 显示访问错误对话框
@@ -282,7 +412,7 @@ class EnhancedFilePickerService {
   static Future<bool> _verifyDirectoryAccess(String path) async {
     try {
       final directory = Directory(path);
-      
+
       // 检查目录是否存在
       if (!await directory.exists()) {
         return false;

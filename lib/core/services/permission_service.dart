@@ -2,7 +2,8 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 权限管理服务
@@ -50,31 +51,47 @@ class PermissionService {
   /// Android 13+ 细粒度权限请求
   static Future<bool> _requestAndroid13Permission() async {
     try {
-      // Android 13+ 需要请求特定的媒体权限
+      log('开始请求Android 13+权限');
+
+      // 首先尝试请求管理外部存储权限（最高权限）
+      final manageStorageStatus =
+          await permission_handler.Permission.manageExternalStorage.status;
+      log('管理外部存储权限状态: $manageStorageStatus');
+
+      if (manageStorageStatus.isDenied) {
+        final manageResult =
+            await permission_handler.Permission.manageExternalStorage.request();
+        log('管理外部存储权限请求结果: $manageResult');
+        if (manageResult.isGranted) {
+          await _savePermissionStatus(true);
+          return true;
+        }
+      } else if (manageStorageStatus.isGranted) {
+        await _savePermissionStatus(true);
+        return true;
+      }
+
+      // 如果管理权限被拒绝，请求细粒度媒体权限
       final permissions = [
-        Permission.photos,
-        Permission.videos,
-        Permission.audio,
+        permission_handler.Permission.photos,
+        permission_handler.Permission.videos,
+        permission_handler.Permission.audio,
       ];
 
-      // 检查当前权限状态
-      Map<Permission, PermissionStatus> statuses = await permissions.request();
+      log('请求细粒度媒体权限');
+      Map<permission_handler.Permission, permission_handler.PermissionStatus>
+          statuses = await permissions.request();
+      log('细粒度权限请求结果: $statuses');
 
       // 检查是否有任何权限被授予
       bool hasAnyPermission = statuses.values.any((status) => status.isGranted);
-
-      if (!hasAnyPermission) {
-        // 尝试请求管理外部存储权限
-        final manageStorageStatus =
-            await Permission.manageExternalStorage.request();
-        hasAnyPermission = manageStorageStatus.isGranted;
-      }
 
       if (hasAnyPermission) {
         await _savePermissionStatus(true);
         return true;
       }
 
+      log('所有权限请求都被拒绝');
       return false;
     } catch (e, stackTrace) {
       log('请求Android 13+权限失败: $e', stackTrace: stackTrace);
@@ -85,8 +102,12 @@ class PermissionService {
   /// Android 11+ 作用域存储权限
   static Future<bool> _requestScopedStoragePermission() async {
     try {
+      log('开始请求Android 11+权限');
+
       // 首先尝试请求管理外部存储权限
-      final manageStorageStatus = await Permission.manageExternalStorage.status;
+      final manageStorageStatus =
+          await permission_handler.Permission.manageExternalStorage.status;
+      log('管理外部存储权限状态: $manageStorageStatus');
 
       if (manageStorageStatus.isGranted) {
         await _savePermissionStatus(true);
@@ -94,7 +115,10 @@ class PermissionService {
       }
 
       if (manageStorageStatus.isDenied) {
-        final result = await Permission.manageExternalStorage.request();
+        log('请求管理外部存储权限');
+        final result =
+            await permission_handler.Permission.manageExternalStorage.request();
+        log('管理外部存储权限请求结果: $result');
         if (result.isGranted) {
           await _savePermissionStatus(true);
           return true;
@@ -102,20 +126,25 @@ class PermissionService {
       }
 
       // 如果管理权限被拒绝，尝试基本存储权限
-      final storageStatus = await Permission.storage.status;
+      final storageStatus = await permission_handler.Permission.storage.status;
+      log('基本存储权限状态: $storageStatus');
+
       if (storageStatus.isGranted) {
         await _savePermissionStatus(true);
         return true;
       }
 
       if (storageStatus.isDenied) {
-        final result = await Permission.storage.request();
+        log('请求基本存储权限');
+        final result = await permission_handler.Permission.storage.request();
+        log('基本存储权限请求结果: $result');
         if (result.isGranted) {
           await _savePermissionStatus(true);
           return true;
         }
       }
 
+      log('所有存储权限请求都被拒绝');
       return false;
     } catch (e, stackTrace) {
       log('请求Android 11+权限失败: $e', stackTrace: stackTrace);
@@ -126,7 +155,7 @@ class PermissionService {
   /// Android 10及以下传统存储权限
   static Future<bool> _requestLegacyStoragePermission() async {
     try {
-      final status = await Permission.storage.status;
+      final status = await permission_handler.Permission.storage.status;
 
       if (status.isGranted) {
         await _savePermissionStatus(true);
@@ -134,7 +163,7 @@ class PermissionService {
       }
 
       if (status.isDenied) {
-        final result = await Permission.storage.request();
+        final result = await permission_handler.Permission.storage.request();
         if (result.isGranted) {
           await _savePermissionStatus(true);
           return true;
@@ -153,7 +182,7 @@ class PermissionService {
     try {
       // iOS通过文件选择器自动获得权限
       // 这里主要是检查照片库权限（如果需要）
-      final status = await Permission.photos.status;
+      final status = await permission_handler.Permission.photos.status;
 
       if (status.isGranted) {
         await _savePermissionStatus(true);
@@ -161,7 +190,7 @@ class PermissionService {
       }
 
       if (status.isDenied) {
-        final result = await Permission.photos.request();
+        final result = await permission_handler.Permission.photos.request();
         if (result.isGranted) {
           await _savePermissionStatus(true);
           return true;
@@ -201,9 +230,9 @@ class PermissionService {
       if (androidInfo >= 33) {
         // Android 13+ 检查细粒度权限
         final permissions = [
-          Permission.photos,
-          Permission.videos,
-          Permission.audio,
+          permission_handler.Permission.photos,
+          permission_handler.Permission.videos,
+          permission_handler.Permission.audio,
         ];
 
         final statuses = await Future.wait(
@@ -213,7 +242,8 @@ class PermissionService {
         bool hasAnyPermission = statuses.any((status) => status.isGranted);
 
         if (!hasAnyPermission) {
-          final manageStatus = await Permission.manageExternalStorage.status;
+          final manageStatus =
+              await permission_handler.Permission.manageExternalStorage.status;
           hasAnyPermission = manageStatus.isGranted;
         }
 
@@ -225,8 +255,10 @@ class PermissionService {
         return false;
       } else if (androidInfo >= 30) {
         // Android 11+
-        final manageStatus = await Permission.manageExternalStorage.status;
-        final storageStatus = await Permission.storage.status;
+        final manageStatus =
+            await permission_handler.Permission.manageExternalStorage.status;
+        final storageStatus =
+            await permission_handler.Permission.storage.status;
         bool hasPermission = manageStatus.isGranted || storageStatus.isGranted;
 
         if (hasPermission) {
@@ -236,7 +268,7 @@ class PermissionService {
         return false;
       } else {
         // Android 10及以下
-        final status = await Permission.storage.status;
+        final status = await permission_handler.Permission.storage.status;
         bool hasPermission = status.isGranted;
 
         if (hasPermission) {
@@ -398,10 +430,49 @@ class PermissionService {
     }
   }
 
+  /// 验证并保存文件夹权限
+  static Future<bool> validateAndSaveFolderPermission(String path) async {
+    try {
+      log('验证文件夹权限: $path');
+
+      // 检查目录是否存在
+      final directory = Directory(path);
+      if (!await directory.exists()) {
+        log('目录不存在: $path');
+        return false;
+      }
+
+      // 尝试访问目录
+      try {
+        final contents =
+            await directory.list(followLinks: false).take(5).toList();
+        log('成功访问目录，包含 ${contents.length} 个项目');
+
+        // 保存授权路径
+        await saveGrantedPath(path);
+
+        // 更新权限状态
+        await _savePermissionStatus(true);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt(
+            _lastPermissionCheckKey, DateTime.now().millisecondsSinceEpoch);
+
+        return true;
+      } catch (e) {
+        log('无法访问目录内容: $e');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('验证文件夹权限失败: $e', stackTrace: stackTrace);
+      return false;
+    }
+  }
+
   /// 打开应用设置页面
   static Future<void> openAppSettings() async {
     try {
-      await Permission.storage.request();
+      // 使用permission_handler包的全局函数
+      await permission_handler.openAppSettings();
     } catch (e, stackTrace) {
       log('打开应用设置失败: $e', stackTrace: stackTrace);
     }
