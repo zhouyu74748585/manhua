@@ -57,7 +57,6 @@ class _MangaCardState extends State<MangaCard> {
                   clipBehavior: Clip.antiAlias,
                   elevation: _isHovered ? 8 : 2,
                   child: Stack(
-                    fit: StackFit.expand, // 确保 Stack 填充整个 Card
                     children: [
                       _buildCoverImage(),
                       // 悬停时显示的操作按钮和进度信息
@@ -80,37 +79,22 @@ class _MangaCardState extends State<MangaCard> {
                             children: [
                               // 顶部操作按钮
                               Padding(
-                                padding: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(8.0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min, // 防止溢出
                                   children: [
-                                    Flexible(
-                                      child: IconButton(
-                                        icon: const Icon(Icons.sync,
-                                            color: Colors.white, size: 18),
-                                        onPressed: () =>
-                                            _showSyncOptions(context),
-                                        tooltip: '同步进度',
-                                        padding: const EdgeInsets.all(4),
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.sync,
+                                          color: Colors.white, size: 20),
+                                      onPressed: () =>
+                                          _showSyncOptions(context),
+                                      tooltip: '同步进度',
                                     ),
-                                    Flexible(
-                                      child: IconButton(
-                                        icon: const Icon(Icons.info_outline,
-                                            color: Colors.white, size: 18),
-                                        onPressed: widget.onLongPress,
-                                        tooltip: '查看详情',
-                                        padding: const EdgeInsets.all(4),
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                      ),
+                                    IconButton(
+                                      icon: const Icon(Icons.info_outline,
+                                          color: Colors.white),
+                                      onPressed: widget.onLongPress,
+                                      tooltip: '查看详情',
                                     ),
                                   ],
                                 ),
@@ -120,25 +104,19 @@ class _MangaCardState extends State<MangaCard> {
                                   widget.currentPage != null)
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8.0,
-                                    vertical: 4.0,
-                                  ),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (widget.currentPage != null)
                                         Text(
                                           '${widget.currentPage}/${widget.totalPages} 页',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 11,
+                                            fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       if (widget.progress != null) ...[
                                         const SizedBox(height: 4),
@@ -179,25 +157,21 @@ class _MangaCardState extends State<MangaCard> {
                 ),
               ),
             ),
-            const SizedBox(height: 6), // 减少封面和标题之间的间距
-            Flexible(
-              child: Text(
-                widget.title,
-                style: Theme.of(context).textTheme.titleSmall,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+            const SizedBox(height: 8),
+            Text(
+              widget.title,
+              style: Theme.of(context).textTheme.titleSmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             if (widget.subtitle != null)
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 1.0), // 减少标题和副标题之间的间距
-                  child: Text(
-                    widget.subtitle!,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Text(
+                  widget.subtitle!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
           ],
@@ -209,8 +183,6 @@ class _MangaCardState extends State<MangaCard> {
   Widget _buildCoverImage() {
     if (widget.coverPath == null || widget.coverPath!.isEmpty) {
       return Container(
-        width: double.infinity,
-        height: double.infinity,
         color: Colors.grey[300],
         child: const Center(
           child: Icon(Icons.image_not_supported, color: Colors.grey),
@@ -222,82 +194,51 @@ class _MangaCardState extends State<MangaCard> {
     switch (widget.coverDisplayMode) {
       case CoverDisplayMode.leftHalf:
         // 显示图片的左半部分 (0-50%)
-        return SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-          child: ClipRect(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              widthFactor: 1,
-              child: Transform.scale(
-                scale: widget.coverScale,
-                alignment: Alignment(-widget.coverOffsetX, 0),
-                child: Image.file(
-                  File(widget.coverPath!),
-                  fit: BoxFit.cover, // 改为 cover 确保填充整个区域
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: Colors.grey[300],
-                      child: const Center(child: Icon(Icons.broken_image)),
-                    );
-                  },
-                ),
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: widget.coverScale,
+              alignment: Alignment(-widget.coverOffsetX, 0),
+              child: Image.file(
+                File(widget.coverPath!),
+                fit: BoxFit.fitHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
               ),
             ),
           ),
         );
       case CoverDisplayMode.rightHalf:
         // 显示图片的右半部分 (50-100%)
-        return SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-          child: ClipRect(
-            child: Align(
-              alignment: Alignment.centerRight,
-              widthFactor: 1,
-              child: Transform.scale(
-                scale: widget.coverScale,
-                alignment: Alignment(widget.coverOffsetX, 0),
-                child: Image.file(
-                  File(widget.coverPath!),
-                  fit: BoxFit.cover, // 改为 cover 确保填充整个区域
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: Colors.grey[300],
-                      child: const Center(child: Icon(Icons.broken_image)),
-                    );
-                  },
-                ),
+        return ClipRect(
+          child: Align(
+            alignment: Alignment.centerRight,
+            widthFactor: 1,
+            child: Transform.scale(
+              scale: widget.coverScale,
+              alignment: Alignment(widget.coverOffsetX, 0),
+              child: Image.file(
+                File(widget.coverPath!),
+                fit: BoxFit.fitHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
               ),
             ),
           ),
         );
       case CoverDisplayMode.defaultMode:
-        return SizedBox(
+        return Image.file(
+          File(widget.coverPath!),
+          fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
-          child: Image.file(
-            File(widget.coverPath!),
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.grey[300],
-                child: const Center(child: Icon(Icons.broken_image)),
-              );
-            },
-          ),
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(child: Icon(Icons.broken_image));
+          },
         );
     }
   }
