@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:manhua_reader_flutter/data/models/library.dart';
+import 'package:manhua_reader_flutter/presentation/providers/library_provider.dart';
 
 import '../../../app/routes/app_router.dart';
 import '../../../data/models/manga.dart';
@@ -50,12 +52,14 @@ class _HomeContent extends ConsumerWidget {
         ref.invalidate(recentlyReadMangaProvider);
         ref.invalidate(recentlyUpdatedMangaProvider);
         ref.invalidate(allMangaProgressProvider);
+        ref.invalidate(allLibrariesProvider);
 
         // 等待数据加载完成
         await Future.wait([
           ref.read(recentlyReadMangaProvider.future),
           ref.read(recentlyUpdatedMangaProvider.future),
           ref.read(allMangaProgressProvider.future),
+          ref.read(allLibrariesProvider.future),
         ]);
       },
       child: CustomScrollView(
@@ -95,7 +99,11 @@ class _HomeContent extends ConsumerWidget {
   Widget _buildRecentlyRead(BuildContext context, WidgetRef ref) {
     final recentlyReadAsync = ref.watch(recentlyReadMangaProvider);
     final allProgressAsync = ref.watch(allMangaProgressProvider);
-
+    final libraries = ref.watch(allLibrariesProvider);
+    Map<String, MangaLibrary> librariesMap = {
+      if (libraries.value != null)
+        for (var e in libraries.value!) e.id: e
+    };
     return recentlyReadAsync.when(
       data: (recentlyRead) {
         if (recentlyRead.isEmpty) {
@@ -123,6 +131,10 @@ class _HomeContent extends ConsumerWidget {
                   child: MangaCard(
                     title: manga.title,
                     coverPath: manga.coverPath,
+                    coverDisplayMode: librariesMap[manga.libraryId]
+                            ?.settings
+                            .coverDisplayMode ??
+                        CoverDisplayMode.defaultMode,
                     progress: progress?.progressPercentage ?? 0.0,
                     subtitle: _formatLastRead(progress),
                     totalPages: manga.totalPages,
@@ -155,7 +167,11 @@ class _HomeContent extends ConsumerWidget {
 
   Widget _buildLatestUpdates(BuildContext context, WidgetRef ref) {
     final latestUpdatesAsync = ref.watch(recentlyUpdatedMangaProvider);
-
+    final libraries = ref.watch(allLibrariesProvider);
+    Map<String, MangaLibrary> librariesMap = {
+      if (libraries.value != null)
+        for (var e in libraries.value!) e.id: e
+    };
     return latestUpdatesAsync.when(
       data: (latestUpdates) {
         if (latestUpdates.isEmpty) {
@@ -178,6 +194,9 @@ class _HomeContent extends ConsumerWidget {
             return MangaCard(
               title: manga.title,
               coverPath: manga.coverPath,
+              coverDisplayMode:
+                  librariesMap[manga.libraryId]?.settings.coverDisplayMode ??
+                      CoverDisplayMode.defaultMode,
               subtitle: _formatUpdateTime(manga.updatedAt),
               totalPages: manga.totalPages,
               onTap: () {

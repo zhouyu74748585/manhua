@@ -5,7 +5,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 import '../../../data/models/network_config.dart';
+import 'network_file_system.dart';
 import 'network_file_system_factory.dart';
+import 'smb_connection_helper.dart';
 
 /// 网络连接测试结果
 class NetworkConnectionTestResult {
@@ -138,15 +140,78 @@ class NetworkConnectionTester {
     NetworkConfig config,
     Duration timeout,
   ) async {
+    // 对于SMB协议，使用专门的测试方法
+    if (config.protocol == NetworkProtocol.smb) {
+      return await _testSMBProtocol(config, timeout);
+    }
+
+    // 其他协议使用通用测试方法
+    return await _testGenericProtocol(config, timeout);
+  }
+
+  /// SMB协议专门测试
+  static Future<NetworkConnectionTestResult> _testSMBProtocol(
+    NetworkConfig config,
+    Duration timeout,
+  ) async {
     try {
-      final fileSystem = NetworkFileSystemFactory.create(config);
+      final result =
+          await SMBConnectionHelper.testConnection(config, timeout: timeout);
+
+      if (result.isSuccess) {
+        return NetworkConnectionTestResult.success(
+          message: result.message,
+          responseTime: result.responseTime,
+          details: {
+            'test': 'smb_specific',
+            'protocol': 'smb',
+            ...?result.details,
+          },
+        );
+      } else {
+        return NetworkConnectionTestResult.failure(
+          message: result.message,
+          errorCode: result.errorCode,
+          details: {
+            'test': 'smb_specific',
+            'protocol': 'smb',
+            'suggestions': SMBConnectionHelper.getConnectionSuggestions(
+                result.errorCode ?? ''),
+            ...?result.details,
+          },
+        );
+      }
+    } catch (e, stackTrace) {
+      dev.log('SMB协议测试失败: $e', stackTrace: stackTrace);
+      return NetworkConnectionTestResult.failure(
+        message: 'SMB协议测试异常: ${e.toString()}',
+        errorCode: 'SMB_TEST_ERROR',
+        details: {'test': 'smb_specific', 'error': e.toString()},
+      );
+    }
+  }
+
+  /// 通用协议测试
+  static Future<NetworkConnectionTestResult> _testGenericProtocol(
+    NetworkConfig config,
+    Duration timeout,
+  ) async {
+    NetworkFileSystem? fileSystem;
+    try {
+      fileSystem = NetworkFileSystemFactory.create(config);
+
+      // 先建立连接
+      await fileSystem.connect().timeout(timeout);
 
       // 尝试列出根目录
       await fileSystem.listDirectory('/').timeout(timeout);
 
       return NetworkConnectionTestResult.success(
         message: '协议测试成功',
-        details: {'test': 'protocol_specific'},
+        details: {
+          'test': 'protocol_specific',
+          'protocol': config.protocol.toString()
+        },
       );
     } on TimeoutException {
       return NetworkConnectionTestResult.failure(
@@ -154,7 +219,8 @@ class NetworkConnectionTester {
         errorCode: 'PROTOCOL_TIMEOUT',
         details: {'test': 'protocol_specific'},
       );
-    } on DioException catch (e) {
+    } on DioException catch (e, stackTrace) {
+      dev.log('协议测试失败: $e', stackTrace: stackTrace);
       return NetworkConnectionTestResult.failure(
         message: '协议测试失败: ${_getDioErrorMessage(e)}',
         errorCode: 'PROTOCOL_ERROR',
@@ -164,12 +230,20 @@ class NetworkConnectionTester {
           'status_code': e.response?.statusCode,
         },
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      dev.log('协议测试失败: $e', stackTrace: stackTrace);
       return NetworkConnectionTestResult.failure(
         message: '协议测试失败: ${e.toString()}',
         errorCode: 'PROTOCOL_ERROR',
         details: {'test': 'protocol_specific', 'error': e.toString()},
       );
+    } finally {
+      // 确保断开连接，释放资源
+      try {
+        await fileSystem?.disconnect();
+      } catch (e) {
+        dev.log('断开连接时发生错误: $e');
+      }
     }
   }
 
@@ -264,6 +338,11 @@ class NetworkConnectionTester {
     final suggestions = <String>[];
 
     if (!result.isSuccess) {
+      // 如果结果中已包含建议，直接使用
+      if (result.details?['suggestions'] is List<String>) {
+        return List<String>.from(result.details!['suggestions']);
+      }
+
       switch (result.errorCode) {
         case 'SOCKET_ERROR':
           suggestions.addAll([
@@ -274,6 +353,7 @@ class NetworkConnectionTester {
           ]);
           break;
         case 'TIMEOUT':
+        case 'PROTOCOL_TIMEOUT':
           suggestions.addAll([
             '检查网络连接是否稳定',
             '尝试增加超时时间',
@@ -301,6 +381,19 @@ class NetworkConnectionTester {
             '确认路径格式正确',
             '尝试使用根路径进行测试',
           ]);
+          break;
+        // SMB特定错误代码
+        case 'SMB_AUTH_FAILED':
+        case 'SMB_CONNECTION_ERROR':
+        case 'SMB_PING_FAILED':
+        case 'SMB_SOCKET_ERROR':
+        case 'SMB_TIMEOUT':
+        case 'SMB_CONNECTION_REFUSED':
+        case 'SMB_HOST_NOT_FOUND':
+        case 'SMB_TEST_ERROR':
+          // 使用SMB连接辅助工具的建议
+          suggestions.addAll(
+              SMBConnectionHelper.getConnectionSuggestions(result.errorCode!));
           break;
         default:
           suggestions.addAll([

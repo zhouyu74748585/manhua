@@ -26,14 +26,6 @@ Future<MangaLibrary?> libraryDetail(
   return service.getLibraryById(libraryId);
 }
 
-// 漫画库设置提供者
-@riverpod
-Future<LibrarySettings> librarySettings(
-    LibrarySettingsRef ref, String libraryId) async {
-  // TODO: Implement settings management
-  return const LibrarySettings();
-}
-
 // 漫画库统计信息提供者
 @riverpod
 Future<Map<String, int>> libraryStats(
@@ -133,8 +125,7 @@ class LibraryActions extends _$LibraryActions {
       if (updatedLibrary != null) {
         await service.updateLibrary(updatedLibrary.copyWith(isScanning: false));
       }
-
-    } catch (e,stackTrace) {
+    } catch (e, stackTrace) {
       log('扫描库时出错: $e, 栈跟踪: $stackTrace');
       // 扫描失败时也要清除扫描状态
       scanStateNotifier.setScanningState(libraryId, false);
@@ -180,15 +171,6 @@ class LibraryActions extends _$LibraryActions {
     // 刷新相关提供者
     ref.invalidate(libraryStatsProvider(libraryId));
     ref.invalidate(libraryDetailProvider(libraryId));
-  }
-
-  Future<void> updateLibrarySettings(
-      String libraryId, LibrarySettings settings) async {
-    // LibraryService doesn't have settings methods, skip for now
-    // TODO: Implement settings management
-
-    // 刷新设置提供者
-    ref.invalidate(librarySettingsProvider(libraryId));
   }
 
   Future<void> refreshAllLibraries() async {

@@ -1,6 +1,5 @@
 import 'dart:developer' as dev;
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
@@ -49,13 +48,13 @@ class NetworkMangaCacheService {
   /// 获取或创建网络文件系统
   Future<NetworkFileSystem> _getFileSystem(NetworkConfig config) async {
     final key = '${config.protocol}://${config.host}:${config.port}';
-    
+
     if (!_fileSystemCache.containsKey(key)) {
       final fileSystem = NetworkFileSystemFactory.create(config);
       await fileSystem.connect();
       _fileSystemCache[key] = fileSystem;
     }
-    
+
     return _fileSystemCache[key]!;
   }
 
@@ -68,7 +67,7 @@ class NetworkMangaCacheService {
       final cacheDir = await _getCacheDirectory();
       final cacheKey = _generateCacheKey(manga.path, manga.id);
       final coverCacheDir = Directory(path.join(cacheDir.path, 'covers'));
-      
+
       if (!await coverCacheDir.exists()) {
         await coverCacheDir.create(recursive: true);
       }
@@ -90,12 +89,14 @@ class NetworkMangaCacheService {
 
       // 获取封面图片
       String? coverImagePath;
-      if (manga.type == MangaType.directory) {
+      if (manga.type == MangaType.folder) {
         // 目录类型：获取第一张图片作为封面
-        coverImagePath = await _getFirstImageFromDirectory(fileSystem, manga.path);
+        coverImagePath =
+            await _getFirstImageFromDirectory(fileSystem, manga.path);
       } else {
         // 压缩文件类型：下载并提取封面
-        coverImagePath = await _extractCoverFromArchive(fileSystem, manga.path, cacheKey);
+        coverImagePath =
+            await _extractCoverFromArchive(fileSystem, manga.path, cacheKey);
       }
 
       if (coverImagePath != null) {
@@ -115,9 +116,8 @@ class NetworkMangaCacheService {
       NetworkFileSystem fileSystem, String directoryPath) async {
     try {
       final files = await fileSystem.listDirectory(directoryPath);
-      final imageFiles = files
-          .where((file) => !file.isDirectory && file.isImageFile)
-          .toList();
+      final imageFiles =
+          files.where((file) => !file.isDirectory && file.isImageFile).toList();
 
       if (imageFiles.isEmpty) return null;
 
@@ -130,7 +130,8 @@ class NetworkMangaCacheService {
       final coverCacheDir = Directory(path.join(cacheDir.path, 'covers'));
       final cacheKey = _generateCacheKey(directoryPath, firstImage.name);
       final extension = path.extension(firstImage.name);
-      final cacheFile = File(path.join(coverCacheDir.path, '$cacheKey$extension'));
+      final cacheFile =
+          File(path.join(coverCacheDir.path, '$cacheKey$extension'));
 
       await fileSystem.downloadFileToLocal(firstImage.path, cacheFile.path);
       return cacheFile.path;
@@ -147,7 +148,7 @@ class NetworkMangaCacheService {
       // 下载压缩文件的前几KB来提取封面
       // 这里简化处理，实际应该实现流式解压
       final archiveData = await fileSystem.downloadFile(archivePath);
-      
+
       // TODO: 实现压缩文件封面提取
       // 这里需要根据文件类型（ZIP、RAR等）进行相应处理
       dev.log('压缩文件封面提取功能待实现: $archivePath');
@@ -167,14 +168,16 @@ class NetworkMangaCacheService {
       Manga manga, int pageIndex, NetworkConfig config) async {
     try {
       final cacheDir = await _getCacheDirectory();
-      final pageCacheDir = Directory(path.join(cacheDir.path, 'pages', manga.id));
-      
+      final pageCacheDir =
+          Directory(path.join(cacheDir.path, 'pages', manga.id));
+
       if (!await pageCacheDir.exists()) {
         await pageCacheDir.create(recursive: true);
       }
 
-      final cacheFile = File(path.join(pageCacheDir.path, 'page_$pageIndex.jpg'));
-      
+      final cacheFile =
+          File(path.join(pageCacheDir.path, 'page_$pageIndex.jpg'));
+
       // 检查是否已有缓存
       if (await cacheFile.exists()) {
         return cacheFile.path;
@@ -183,9 +186,10 @@ class NetworkMangaCacheService {
       // 获取网络文件系统
       final fileSystem = await _getFileSystem(config);
 
-      if (manga.type == MangaType.directory) {
+      if (manga.type == MangaType.folder) {
         // 目录类型：获取指定索引的图片
-        final imagePath = await _getImageFromDirectory(fileSystem, manga.path, pageIndex);
+        final imagePath =
+            await _getImageFromDirectory(fileSystem, manga.path, pageIndex);
         if (imagePath != null) {
           await fileSystem.downloadFileToLocal(imagePath, cacheFile.path);
           return cacheFile.path;
@@ -198,7 +202,8 @@ class NetworkMangaCacheService {
 
       return null;
     } catch (e, stackTrace) {
-      dev.log('缓存漫画页面失败: ${manga.title} 页面$pageIndex, 错误: $e', stackTrace: stackTrace);
+      dev.log('缓存漫画页面失败: ${manga.title} 页面$pageIndex, 错误: $e',
+          stackTrace: stackTrace);
       return null;
     }
   }
@@ -208,9 +213,8 @@ class NetworkMangaCacheService {
       NetworkFileSystem fileSystem, String directoryPath, int pageIndex) async {
     try {
       final files = await fileSystem.listDirectory(directoryPath);
-      final imageFiles = files
-          .where((file) => !file.isDirectory && file.isImageFile)
-          .toList();
+      final imageFiles =
+          files.where((file) => !file.isDirectory && file.isImageFile).toList();
 
       if (imageFiles.isEmpty || pageIndex >= imageFiles.length) return null;
 
@@ -265,7 +269,7 @@ class NetworkMangaCacheService {
         int currentSize = totalSize;
         for (final file in allFiles) {
           if (currentSize <= maxSizeBytes) break;
-          
+
           final stat = file.statSync();
           await file.delete();
           currentSize -= stat.size;
@@ -273,7 +277,8 @@ class NetworkMangaCacheService {
         }
       }
 
-      dev.log('缓存清理完成，当前大小: ${(totalSize / 1024 / 1024).toStringAsFixed(2)} MB');
+      dev.log(
+          '缓存清理完成，当前大小: ${(totalSize / 1024 / 1024).toStringAsFixed(2)} MB');
     } catch (e, stackTrace) {
       dev.log('清理缓存失败: $e', stackTrace: stackTrace);
     }

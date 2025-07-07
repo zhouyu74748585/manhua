@@ -175,138 +175,6 @@ class _LibraryDetailProviderElement
   String get libraryId => (origin as LibraryDetailProvider).libraryId;
 }
 
-String _$librarySettingsHash() => r'2ab2b1c3c002e97c3f2afc14e30d4f89e319ca92';
-
-/// See also [librarySettings].
-@ProviderFor(librarySettings)
-const librarySettingsProvider = LibrarySettingsFamily();
-
-/// See also [librarySettings].
-class LibrarySettingsFamily extends Family<AsyncValue<LibrarySettings>> {
-  /// See also [librarySettings].
-  const LibrarySettingsFamily();
-
-  /// See also [librarySettings].
-  LibrarySettingsProvider call(
-    String libraryId,
-  ) {
-    return LibrarySettingsProvider(
-      libraryId,
-    );
-  }
-
-  @override
-  LibrarySettingsProvider getProviderOverride(
-    covariant LibrarySettingsProvider provider,
-  ) {
-    return call(
-      provider.libraryId,
-    );
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'librarySettingsProvider';
-}
-
-/// See also [librarySettings].
-class LibrarySettingsProvider
-    extends AutoDisposeFutureProvider<LibrarySettings> {
-  /// See also [librarySettings].
-  LibrarySettingsProvider(
-    String libraryId,
-  ) : this._internal(
-          (ref) => librarySettings(
-            ref as LibrarySettingsRef,
-            libraryId,
-          ),
-          from: librarySettingsProvider,
-          name: r'librarySettingsProvider',
-          debugGetCreateSourceHash:
-              const bool.fromEnvironment('dart.vm.product')
-                  ? null
-                  : _$librarySettingsHash,
-          dependencies: LibrarySettingsFamily._dependencies,
-          allTransitiveDependencies:
-              LibrarySettingsFamily._allTransitiveDependencies,
-          libraryId: libraryId,
-        );
-
-  LibrarySettingsProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.libraryId,
-  }) : super.internal();
-
-  final String libraryId;
-
-  @override
-  Override overrideWith(
-    FutureOr<LibrarySettings> Function(LibrarySettingsRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: LibrarySettingsProvider._internal(
-        (ref) => create(ref as LibrarySettingsRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        libraryId: libraryId,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeFutureProviderElement<LibrarySettings> createElement() {
-    return _LibrarySettingsProviderElement(this);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is LibrarySettingsProvider && other.libraryId == libraryId;
-  }
-
-  @override
-  int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, libraryId.hashCode);
-
-    return _SystemHash.finish(hash);
-  }
-}
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin LibrarySettingsRef on AutoDisposeFutureProviderRef<LibrarySettings> {
-  /// The parameter `libraryId` of this provider.
-  String get libraryId;
-}
-
-class _LibrarySettingsProviderElement
-    extends AutoDisposeFutureProviderElement<LibrarySettings>
-    with LibrarySettingsRef {
-  _LibrarySettingsProviderElement(super.provider);
-
-  @override
-  String get libraryId => (origin as LibrarySettingsProvider).libraryId;
-}
-
 String _$libraryStatsHash() => r'57c8e5fbb8e88925633c823a8aa2215465e8937e';
 
 /// See also [libraryStats].
@@ -454,7 +322,7 @@ final totalStatsProvider = AutoDisposeFutureProvider<Map<String, int>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TotalStatsRef = AutoDisposeFutureProviderRef<Map<String, int>>;
-String _$libraryActionsHash() => r'e110ec6a1c9c9fe38bf5747a971ca27d878a3e1a';
+String _$libraryActionsHash() => r'5283288c9decd6a9267a37a087dc98ed478a15bb';
 
 /// See also [LibraryActions].
 @ProviderFor(LibraryActions)

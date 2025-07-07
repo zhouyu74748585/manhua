@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -15,6 +16,11 @@ class SMBFileSystem extends NetworkFileSystem {
 
   @override
   Future<void> connect() async {
+    // 如果已经连接，先断开
+    if (_isConnected && _smbClient != null) {
+      await disconnect();
+    }
+
     try {
       _smbClient = await SmbConnect.connectAuth(
         host: config.host,
@@ -24,8 +30,12 @@ class SMBFileSystem extends NetworkFileSystem {
       );
 
       _isConnected = true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      dev.log('SMB连接异常: $e, $stackTrace');
       _isConnected = false;
+      // 确保清理资源
+      await _cleanup();
+
       if (e.toString().contains('authentication') ||
           e.toString().contains('login')) {
         throw NetworkAuthenticationException(details: e.toString());
@@ -44,12 +54,18 @@ class SMBFileSystem extends NetworkFileSystem {
 
   @override
   Future<void> disconnect() async {
+    await _cleanup();
+  }
+
+  /// 清理连接资源
+  Future<void> _cleanup() async {
     try {
-      if (_smbClient != null && _isConnected) {
+      if (_smbClient != null) {
         await _smbClient!.close();
       }
     } catch (e) {
-      // 忽略断开连接时的错误
+      // 忽略断开连接时的错误，但记录日志
+      print('SMB断开连接时发生错误: $e');
     } finally {
       _smbClient = null;
       _isConnected = false;
@@ -67,6 +83,8 @@ class SMBFileSystem extends NetworkFileSystem {
       await _smbClient!.listShares();
       return true;
     } catch (e) {
+      // 连接可能已断开，更新状态
+      _isConnected = false;
       return false;
     }
   }
@@ -258,6 +276,13 @@ class SMBFileSystem extends NetworkFileSystem {
 
   /// 确保已连接
   void _ensureConnected() {
+    if (!_isConnected || _smbClient == null) {
+      throw NetworkFileSystemException('SMB未连接，请先调用connect()');
+    }
+  }
+
+  /// 异步确保已连接（支持自动重连）
+  Future<void> _ensureConnectedAsync() async {
     if (!_isConnected || _smbClient == null) {
       throw NetworkFileSystemException('SMB未连接，请先调用connect()');
     }

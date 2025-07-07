@@ -19,7 +19,7 @@ MangaLibrary _$MangaLibraryFromJson(Map<String, dynamic> json) => MangaLibrary(
       mangaCount: (json['mangaCount'] as num?)?.toInt() ?? 0,
       settings: json['settings'] == null
           ? const LibrarySettings()
-          : LibrarySettings.fromJson(json['settings'] as Map<String, dynamic>),
+          : _librarySettingsFromJson(json['settings'] as Map<String, dynamic>?),
       isScanning: json['isScanning'] as bool? ?? false,
       isPrivate: json['isPrivate'] as bool? ?? false,
     );
@@ -34,7 +34,7 @@ Map<String, dynamic> _$MangaLibraryToJson(MangaLibrary instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'lastScanAt': instance.lastScanAt?.toIso8601String(),
       'mangaCount': instance.mangaCount,
-      'settings': instance.settings,
+      'settings': _librarySettingsToJson(instance.settings),
       'isScanning': instance.isScanning,
       'isPrivate': instance.isPrivate,
     };
@@ -63,6 +63,8 @@ LibrarySettings _$LibrarySettingsFromJson(Map<String, dynamic> json) =>
           CoverDisplayMode.defaultMode,
       coverScale: (json['coverScale'] as num?)?.toDouble() ?? 3.0,
       coverOffsetX: (json['coverOffsetX'] as num?)?.toDouble() ?? 0.4,
+      networkConfig: _networkConfigFromJson(
+          json['networkConfig'] as Map<String, dynamic>?),
     );
 
 Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
@@ -76,6 +78,7 @@ Map<String, dynamic> _$LibrarySettingsToJson(LibrarySettings instance) =>
       'coverDisplayMode': _$CoverDisplayModeEnumMap[instance.coverDisplayMode]!,
       'coverScale': instance.coverScale,
       'coverOffsetX': instance.coverOffsetX,
+      'networkConfig': _networkConfigToJson(instance.networkConfig),
     };
 
 const _$CoverDisplayModeEnumMap = {

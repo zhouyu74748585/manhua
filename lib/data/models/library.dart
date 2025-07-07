@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'network_config.dart';
+
 part 'library.g.dart';
 
 @JsonSerializable()
@@ -12,6 +14,7 @@ class MangaLibrary {
   final DateTime createdAt;
   final DateTime? lastScanAt;
   final int mangaCount;
+  @JsonKey(fromJson: _librarySettingsFromJson, toJson: _librarySettingsToJson)
   final LibrarySettings settings;
   final bool isScanning; // 扫描状态
   final bool isPrivate; // 隐私模式
@@ -116,6 +119,8 @@ class LibrarySettings {
   final CoverDisplayMode coverDisplayMode;
   final double coverScale; // 封面缩放比例（宽高比）
   final double coverOffsetX; // 封面X轴偏移量
+  @JsonKey(fromJson: _networkConfigFromJson, toJson: _networkConfigToJson)
+  final NetworkConfig? networkConfig; // 网络配置信息
 
   const LibrarySettings({
     this.autoScan = false,
@@ -127,6 +132,7 @@ class LibrarySettings {
     this.coverDisplayMode = CoverDisplayMode.defaultMode,
     this.coverScale = 3.0,
     this.coverOffsetX = 0.4,
+    this.networkConfig,
   });
 
   factory LibrarySettings.fromJson(Map<String, dynamic> json) =>
@@ -143,6 +149,7 @@ class LibrarySettings {
     CoverDisplayMode? coverDisplayMode,
     double? coverScale,
     double? coverOffsetX,
+    NetworkConfig? networkConfig,
   }) {
     return LibrarySettings(
       autoScan: autoScan ?? this.autoScan,
@@ -154,6 +161,7 @@ class LibrarySettings {
       coverDisplayMode: coverDisplayMode ?? this.coverDisplayMode,
       coverScale: coverScale ?? this.coverScale,
       coverOffsetX: coverOffsetX ?? this.coverOffsetX,
+      networkConfig: networkConfig ?? this.networkConfig,
     );
   }
 }
@@ -189,4 +197,24 @@ extension CoverDisplayModeExtension on CoverDisplayMode {
         return '只显示封面图片的右半部分';
     }
   }
+}
+
+// LibrarySettings JSON序列化辅助函数
+LibrarySettings _librarySettingsFromJson(Map<String, dynamic>? json) {
+  if (json == null) return const LibrarySettings();
+  return LibrarySettings.fromJson(json);
+}
+
+Map<String, dynamic> _librarySettingsToJson(LibrarySettings settings) {
+  return settings.toJson();
+}
+
+// NetworkConfig JSON序列化辅助函数
+NetworkConfig? _networkConfigFromJson(Map<String, dynamic>? json) {
+  if (json == null) return null;
+  return NetworkConfig.fromJson(json);
+}
+
+Map<String, dynamic>? _networkConfigToJson(NetworkConfig? networkConfig) {
+  return networkConfig?.toJson();
 }

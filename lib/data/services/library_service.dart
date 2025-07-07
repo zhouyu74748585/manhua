@@ -181,9 +181,10 @@ class LibraryService {
       final uri = Uri.tryParse(path);
       if (uri == null ||
           (!uri.hasScheme ||
-              !['http', 'https', 'ftp', 'smb']
+              !['http', 'https', 'ftp', 'sftp', 'smb', 'nfs', 'webdav']
                   .contains(uri.scheme.toLowerCase()))) {
-        throw Exception('无效的网络路径格式，支持的协议: http, https, ftp, smb');
+        throw Exception(
+            '无效的网络路径格式，支持的协议: http, https, ftp, sftp, smb, nfs, webdav');
       }
 
       // 对于HTTP/HTTPS路径，尝试发送HEAD请求验证可访问性
@@ -272,8 +273,14 @@ class LibraryService {
 
   Future<int> _scanNetworkLibrary(MangaLibrary library) async {
     try {
-      // 解析网络配置
-      final config = NetworkConfig.fromConnectionString(library.path);
+      // 优先从settings中读取网络配置，包含完整的认证信息
+      NetworkConfig config;
+      if (library.settings.networkConfig != null) {
+        config = library.settings.networkConfig!;
+      } else {
+        // 兼容旧版本：从path中解析网络配置
+        config = NetworkConfig.fromConnectionString(library.path);
+      }
 
       // 检查协议是否支持
       if (!NetworkFileSystemFactory.isProtocolSupported(config.protocol)) {
@@ -502,8 +509,6 @@ class LibraryService {
       }
     }
   }
-
-
 
   /// 生成漫画ID
   String _generateMangaId(String name, String path) {

@@ -40,11 +40,15 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       _pathController.text = widget.library!.path;
       _selectedType = widget.library!.type;
       _isEnabled = widget.library!.isEnabled;
-      // 如果是网络类型，尝试解析网络配置
-      if (_selectedType == LibraryType.network &&
-          widget.library!.path.isNotEmpty) {
-        _networkConfig =
-            NetworkConfig.fromConnectionString(widget.library!.path);
+      // 如果是网络类型，优先从settings中读取网络配置
+      if (_selectedType == LibraryType.network) {
+        if (widget.library!.settings.networkConfig != null) {
+          // 从settings中读取完整的网络配置（包含用户名密码）
+          _networkConfig = widget.library!.settings.networkConfig;
+        } else if (widget.library!.path.isNotEmpty) {
+          // 兼容旧版本：从path中解析网络配置
+          _networkConfig = NetworkConfig.fromConnectionString(widget.library!.path);
+        }
       }
     }
   }
@@ -323,6 +327,14 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       finalPath = _networkConfig!.connectionUrl;
     }
 
+    // 准备设置信息，包含网络配置
+    final settings =
+        _selectedType == LibraryType.network && _networkConfig != null
+            ? (widget.library?.settings ?? const LibrarySettings()).copyWith(
+                networkConfig: _networkConfig,
+              )
+            : widget.library?.settings ?? const LibrarySettings();
+
     final library = MangaLibrary(
       id: widget.library?.id ??
           DateTime.now().millisecondsSinceEpoch.toString(),
@@ -333,7 +345,7 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
       createdAt: widget.library?.createdAt ?? DateTime.now(),
       lastScanAt: widget.library?.lastScanAt,
       mangaCount: widget.library?.mangaCount ?? 0,
-      settings: widget.library?.settings ?? const LibrarySettings(),
+      settings: settings,
     );
 
     widget.onAdd(library);
