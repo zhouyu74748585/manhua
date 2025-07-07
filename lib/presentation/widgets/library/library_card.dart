@@ -210,46 +210,86 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                   ),
                   const SizedBox(width: 8),
 
-                  // 同步按钮
-                  if (widget.onSync != null)
-                    OutlinedButton.icon(
-                      onPressed:
-                          widget.library.isEnabled ? widget.onSync : null,
-                      icon: const Icon(Icons.sync, size: 16),
-                      label: const Text('同步'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.green,
-                      ),
-                    ),
-                  const SizedBox(width: 8),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // 屏幕宽度小于 360 时折叠次要按钮（可根据需求调整阈值）
+                      if (constraints.maxWidth < 360) {
+                        return PopupMenuButton(
+                          icon: const Icon(Icons.more_vert), // 省略号图标
+                          itemBuilder: (context) => [
+                            // 同步按钮（折叠到菜单中）
+                            if (widget.onSync != null)
+                              PopupMenuItem(
+                                child: Text('同步'),
+                                onTap: widget.onSync,
+                              ),
+                            // 设置按钮
+                            if (widget.onSettings != null)
+                              PopupMenuItem(
+                                child: Text('设置'),
+                                onTap: widget.onSettings,
+                              ),
+                            // 隐私保护按钮
+                            if (widget.onPrivacySettings != null)
+                              PopupMenuItem(
+                                child: Text(
+                                  widget.library.isPrivate ? '公开' : '锁定',
+                                ),
+                                onTap: widget.onPrivacySettings,
+                              ),
+                          ],
+                        );
+                      } else {
+                        return Row(
+                          children: [
+                            // 同步按钮
+                            if (widget.onSync != null)
+                              OutlinedButton.icon(
+                                onPressed: widget.library.isEnabled
+                                    ? widget.onSync
+                                    : null,
+                                icon: const Icon(Icons.sync, size: 16),
+                                label: const Text('同步'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.green,
+                                ),
+                              ),
+                            const SizedBox(width: 8),
 
-                  // 设置按钮
-                  if (widget.onSettings != null)
-                    OutlinedButton.icon(
-                      onPressed: widget.onSettings,
-                      icon: const Icon(Icons.settings, size: 16),
-                      label: const Text('设置'),
-                    ),
-                  const SizedBox(width: 8),
+                            // 设置按钮
+                            if (widget.onSettings != null)
+                              OutlinedButton.icon(
+                                onPressed: widget.onSettings,
+                                icon: const Icon(Icons.settings, size: 16),
+                                label: const Text('设置'),
+                              ),
+                            const SizedBox(width: 8),
 
-                  // 隐私设置按钮
-                  if (widget.onPrivacySettings != null)
-                    OutlinedButton.icon(
-                      onPressed: widget.onPrivacySettings,
-                      icon: Icon(
-                        widget.library.isPrivate ? Icons.lock : Icons.lock_open,
-                        size: 16,
-                      ),
-                      label: widget.library.isPrivate
-                          ? const Text('停用隐私保护')
-                          : const Text('开启隐私保护'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            widget.library.isPrivate ? Colors.red : null,
-                      ),
-                    ),
+                            // 隐私设置按钮
+                            if (widget.onPrivacySettings != null)
+                              OutlinedButton.icon(
+                                onPressed: widget.onPrivacySettings,
+                                icon: Icon(
+                                  widget.library.isPrivate
+                                      ? Icons.lock
+                                      : Icons.lock_open,
+                                  size: 16,
+                                ),
+                                label: widget.library.isPrivate
+                                    ? const Text('公开')
+                                    : const Text('锁定'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: widget.library.isPrivate
+                                      ? Colors.red
+                                      : null,
+                                ),
+                              ),
+                          ],
+                        );
+                      }
+                    },
+                  ),
                   const Spacer(),
-
                   // 删除按钮
                   IconButton(
                     onPressed: widget.onDelete,

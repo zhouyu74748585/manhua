@@ -390,6 +390,7 @@ class NetworkConnectionTester {
         case 'SMB_TIMEOUT':
         case 'SMB_CONNECTION_REFUSED':
         case 'SMB_HOST_NOT_FOUND':
+        case 'SMB_PROTOCOL_ERROR':
         case 'SMB_TEST_ERROR':
           // 使用SMB连接辅助工具的建议
           suggestions.addAll(

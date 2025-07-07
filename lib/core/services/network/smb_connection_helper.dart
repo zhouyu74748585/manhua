@@ -9,7 +9,7 @@ import '../../../data/models/network_config.dart';
 /// 专门处理SMB协议的连接问题和异常情况
 class SMBConnectionHelper {
   /// 测试SMB连接
-  /// 
+  ///
   /// [config] 网络配置
   /// [timeout] 超时时间
   /// 返回连接测试结果
@@ -48,13 +48,13 @@ class SMBConnectionHelper {
       stopwatch.stop();
       dev.log('SMB连接测试失败: $e', stackTrace: stackTrace);
 
-      // 分析错误类型
-      final errorInfo = _analyzeError(e);
+      // 分析错误类型，包括堆栈跟踪信息
+      final errorInfo = _analyzeError(e, stackTrace);
       return SMBConnectionResult.failure(
         message: errorInfo.message,
         errorCode: errorInfo.code,
         responseTime: stopwatch.elapsed,
-        details: {'error': e.toString()},
+        details: {'error': e.toString(), 'stackTrace': stackTrace.toString()},
       );
     } finally {
       // 确保清理连接
@@ -67,10 +67,29 @@ class SMBConnectionHelper {
   }
 
   /// 分析SMB错误
-  static _SMBErrorInfo _analyzeError(dynamic error) {
+  static _SMBErrorInfo _analyzeError(dynamic error, [StackTrace? stackTrace]) {
     final errorString = error.toString().toLowerCase();
+    final stackTraceString = stackTrace?.toString().toLowerCase() ?? '';
 
-    if (errorString.contains('authentication') || 
+    // 添加调试日志
+    dev.log('分析SMB错误: $errorString');
+    dev.log('堆栈跟踪: $stackTraceString');
+
+    // 首先检查StreamSink错误 - 这是最常见的问题
+    // 检查堆栈跟踪中是否包含StreamSink错误或特定的SMB错误路径
+    if (stackTraceString.contains('streamsink is closed') ||
+        stackTraceString.contains('bad state: streamsink is closed') ||
+        errorString.contains('streamsink is closed') ||
+        errorString.contains('bad state: streamsink is closed') ||
+        stackTraceString.contains('socket_writer.dart') ||
+        stackTraceString.contains('smb_transport.dart')) {
+      return _SMBErrorInfo(
+        code: 'SMB_PROTOCOL_ERROR',
+        message: 'SMB协议连接失败 - 可能是服务器兼容性问题',
+      );
+    }
+
+    if (errorString.contains('authentication') ||
         errorString.contains('login') ||
         errorString.contains('access denied')) {
       return _SMBErrorInfo(
@@ -79,7 +98,7 @@ class SMBConnectionHelper {
       );
     }
 
-    if (errorString.contains('timeout') || 
+    if (errorString.contains('timeout') ||
         errorString.contains('connection timeout')) {
       return _SMBErrorInfo(
         code: 'SMB_TIMEOUT',
@@ -95,8 +114,7 @@ class SMBConnectionHelper {
       );
     }
 
-    if (errorString.contains('streamsink is closed') ||
-        errorString.contains('socket')) {
+    if (errorString.contains('socket')) {
       return _SMBErrorInfo(
         code: 'SMB_SOCKET_ERROR',
         message: 'SMB网络连接异常，请重试',
@@ -143,6 +161,15 @@ class SMBConnectionHelper {
           '检查端口445是否开放',
           '验证防火墙设置',
           '确认服务器允许SMB连接',
+        ];
+
+      case 'SMB_PROTOCOL_ERROR':
+        return [
+          '检查SMB服务器版本兼容性',
+          '尝试使用SMB 1.0协议',
+          '检查服务器SMB配置',
+          '验证用户名和密码格式',
+          '联系系统管理员检查服务器设置',
         ];
 
       case 'SMB_SOCKET_ERROR':
