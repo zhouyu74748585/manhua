@@ -165,7 +165,7 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                   if (widget.library.isPrivate)
                     _buildInfoChip(
                       icon: Icons.lock,
-                      label: '隐私模式已激活',
+                      label: '隐私保护中',
                       color: Colors.red,
                     ),
                   const SizedBox(width: 8),
@@ -205,39 +205,54 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                   // 编辑按钮
                   OutlinedButton.icon(
                     onPressed: widget.onEdit,
-                    icon: const Icon(Icons.edit, size: 16),
+                    icon: const Icon(Icons.edit, size: 10),
                     label: const Text('编辑'),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
 
+                  // 同步、设置和删除按钮
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      // 屏幕宽度小于 360 时折叠次要按钮（可根据需求调整阈值）
-                      if (constraints.maxWidth < 360) {
-                        return PopupMenuButton(
-                          icon: const Icon(Icons.more_vert), // 省略号图标
-                          itemBuilder: (context) => [
-                            // 同步按钮（折叠到菜单中）
-                            if (widget.onSync != null)
-                              PopupMenuItem(
-                                child: Text('同步'),
-                                onTap: widget.onSync,
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      // 考虑边距和其他组件宽度，适当调整阈值
+                      const threshold = 500;
+                      if (screenWidth < threshold) {
+                        return Expanded(
+                          child: Row(
+                            children: [
+                              PopupMenuButton(
+                                icon: const Icon(Icons.more_vert), // 省略号图标
+                                itemBuilder: (context) => [
+                                  // 同步按钮（折叠到菜单中）
+                                  if (widget.onSync != null)
+                                    PopupMenuItem(
+                                      onTap: widget.onSync,
+                                      child: const Text('同步'),
+                                    ),
+                                  // 设置按钮
+                                  if (widget.onSettings != null)
+                                    PopupMenuItem(
+                                      onTap: widget.onSettings,
+                                      child: const Text('设置'),
+                                    ),
+                                  // 隐私保护按钮
+                                  if (widget.onPrivacySettings != null)
+                                    PopupMenuItem(
+                                      onTap: widget.onPrivacySettings,
+                                      child: Text(
+                                        widget.library.isPrivate ? '公开' : '锁定',
+                                      ),
+                                    ),
+                                ],
                               ),
-                            // 设置按钮
-                            if (widget.onSettings != null)
-                              PopupMenuItem(
-                                child: Text('设置'),
-                                onTap: widget.onSettings,
-                              ),
-                            // 隐私保护按钮
-                            if (widget.onPrivacySettings != null)
-                              PopupMenuItem(
-                                child: Text(
-                                  widget.library.isPrivate ? '公开' : '锁定',
-                                ),
-                                onTap: widget.onPrivacySettings,
-                              ),
-                          ],
+                              IconButton(
+                                onPressed: widget.onDelete,
+                                icon: const Icon(Icons.delete),
+                                color: Colors.red,
+                                tooltip: '删除漫画库',
+                              ), // 删除按钮
+                            ],
+                          ),
                         );
                       } else {
                         return Row(
@@ -288,14 +303,6 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                         );
                       }
                     },
-                  ),
-                  const Spacer(),
-                  // 删除按钮
-                  IconButton(
-                    onPressed: widget.onDelete,
-                    icon: const Icon(Icons.delete),
-                    color: Colors.red,
-                    tooltip: '删除漫画库',
                   ),
                 ],
               ),

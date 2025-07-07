@@ -25,8 +25,10 @@ class NetworkScanQueueManager {
   /// 开始扫描网络漫画库
   /// [library] 要扫描的漫画库
   /// [config] 网络配置
+  /// [taskId] 可选的任务ID，如果不提供则自动生成
   /// 返回扫描任务ID
-  Future<String> startScan(MangaLibrary library, NetworkConfig config) async {
+  Future<String> startScan(MangaLibrary library, NetworkConfig config,
+      {String? taskId}) async {
     // 检查是否已有相同库的扫描任务
     final existingTask = _activeTasks.values
         .where(
@@ -38,22 +40,23 @@ class NetworkScanQueueManager {
       throw NetworkScanException('漫画库 ${library.name} 正在扫描中，请等待完成');
     }
 
-    final taskId = '${library.id}_${DateTime.now().millisecondsSinceEpoch}';
+    final finalTaskId =
+        taskId ?? '${library.id}_${DateTime.now().millisecondsSinceEpoch}';
 
     // 创建新的扫描任务
     final task = NetworkScanTask(
-      id: taskId,
+      id: finalTaskId,
       libraryId: library.id,
       libraryName: library.name,
       config: config,
     );
 
-    _activeTasks[taskId] = task;
+    _activeTasks[finalTaskId] = task;
 
     // 在独立的Isolate中执行扫描
     _startScanInIsolate(task);
 
-    return taskId;
+    return finalTaskId;
   }
 
   /// 取消扫描任务

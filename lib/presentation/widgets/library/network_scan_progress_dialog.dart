@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/network/network_scan_queue_manager.dart';
 import '../../../data/models/library.dart';
+import '../../../data/models/network_config.dart';
 
 /// 网络扫描进度对话框
 class NetworkScanProgressDialog extends ConsumerStatefulWidget {
@@ -33,6 +34,7 @@ class _NetworkScanProgressDialogState
   void initState() {
     super.initState();
     _listenToProgress();
+    _startScan();
   }
 
   @override
@@ -66,6 +68,50 @@ class _NetworkScanProgressDialogState
         }
       }
     });
+  }
+
+  void _startScan() async {
+    try {
+      // 获取网络配置
+      NetworkConfig config;
+      if (widget.library.settings.networkConfig != null) {
+        config = widget.library.settings.networkConfig!;
+      } else {
+        // 兼容旧版本：从path中解析网络配置
+        config = NetworkConfig.fromConnectionString(widget.library.path);
+      }
+
+      // 验证配置是否有效
+      if (!config.isValid) {
+        setState(() {
+          _currentProgress = NetworkScanProgress(
+            taskId: widget.taskId,
+            libraryId: widget.library.id,
+            status: NetworkScanStatus.failed,
+            message: '网络配置无效，请检查连接设置',
+          );
+        });
+        return;
+      }
+
+      // 启动扫描，传递任务ID以确保一致性
+      await NetworkScanQueueManager.instance.startScan(
+        widget.library,
+        config,
+        taskId: widget.taskId,
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentProgress = NetworkScanProgress(
+            taskId: widget.taskId,
+            libraryId: widget.library.id,
+            status: NetworkScanStatus.failed,
+            message: '启动扫描失败: $e',
+          );
+        });
+      }
+    }
   }
 
   void _cancelScan() {
@@ -232,12 +278,16 @@ class _NetworkScanProgressDialogState
         ),
       ),
       actions: [
-        if (!_isCompleted && !_isCancelled && progress?.status != NetworkScanStatus.failed)
+        if (!_isCompleted &&
+            !_isCancelled &&
+            progress?.status != NetworkScanStatus.failed)
           TextButton(
             onPressed: _cancelScan,
             child: const Text('取消'),
           ),
-        if (_isCompleted || _isCancelled || progress?.status == NetworkScanStatus.failed)
+        if (_isCompleted ||
+            _isCancelled ||
+            progress?.status == NetworkScanStatus.failed)
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(progress),
             child: const Text('确定'),
