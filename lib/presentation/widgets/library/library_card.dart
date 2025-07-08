@@ -299,6 +299,13 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                                       : null,
                                 ),
                               ),
+                            const SizedBox(width: 80),
+                            IconButton(
+                              onPressed: widget.onDelete,
+                              icon: const Icon(Icons.delete),
+                              color: Colors.red,
+                              tooltip: '删除漫画库',
+                            ), // 删除按钮
                           ],
                         );
                       }

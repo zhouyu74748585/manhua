@@ -293,16 +293,6 @@ class _NetworkConfigDialogState extends State<NetworkConfigDialog> {
                       const SizedBox(height: 16),
                     ],
                   ),
-
-                // 远程路径
-                TextFormField(
-                  controller: _remotePathController,
-                  decoration: const InputDecoration(
-                    labelText: '远程路径 (可选)',
-                    hintText: '例如: /manga 或 manga/collection',
-                    prefixIcon: Icon(Icons.folder),
-                  ),
-                ),
                 const SizedBox(height: 16),
 
                 // WebDAV SSL 选项

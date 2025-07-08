@@ -169,8 +169,17 @@ void _scanIsolateEntryPoint(_ScanIsolateMessage message) async {
       message: '已连接到服务器，开始扫描文件...',
     ));
 
+    String remotePath;
+    if (task.config.protocol == NetworkProtocol.smb) {
+      remotePath = task.config.shareName ?? '';
+    } else if (task.config.protocol == NetworkProtocol.nfs) {
+      remotePath = task.config.exportPath ?? '/';
+    } else {
+      remotePath = task.config.remotePath ?? '/';
+    }
     // 扫描根目录
-    final results = await _scanDirectory(fileSystem, '/', task, sendPort);
+    final results =
+        await _scanDirectory(fileSystem, remotePath, task, sendPort);
 
     // 发送完成消息
     sendPort.send(NetworkScanProgress(
