@@ -69,7 +69,7 @@ abstract class NetworkFileSystem {
     '.cbz',
     '.cbr',
     '.zip',
-    '.rar',
+    //'.rar',
     '.7z',
     '.pdf',
     '.epub',
