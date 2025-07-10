@@ -9,7 +9,6 @@ import '../../../data/models/manga.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/manga_card.dart';
-import '../manga_detail/manga_detail_page.dart';
 
 enum BookshelfViewMode { grid, list }
 
@@ -261,6 +260,7 @@ class _BookshelfPageState extends ConsumerState<BookshelfPage> {
         );
 
         return MangaCard(
+          mangaId: manga.id, // 添加mangaId参数
           title: manga.title,
           coverPath: manga.coverPath,
           subtitle: manga.author,
