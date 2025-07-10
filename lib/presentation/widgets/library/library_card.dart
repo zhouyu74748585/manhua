@@ -333,9 +333,8 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                   // 同步按钮
                   if (widget.onSync != null)
                     OutlinedButton.icon(
-                      onPressed: widget.library.isEnabled
-                          ? widget.onSync
-                          : null,
+                      onPressed:
+                          widget.library.isEnabled ? widget.onSync : null,
                       icon: const Icon(Icons.sync, size: 16),
                       label: const Text('同步'),
                       style: OutlinedButton.styleFrom(
@@ -356,27 +355,27 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                     OutlinedButton.icon(
                       onPressed: widget.onPrivacySettings,
                       icon: Icon(
-                        widget.library.isPrivate
-                            ? Icons.lock
-                            : Icons.lock_open,
+                        widget.library.isPrivate ? Icons.lock : Icons.lock_open,
                         size: 16,
                       ),
                       label: widget.library.isPrivate
                           ? const Text('公开')
                           : const Text('锁定'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: widget.library.isPrivate
-                            ? Colors.red
-                            : null,
+                        foregroundColor:
+                            widget.library.isPrivate ? Colors.red : null,
                       ),
                     ),
 
                   // 删除按钮
-                  IconButton(
+                  ElevatedButton.icon(
                     onPressed: widget.onDelete,
                     icon: const Icon(Icons.delete),
-                    color: Colors.red,
-                    tooltip: '删除漫画库',
+                    label: const Text('删除'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ],
               ),
