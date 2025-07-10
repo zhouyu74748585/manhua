@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
+import 'package:manhua_reader_flutter/data/services/pdf_page_service.dart';
 import 'package:manhua_reader_flutter/data/services/thumbnail_service.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -201,9 +202,14 @@ class FileScannerService {
       // 提取漫画标题（从文件名）
       final title = _extractTitleFromFileName(fileName);
 
-      // 尝试提取封面
+      // 尝试提取封面和获取页数
       String? coverPath;
       int pages = 0;
+
+      // 如果是PDF文件，获取页数
+      if (fileExtension == '.pdf') {
+        pages = await PdfPageService.getPdfPageCount(file.path);
+      }
 
       // 创建初始化的阅读进度
       final fileSize = await file.length() / 1024;
@@ -281,6 +287,13 @@ class FileScannerService {
 
   static Future<List<MangaPage>> extractFileToDisk(Manga manga,
       {Function(List<MangaPage>)? onBatchProcessed}) async {
+    // 根据漫画类型选择不同的处理方式
+    if (manga.type == MangaType.pdf) {
+      return await PdfPageService.extractPdfPages(manga,
+          onBatchProcessed: onBatchProcessed);
+    }
+
+    // 处理ZIP/CBZ文件
     try {
       final appDir = await getApplicationDocumentsDirectory();
       //为当前漫画创建目录

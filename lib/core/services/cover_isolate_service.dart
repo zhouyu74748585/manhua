@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/services.dart';
 import 'package:manhua_reader_flutter/core/services/isolate_service.dart';
 import 'package:manhua_reader_flutter/data/models/manga.dart';
 import 'package:manhua_reader_flutter/data/services/cover_cache_service.dart';
@@ -37,6 +38,7 @@ class CoverIsolateService {
         message: {
           'mangas': mangas.map((m) => m.toJson()).toList(),
           'cachePath': cachePath,
+          'rootIsolateToken': RootIsolateToken.instance!,
         },
       );
 
@@ -99,6 +101,10 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
   mainSendPort.send(isolateReceivePort.sendPort);
 
   try {
+    // 初始化BackgroundIsolateBinaryMessenger以支持Flutter插件
+    BackgroundIsolateBinaryMessenger.ensureInitialized(
+        params['message']['rootIsolateToken']);
+
     final Map<String, dynamic> messageData = params['message'];
     final List<dynamic> mangaJsonList = messageData['mangas'];
     final String cachePath = messageData['cachePath'];

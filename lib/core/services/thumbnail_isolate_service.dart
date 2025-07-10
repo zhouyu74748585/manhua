@@ -221,8 +221,8 @@ Future<void> _generateThumbnailsForManga(
   String? thumbnailPath;
 
   if (manga.type != MangaType.folder) {
-    if (manga.type == MangaType.archive) {
-      // 处理压缩包类型
+    if (manga.type == MangaType.archive || manga.type == MangaType.pdf) {
+      // 处理压缩包类型和PDF类型
       List<MangaPage> extractedPages =
           await FileScannerService.extractFileToDisk(
         manga,
