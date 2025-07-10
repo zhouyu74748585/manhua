@@ -14,9 +14,21 @@ class IsolateService {
     required String name,
     required void Function(Map<String, dynamic>) entryPoint,
     dynamic message,
+    bool allowConcurrent = false,
   }) async {
-    if (_isolates.containsKey(name)) {
+    // 如果不允许并发且已存在同名isolate，则停止旧的
+    if (!allowConcurrent && _isolates.containsKey(name)) {
       await stopIsolate(name);
+    }
+
+    // 如果允许并发，生成唯一名称
+    String uniqueName = name;
+    if (allowConcurrent) {
+      int counter = 1;
+      while (_isolates.containsKey(uniqueName)) {
+        uniqueName = '${name}_$counter';
+        counter++;
+      }
     }
 
     final receivePort = ReceivePort();
@@ -28,12 +40,12 @@ class IsolateService {
       },
     );
 
-    _isolates[name] = isolate;
-    _receivePorts[name] = receivePort;
+    _isolates[uniqueName] = isolate;
+    _receivePorts[uniqueName] = receivePort;
 
     // 将ReceivePort转换为广播流，避免多次监听问题
     final broadcastStream = receivePort.asBroadcastStream();
-    _broadcastStreams[name] = broadcastStream;
+    _broadcastStreams[uniqueName] = broadcastStream;
 
     // 等待Isolate发送SendPort
     final completer = Completer<SendPort>();
@@ -41,15 +53,15 @@ class IsolateService {
 
     subscription = broadcastStream.listen((data) {
       if (data is SendPort) {
-        _sendPorts[name] = data;
+        _sendPorts[uniqueName] = data;
         completer.complete(data);
         subscription.cancel();
       }
     });
 
     await completer.future;
-    log('Isolate [$name] 启动成功');
-    return name;
+    log('Isolate [$uniqueName] 启动成功');
+    return uniqueName;
   }
 
   /// 向Isolate发送消息
@@ -104,6 +116,24 @@ class IsolateService {
   /// 检查Isolate是否正在运行
   static bool isIsolateRunning(String name) {
     return _isolates.containsKey(name);
+  }
+
+  /// 检查指定类型的Isolate是否正在运行
+  static bool isIsolateTypeRunning(String namePrefix) {
+    return _isolates.keys.any((name) => name.startsWith(namePrefix));
+  }
+
+  /// 获取指定类型的所有运行中的Isolate名称
+  static List<String> getRunningIsolatesByType(String namePrefix) {
+    return _isolates.keys.where((name) => name.startsWith(namePrefix)).toList();
+  }
+
+  /// 停止指定类型的所有Isolate
+  static Future<void> stopIsolatesByType(String namePrefix) async {
+    final names = getRunningIsolatesByType(namePrefix);
+    for (final name in names) {
+      await stopIsolate(name);
+    }
   }
 }
 

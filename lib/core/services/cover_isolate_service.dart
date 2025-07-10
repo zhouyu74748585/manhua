@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 
 /// 封面生成Isolate服务
 class CoverIsolateService {
-  static const String _isolateName = 'cover_generator';
+  static const String _isolateNamePrefix = 'cover_generator';
 
   /// 在Isolate中生成封面
   static Future<void> generateCoversInIsolate(
@@ -20,21 +20,20 @@ class CoverIsolateService {
   }) async {
     if (mangas.isEmpty) return;
 
-    // 检查是否已有Isolate在运行
-    if (IsolateService.isIsolateRunning(_isolateName)) {
-      log('封面生成Isolate已在运行，跳过重复启动');
-      return;
-    }
+    // 允许并发执行，不检查是否已有Isolate在运行
+    log('开始启动封面生成Isolate，漫画数量: ${mangas.length}');
 
+    String? isolateName;
     try {
       // 获取缓存目录路径，传递给Isolate
       final appDir = await getApplicationDocumentsDirectory();
       final cachePath = appDir.path;
 
-      // 启动Isolate
-      await IsolateService.startIsolate(
-        name: _isolateName,
+      // 启动Isolate，允许并发
+      isolateName = await IsolateService.startIsolate(
+        name: _isolateNamePrefix,
         entryPoint: _coverGeneratorIsolate,
+        allowConcurrent: true,
         message: {
           'mangas': mangas.map((m) => m.toJson()).toList(),
           'cachePath': cachePath,
@@ -43,7 +42,7 @@ class CoverIsolateService {
       );
 
       // 监听Isolate消息
-      final stream = IsolateService.listenToIsolate(_isolateName);
+      final stream = IsolateService.listenToIsolate(isolateName);
       await for (final data in stream) {
         if (data is Map<String, dynamic>) {
           final message = IsolateMessage.fromJson(data);
@@ -65,13 +64,13 @@ class CoverIsolateService {
               break;
 
             case IsolateMessageType.complete:
-              log('封面生成完成');
-              await IsolateService.stopIsolate(_isolateName);
+              log('封面生成完成: $isolateName');
+              await IsolateService.stopIsolate(isolateName);
               return;
 
             case IsolateMessageType.error:
               log('封面生成错误: ${message.error}');
-              await IsolateService.stopIsolate(_isolateName);
+              await IsolateService.stopIsolate(isolateName);
               throw Exception(message.error);
 
             default:
@@ -81,14 +80,26 @@ class CoverIsolateService {
       }
     } catch (e, stackTrace) {
       log('封面生成Isolate执行失败: $e,堆栈:$stackTrace');
-      await IsolateService.stopIsolate(_isolateName);
+      if (isolateName != null) {
+        await IsolateService.stopIsolate(isolateName);
+      }
       rethrow;
     }
   }
 
-  /// 停止封面生成
-  static Future<void> stopCoverGeneration() async {
-    await IsolateService.stopIsolate(_isolateName);
+  /// 停止所有封面生成任务
+  static Future<void> stopAllCoverGeneration() async {
+    await IsolateService.stopIsolatesByType(_isolateNamePrefix);
+  }
+
+  /// 检查是否有封面生成任务正在运行
+  static bool isCoverGenerationRunning() {
+    return IsolateService.isIsolateTypeRunning(_isolateNamePrefix);
+  }
+
+  /// 获取正在运行的封面生成任务数量
+  static int getRunningCoverGenerationCount() {
+    return IsolateService.getRunningIsolatesByType(_isolateNamePrefix).length;
   }
 }
 

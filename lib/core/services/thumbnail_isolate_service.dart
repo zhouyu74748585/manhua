@@ -13,7 +13,7 @@ import '../../data/services/drift_isolate_database_service.dart';
 
 /// 缩略图生成Isolate服务
 class ThumbnailIsolateService {
-  static const String _isolateName = 'thumbnail_generator';
+  static const String _isolateNamePrefix = 'thumbnail_generator';
 
   /// 在Isolate中生成缩略图
   static Future<void> generateThumbnailsInIsolate(
@@ -21,50 +21,60 @@ class ThumbnailIsolateService {
     void Function()? onComplete,
     Function(List<MangaPage>)? onBatchProcessed,
   }) async {
-    final receivePort = ReceivePort();
+    log('开始启动缩略图生成Isolate，漫画: ${manga.title}');
 
-    final isolate = await Isolate.spawn(
-      _thumbnailGeneratorIsolate,
-      {
-        'sendPort': receivePort.sendPort,
-        'manga': manga.toJson(),
-        'rootIsolateToken': RootIsolateToken.instance!,
-      },
-    );
+    try {
+      // 启动Isolate，允许并发
+      final isolateName = await IsolateService.startIsolate(
+        name: _isolateNamePrefix,
+        entryPoint: _thumbnailGeneratorIsolate,
+        allowConcurrent: true,
+        message: {
+          'manga': manga.toJson(),
+          'rootIsolateToken': RootIsolateToken.instance!,
+        },
+      );
 
-    await for (final message in receivePort) {
-      if (message is Map<String, dynamic>) {
-        final type = IsolateMessageType.values[message['type']];
+      // 监听Isolate消息
+      final stream = IsolateService.listenToIsolate(isolateName);
 
-        switch (type) {
-          case IsolateMessageType.batchProcessed:
-            final batchData = message['batch'] as List<dynamic>;
-            final batchPages = batchData
-                .map((pageData) => MangaPage.fromJson(pageData))
-                .toList();
-            onBatchProcessed?.call(batchPages);
-            break;
+      await for (final data in stream) {
+        if (data is Map<String, dynamic>) {
+          final message = IsolateMessage.fromJson(data);
 
-          case IsolateMessageType.complete:
-            onComplete?.call();
-            receivePort.close();
-            isolate.kill();
-            return;
+          switch (message.type) {
+            case IsolateMessageType.batchProcessed:
+              if (onBatchProcessed != null && message.data is Map) {
+                final batchData = message.data['batch'] as List<dynamic>;
+                final batchPages = batchData
+                    .map((pageData) => MangaPage.fromJson(pageData))
+                    .toList();
+                onBatchProcessed(batchPages);
+              }
+              break;
 
-          case IsolateMessageType.error:
-            final error = message['error'] as String;
-            print('Thumbnail generation error: $error');
-            receivePort.close();
-            isolate.kill();
-            throw Exception(error);
+            case IsolateMessageType.complete:
+              log('缩略图生成完成: $isolateName');
+              onComplete?.call();
+              await IsolateService.stopIsolate(isolateName);
+              return;
 
-          case IsolateMessageType.start:
-          case IsolateMessageType.progress:
-          case IsolateMessageType.stop:
-            // 这些消息类型在此上下文中不处理
-            break;
+            case IsolateMessageType.error:
+              log('缩略图生成错误: ${message.error}');
+              await IsolateService.stopIsolate(isolateName);
+              throw Exception(message.error);
+
+            case IsolateMessageType.start:
+            case IsolateMessageType.progress:
+            case IsolateMessageType.stop:
+              // 这些消息类型在此上下文中不处理
+              break;
+          }
         }
       }
+    } catch (e, stackTrace) {
+      log('缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
+      rethrow;
     }
   }
 
@@ -164,9 +174,19 @@ class ThumbnailIsolateService {
     }
   }
 
-  /// 停止缩略图生成
-  static Future<void> stopThumbnailGeneration() async {
-    await IsolateService.stopIsolate(_isolateName);
+  /// 停止所有缩略图生成任务
+  static Future<void> stopAllThumbnailGeneration() async {
+    await IsolateService.stopIsolatesByType(_isolateNamePrefix);
+  }
+
+  /// 检查是否有缩略图生成任务正在运行
+  static bool isThumbnailGenerationRunning() {
+    return IsolateService.isIsolateTypeRunning(_isolateNamePrefix);
+  }
+
+  /// 获取正在运行的缩略图生成任务数量
+  static int getRunningThumbnailGenerationCount() {
+    return IsolateService.getRunningIsolatesByType(_isolateNamePrefix).length;
   }
 }
 
@@ -182,26 +202,26 @@ void _thumbnailGeneratorIsolate(Map<String, dynamic> params) async {
   try {
     // Initialize BackgroundIsolateBinaryMessenger for Flutter services
     BackgroundIsolateBinaryMessenger.ensureInitialized(
-        params['rootIsolateToken']);
+        params['message']['rootIsolateToken']);
 
     // Initialize Drift database for isolate
     databaseService = await DriftIsolateDatabaseService.create();
 
-    final Map<String, dynamic> mangaJson = params['manga'];
+    final Map<String, dynamic> mangaJson = params['message']['manga'];
     final Manga manga = Manga.fromJson(mangaJson);
     await _generateThumbnailsForManga(manga, databaseService, mainSendPort);
 
     // 发送完成消息
-    mainSendPort.send({
-      'type': IsolateMessageType.complete.index,
-    });
+    mainSendPort.send(const IsolateMessage(
+      type: IsolateMessageType.complete,
+    ).toJson());
   } catch (e, stackTrace) {
     log('缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
     // 发送错误消息
-    mainSendPort.send({
-      'type': IsolateMessageType.error.index,
-      'error': e.toString(),
-    });
+    mainSendPort.send(IsolateMessage(
+      type: IsolateMessageType.error,
+      error: e.toString(),
+    ).toJson());
   } finally {
     // Close database connection
     await databaseService?.close();
@@ -232,10 +252,12 @@ Future<void> _generateThumbnailsForManga(
           log("生成[${manga.title}]的${batchPages.length}页的缩略图");
 
           // 发送批次完成消息
-          mainSendPort.send({
-            'type': IsolateMessageType.batchProcessed.index,
-            'batch': batchPages.map((page) => page.toJson()).toList(),
-          });
+          mainSendPort.send(IsolateMessage(
+            type: IsolateMessageType.batchProcessed,
+            data: {
+              'batch': batchPages.map((page) => page.toJson()).toList(),
+            },
+          ).toJson());
         },
       );
 
