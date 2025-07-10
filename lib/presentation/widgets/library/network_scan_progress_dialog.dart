@@ -278,6 +278,18 @@ class _NetworkScanProgressDialogState
         ),
       ),
       actions: [
+        // 隐藏按钮 - 让任务在后台执行
+        if (!_isCompleted &&
+            !_isCancelled &&
+            progress?.status != NetworkScanStatus.failed)
+          TextButton(
+            onPressed: () {
+              // 关闭对话框但不取消任务，让扫描在后台继续
+              Navigator.of(context).pop('background');
+            },
+            child: const Text('隐藏'),
+          ),
+        // 取消按钮
         if (!_isCompleted &&
             !_isCancelled &&
             progress?.status != NetworkScanStatus.failed)
@@ -285,6 +297,7 @@ class _NetworkScanProgressDialogState
             onPressed: _cancelScan,
             child: const Text('取消'),
           ),
+        // 确定按钮
         if (_isCompleted ||
             _isCancelled ||
             progress?.status == NetworkScanStatus.failed)

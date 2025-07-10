@@ -30,7 +30,8 @@ class HTTPFileSystem extends NetworkFileSystem {
     ));
 
     // 添加基本认证（如果需要）
-    if (config.username?.isNotEmpty == true && config.password?.isNotEmpty == true) {
+    if (config.username?.isNotEmpty == true &&
+        config.password?.isNotEmpty == true) {
       final auth =
           'Basic ${base64Encode('${config.username}:${config.password}'.codeUnits)}';
       _dio.options.headers['Authorization'] = auth;
@@ -193,6 +194,40 @@ class HTTPFileSystem extends NetworkFileSystem {
         throw NetworkFileNotFoundException(path);
       }
       throw NetworkFileSystemException('下载文件失败: $path', originalError: e);
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadFileStream(String path, {int start = 0, int? length}) async* {
+    _ensureConnected();
+
+    try {
+      // 构建Range请求头
+      final headers = <String, dynamic>{};
+      if (length != null) {
+        headers['Range'] = 'bytes=$start-${start + length - 1}';
+      } else if (start > 0) {
+        headers['Range'] = 'bytes=$start-';
+      }
+
+      final response = await _dio.get<ResponseBody>(
+        path,
+        options: Options(
+          responseType: ResponseType.stream,
+          headers: headers,
+        ),
+      );
+
+      if (response.data != null) {
+        await for (final chunk in response.data!.stream) {
+          yield chunk;
+        }
+      }
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        throw NetworkFileNotFoundException(path);
+      }
+      throw NetworkFileSystemException('HTTP流式下载文件失败: $path', originalError: e);
     }
   }
 

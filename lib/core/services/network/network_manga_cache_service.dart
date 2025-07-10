@@ -1,6 +1,8 @@
 import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -141,20 +143,154 @@ class NetworkMangaCacheService {
     }
   }
 
-  /// 从压缩文件中提取封面
+  /// 从压缩文件中提取封面（流式处理）
   Future<String?> _extractCoverFromArchive(
       NetworkFileSystem fileSystem, String archivePath, String cacheKey) async {
     try {
-      // 下载压缩文件的前几KB来提取封面
-      // 这里简化处理，实际应该实现流式解压
-      final archiveData = await fileSystem.downloadFile(archivePath);
+      dev.log('开始流式提取压缩文件封面: $archivePath');
 
-      // TODO: 实现压缩文件封面提取
-      // 这里需要根据文件类型（ZIP、RAR等）进行相应处理
-      dev.log('压缩文件封面提取功能待实现: $archivePath');
-      return null;
+      // 确定文件类型
+      final extension = path.extension(archivePath).toLowerCase();
+
+      if (extension == '.zip' || extension == '.cbz') {
+        return await _extractCoverFromZip(fileSystem, archivePath, cacheKey);
+      } else if (extension == '.rar' || extension == '.cbr') {
+        return await _extractCoverFromRar(fileSystem, archivePath, cacheKey);
+      } else if (extension == '.7z' || extension == '.cb7') {
+        return await _extractCoverFrom7z(fileSystem, archivePath, cacheKey);
+      } else {
+        dev.log('不支持的压缩文件格式: $extension');
+        return null;
+      }
     } catch (e) {
       dev.log('从压缩文件提取封面失败: $archivePath, 错误: $e');
+      return null;
+    }
+  }
+
+  /// 从ZIP文件中流式提取封面
+  Future<String?> _extractCoverFromZip(
+      NetworkFileSystem fileSystem, String archivePath, String cacheKey) async {
+    try {
+      // 流式下载ZIP文件的前64KB来查找中央目录
+      const initialChunkSize = 65536; // 64KB
+      final chunks = <int>[];
+
+      await for (final chunk in fileSystem.downloadFileStream(archivePath,
+          start: 0, length: initialChunkSize)) {
+        chunks.addAll(chunk);
+      }
+
+      if (chunks.isEmpty) {
+        dev.log('ZIP文件为空或下载失败: $archivePath');
+        return null;
+      }
+
+      // 尝试解析ZIP文件
+      final archive =
+          ZipDecoder().decodeBytes(Uint8List.fromList(chunks), verify: false);
+
+      // 查找第一个图片文件
+      final imageExtensions = {
+        '.jpg',
+        '.jpeg',
+        '.png',
+        '.gif',
+        '.bmp',
+        '.webp'
+      };
+      ArchiveFile? firstImageFile;
+
+      for (final file in archive.files) {
+        if (!file.isFile) continue;
+
+        final ext = path.extension(file.name).toLowerCase();
+        if (imageExtensions.contains(ext)) {
+          firstImageFile = file;
+          break;
+        }
+      }
+
+      if (firstImageFile == null) {
+        dev.log('ZIP文件中未找到图片文件: $archivePath');
+        return null;
+      }
+
+      // 如果第一个图片文件在初始chunk中，直接提取
+      if (firstImageFile.content.isNotEmpty) {
+        return await _saveCoverImage(
+            firstImageFile.content, cacheKey, firstImageFile.name);
+      }
+
+      // 如果需要更多数据，下载完整文件（这里可以进一步优化）
+      dev.log('需要下载更多数据来提取封面: ${firstImageFile.name}');
+      final fullData = await fileSystem.downloadFile(archivePath);
+      final fullArchive = ZipDecoder().decodeBytes(fullData);
+
+      for (final file in fullArchive.files) {
+        if (file.name == firstImageFile.name && file.content.isNotEmpty) {
+          return await _saveCoverImage(file.content, cacheKey, file.name);
+        }
+      }
+
+      return null;
+    } catch (e) {
+      dev.log('从ZIP文件提取封面失败: $archivePath, 错误: $e');
+      return null;
+    }
+  }
+
+  /// 从RAR文件中提取封面（简化实现）
+  Future<String?> _extractCoverFromRar(
+      NetworkFileSystem fileSystem, String archivePath, String cacheKey) async {
+    try {
+      // RAR格式比较复杂，这里提供简化实现
+      // 实际生产环境可能需要使用专门的RAR解压库
+      dev.log('RAR文件封面提取功能需要专门的库支持: $archivePath');
+      return null;
+    } catch (e) {
+      dev.log('从RAR文件提取封面失败: $archivePath, 错误: $e');
+      return null;
+    }
+  }
+
+  /// 从7Z文件中提取封面（简化实现）
+  Future<String?> _extractCoverFrom7z(
+      NetworkFileSystem fileSystem, String archivePath, String cacheKey) async {
+    try {
+      // 7Z格式比较复杂，这里提供简化实现
+      dev.log('7Z文件封面提取功能需要专门的库支持: $archivePath');
+      return null;
+    } catch (e) {
+      dev.log('从7Z文件提取封面失败: $archivePath, 错误: $e');
+      return null;
+    }
+  }
+
+  /// 保存封面图片到缓存
+  Future<String?> _saveCoverImage(
+      Uint8List imageData, String cacheKey, String originalName) async {
+    try {
+      final cacheDir = await _getCacheDirectory();
+      final coverCacheDir = Directory(path.join(cacheDir.path, 'covers'));
+
+      if (!await coverCacheDir.exists()) {
+        await coverCacheDir.create(recursive: true);
+      }
+
+      // 根据原始文件扩展名确定保存格式
+      final ext = path.extension(originalName).toLowerCase();
+      final validExts = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'};
+      final saveExt = validExts.contains(ext) ? ext : '.jpg';
+
+      final coverFile =
+          File(path.join(coverCacheDir.path, '$cacheKey$saveExt'));
+      await coverFile.writeAsBytes(imageData);
+
+      dev.log('封面图片已保存: ${coverFile.path}');
+      return coverFile.path;
+    } catch (e) {
+      dev.log('保存封面图片失败: $e');
       return null;
     }
   }

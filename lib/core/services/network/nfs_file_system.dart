@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -57,18 +58,32 @@ class NFSFileSystem extends NetworkFileSystem {
       }
 
       final files = <NetworkFileInfo>[];
-      await for (final entity in directory.list()) {
-        final stat = await entity.stat();
-        final relativePath = _getRelativePath(entity.path);
 
-        files.add(NetworkFileInfo(
-          name: entity.path.split(Platform.pathSeparator).last,
-          path: relativePath,
-          isDirectory: entity is Directory,
-          size: stat.size,
-          lastModified: stat.modified,
-        ));
-      }
+      // 批量获取文件信息，避免逐个调用stat()
+      final entities = await directory.list().toList();
+
+      // 并行获取文件状态信息以提高性能
+      final futures = entities.map((entity) async {
+        try {
+          final stat = await entity.stat();
+          final relativePath = _getRelativePath(entity.path);
+
+          return NetworkFileInfo(
+            name: entity.path.split(Platform.pathSeparator).last,
+            path: relativePath,
+            isDirectory: entity is Directory,
+            size: stat.size,
+            lastModified: stat.modified,
+          );
+        } catch (e) {
+          // 如果获取某个文件信息失败，记录日志但不中断整个扫描
+          dev.log('获取文件信息失败: ${entity.path}, 错误: $e');
+          return null;
+        }
+      });
+
+      final results = await Future.wait(futures);
+      files.addAll(results.whereType<NetworkFileInfo>());
 
       return files;
     } catch (e) {
@@ -235,6 +250,31 @@ class NFSFileSystem extends NetworkFileSystem {
     } catch (e) {
       if (e is NetworkFileSystemException) rethrow;
       throw NetworkFileSystemException('重命名NFS文件失败: $oldPath -> $newPath - $e');
+    }
+  }
+
+  @override
+  Stream<List<int>> downloadFileStream(String path,
+      {int start = 0, int? length}) async* {
+    // NFS协议的流式下载实现，这里提供简化版本
+    try {
+      final data = await downloadFile(path);
+
+      int currentPos = start;
+      final endPos = length != null ? start + length : data.length;
+      const chunkSize = 8192; // 8KB chunks
+
+      while (currentPos < endPos && currentPos < data.length) {
+        final chunkEnd =
+            (currentPos + chunkSize < endPos) ? currentPos + chunkSize : endPos;
+
+        if (chunkEnd <= data.length) {
+          yield data.sublist(currentPos, chunkEnd);
+        }
+        currentPos = chunkEnd;
+      }
+    } catch (e) {
+      throw NetworkFileSystemException('NFS流式下载文件失败: $path', originalError: e);
     }
   }
 

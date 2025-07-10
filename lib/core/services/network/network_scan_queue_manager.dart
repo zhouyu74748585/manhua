@@ -1,7 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:isolate';
 
+import 'package:crypto/crypto.dart';
+
 import '../../../data/models/library.dart';
+import '../../../data/models/manga.dart';
+import '../../../data/models/manga_page.dart';
 import '../../../data/models/network_config.dart';
 import 'network_file_system.dart';
 import 'network_file_system_factory.dart';
@@ -219,15 +225,12 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
     ));
 
     final files = await fileSystem.listDirectory(path);
-    int processedFiles = 0;
 
     for (final file in files) {
       // 检查是否取消
       if (task.isCancelled) {
         break;
       }
-
-      processedFiles++;
 
       if (file.isDirectory) {
         // 发送子目录扫描信息
@@ -245,21 +248,41 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
         results.addAll(subResults);
       } else if (file.isMangaFile) {
         // 发现漫画文件
-        results.add(NetworkMangaInfo(
+        final networkMangaInfo = NetworkMangaInfo(
           name: file.name,
           path: file.path,
           size: file.size,
           lastModified: file.lastModified,
-        ));
+        );
+        results.add(networkMangaInfo);
 
-        // 发送进度更新
-        sendPort.send(NetworkScanProgress(
-          taskId: task.id,
-          libraryId: task.libraryId,
-          status: NetworkScanStatus.scanning,
-          message: '发现漫画文件: ${file.name}',
-          scannedCount: results.length,
-        ));
+        // 实时处理：立即创建漫画记录并获取封面
+        try {
+          final processedManga = await _processAndCreateMangaRecord(
+              networkMangaInfo, task.libraryId, fileSystem);
+
+          if (processedManga != null) {
+            // 发送实时处理结果
+            sendPort.send(NetworkScanProgress(
+              taskId: task.id,
+              libraryId: task.libraryId,
+              status: NetworkScanStatus.scanning,
+              message: '处理漫画文件: ${file.name}',
+              scannedCount: results.length,
+              processedMangas: [processedManga], // 发送处理过的漫画
+            ));
+          }
+        } catch (e) {
+          dev.log('处理漫画文件失败: ${file.name}, 错误: $e');
+          // 即使处理失败，也发送进度更新
+          sendPort.send(NetworkScanProgress(
+            taskId: task.id,
+            libraryId: task.libraryId,
+            status: NetworkScanStatus.scanning,
+            message: '发现漫画文件: ${file.name}',
+            scannedCount: results.length,
+          ));
+        }
       }
     }
 
@@ -270,7 +293,7 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
         final directoryName =
             path.split('/').last.isEmpty ? 'Root' : path.split('/').last;
 
-        results.add(NetworkMangaInfo(
+        final networkMangaInfo = NetworkMangaInfo(
           name: directoryName,
           path: path,
           size: imageFiles.fold(0, (sum, f) => sum + f.size),
@@ -278,16 +301,36 @@ Future<List<NetworkMangaInfo>> _scanDirectory(
           imageCount: imageFiles.length,
           lastModified:
               imageFiles.isNotEmpty ? imageFiles.first.lastModified : null,
-        ));
+        );
+        results.add(networkMangaInfo);
 
-        // 发送漫画目录发现信息
-        sendPort.send(NetworkScanProgress(
-          taskId: task.id,
-          libraryId: task.libraryId,
-          status: NetworkScanStatus.scanning,
-          message: '发现漫画目录: $directoryName (${imageFiles.length}张图片)',
-          scannedCount: results.length,
-        ));
+        // 实时处理：立即创建漫画记录并获取封面
+        try {
+          final processedManga = await _processAndCreateMangaRecord(
+              networkMangaInfo, task.libraryId, fileSystem);
+
+          if (processedManga != null) {
+            // 发送实时处理结果
+            sendPort.send(NetworkScanProgress(
+              taskId: task.id,
+              libraryId: task.libraryId,
+              status: NetworkScanStatus.scanning,
+              message: '处理漫画目录: $directoryName (${imageFiles.length}张图片)',
+              scannedCount: results.length,
+              processedMangas: [processedManga], // 发送处理过的漫画
+            ));
+          }
+        } catch (e) {
+          dev.log('处理漫画目录失败: $directoryName, 错误: $e');
+          // 即使处理失败，也发送进度更新
+          sendPort.send(NetworkScanProgress(
+            taskId: task.id,
+            libraryId: task.libraryId,
+            status: NetworkScanStatus.scanning,
+            message: '发现漫画目录: $directoryName (${imageFiles.length}张图片)',
+            scannedCount: results.length,
+          ));
+        }
       }
     }
   } catch (e) {
@@ -374,6 +417,34 @@ class NetworkScanTask {
   }
 }
 
+/// 处理过的漫画信息
+class ProcessedMangaInfo {
+  final NetworkMangaInfo networkMangaInfo;
+  final Manga manga;
+  final List<MangaPage> pageInfos;
+
+  ProcessedMangaInfo({
+    required this.networkMangaInfo,
+    required this.manga,
+    required this.pageInfos,
+  });
+}
+
+/// 漫画页面信息
+class MangaPageInfo {
+  final String id;
+  final String mangaId;
+  final int pageIndex;
+  final String localPath;
+
+  MangaPageInfo({
+    required this.id,
+    required this.mangaId,
+    required this.pageIndex,
+    required this.localPath,
+  });
+}
+
 /// 网络扫描进度
 class NetworkScanProgress {
   final String taskId;
@@ -382,6 +453,7 @@ class NetworkScanProgress {
   final String message;
   final int scannedCount;
   final List<NetworkMangaInfo>? foundMangas;
+  final List<ProcessedMangaInfo>? processedMangas; // 新增：处理过的漫画信息
 
   NetworkScanProgress({
     required this.taskId,
@@ -390,6 +462,7 @@ class NetworkScanProgress {
     required this.message,
     this.scannedCount = 0,
     this.foundMangas,
+    this.processedMangas, // 新增参数
   });
 }
 
@@ -428,4 +501,75 @@ class NetworkScanException implements Exception {
 
   @override
   String toString() => 'NetworkScanException: $message';
+}
+
+/// 处理并创建漫画记录
+/// 这个方法在扫描过程中被调用，用于实时处理发现的漫画
+Future<ProcessedMangaInfo?> _processAndCreateMangaRecord(
+  NetworkMangaInfo networkMangaInfo,
+  String libraryId,
+  NetworkFileSystem fileSystem,
+) async {
+  try {
+    // 生成唯一ID
+    final pathBytes = utf8.encode('${libraryId}_${networkMangaInfo.path}');
+    final digest = md5.convert(pathBytes);
+    final mangaId = digest.toString();
+
+    // 创建漫画对象
+    final manga = Manga(
+      id: mangaId,
+      title: networkMangaInfo.name,
+      libraryId: libraryId,
+      path: networkMangaInfo.path,
+      type: networkMangaInfo.isDirectory ? MangaType.folder : MangaType.archive,
+      totalPages: networkMangaInfo.imageCount,
+      currentPage: 0,
+      lastReadAt: null,
+      createdAt: DateTime.now(),
+      fileSize: networkMangaInfo.size,
+    );
+
+    // 生成页面信息
+    final pageInfos = <MangaPage>[];
+    if (networkMangaInfo.isDirectory) {
+      // 对于目录，扫描其中的图片文件
+      try {
+        final files = await fileSystem.listDirectory(networkMangaInfo.path);
+        final imageFiles = files.where((f) => f.isImageFile).toList();
+
+        // 按文件名排序
+        imageFiles.sort((a, b) => a.name.compareTo(b.name));
+
+        for (int i = 0; i < imageFiles.length; i++) {
+          pageInfos.add(MangaPage(
+            id: '${mangaId}_page_${i + 1}',
+            mangaId: mangaId,
+            pageIndex: i,
+            localPath: imageFiles[i].path,
+          ));
+        }
+      } catch (e) {
+        dev.log('扫描漫画目录页面失败: ${networkMangaInfo.path}, 错误: $e');
+      }
+    } else {
+      // 对于压缩文件，暂时创建一个占位页面信息
+      // 实际的页面信息会在用户首次打开时生成
+      pageInfos.add(MangaPage(
+        id: '${mangaId}_page_1',
+        mangaId: mangaId,
+        pageIndex: 0,
+        localPath: networkMangaInfo.path,
+      ));
+    }
+
+    return ProcessedMangaInfo(
+      networkMangaInfo: networkMangaInfo,
+      manga: manga,
+      pageInfos: pageInfos,
+    );
+  } catch (e) {
+    dev.log('创建漫画记录失败: ${networkMangaInfo.name}, 错误: $e');
+    return null;
+  }
 }

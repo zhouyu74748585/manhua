@@ -154,6 +154,59 @@ class SMBFileSystem extends NetworkFileSystem {
   }
 
   @override
+  Stream<List<int>> downloadFileStream(String path, {int start = 0, int? length}) async* {
+    _ensureConnected();
+
+    try {
+      final smbFile = await _smbClient!.file(path);
+      final stream = await _smbClient!.openRead(smbFile);
+
+      int currentPosition = 0;
+      int totalRead = 0;
+      final targetLength = length ?? -1; // -1 表示读取到文件末尾
+
+      await for (final chunk in stream) {
+        // 跳过开始位置之前的数据
+        if (currentPosition + chunk.length <= start) {
+          currentPosition += chunk.length;
+          continue;
+        }
+
+        // 计算当前chunk中需要的部分
+        int chunkStart = 0;
+        int chunkEnd = chunk.length;
+
+        if (currentPosition < start) {
+          chunkStart = start - currentPosition;
+        }
+
+        if (targetLength > 0 && totalRead + (chunkEnd - chunkStart) > targetLength) {
+          chunkEnd = chunkStart + (targetLength - totalRead);
+        }
+
+        if (chunkStart < chunkEnd) {
+          final relevantData = chunk.sublist(chunkStart, chunkEnd);
+          totalRead += relevantData.length;
+          yield relevantData;
+
+          // 如果已读取足够数据，停止
+          if (targetLength > 0 && totalRead >= targetLength) {
+            break;
+          }
+        }
+
+        currentPosition += chunk.length;
+      }
+    } catch (e) {
+      throw NetworkFileSystemException(
+        'SMB流式下载文件失败: $path',
+        details: e.toString(),
+        originalError: e,
+      );
+    }
+  }
+
+  @override
   Future<void> downloadFileToLocal(
     String remotePath,
     String localPath, {

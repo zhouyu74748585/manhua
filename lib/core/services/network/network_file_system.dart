@@ -35,6 +35,14 @@ abstract class NetworkFileSystem {
   /// 返回文件字节数据
   Future<Uint8List> downloadFile(String path);
 
+  /// 流式下载文件的部分内容
+  /// [path] 远程文件路径
+  /// [start] 开始字节位置
+  /// [length] 要下载的字节数，null表示下载到文件末尾
+  /// 返回字节流
+  Stream<List<int>> downloadFileStream(String path,
+      {int start = 0, int? length});
+
   /// 下载文件到本地
   /// [remotePath] 远程文件路径
   /// [localPath] 本地保存路径

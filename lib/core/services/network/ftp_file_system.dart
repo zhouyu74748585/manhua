@@ -201,6 +201,32 @@ class FTPFileSystem extends NetworkFileSystem {
   }
 
   @override
+  Stream<List<int>> downloadFileStream(String path, {int start = 0, int? length}) async* {
+    // FTP协议的流式下载实现相对复杂，这里提供简化版本
+    // 实际生产环境中可能需要更复杂的实现来支持断点续传
+    try {
+      final data = await downloadFile(path);
+
+      int currentPos = start;
+      final endPos = length != null ? start + length : data.length;
+      const chunkSize = 8192; // 8KB chunks
+
+      while (currentPos < endPos && currentPos < data.length) {
+        final chunkEnd = (currentPos + chunkSize < endPos)
+            ? currentPos + chunkSize
+            : endPos;
+
+        if (chunkEnd <= data.length) {
+          yield data.sublist(currentPos, chunkEnd);
+        }
+        currentPos = chunkEnd;
+      }
+    } catch (e) {
+      throw NetworkFileSystemException('FTP流式下载文件失败: $path', originalError: e);
+    }
+  }
+
+  @override
   Future<void> downloadFileToLocal(
     String remotePath,
     String localPath, {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,11 +40,18 @@ class LibraryCard extends ConsumerStatefulWidget {
 
 class _LibraryCardState extends ConsumerState<LibraryCard> {
   String? _currentScanTaskId;
+  StreamSubscription<NetworkScanProgress>? _backgroundScanSubscription;
 
   @override
   void initState() {
     super.initState();
     _listenToScanProgress();
+  }
+
+  @override
+  void dispose() {
+    _backgroundScanSubscription?.cancel();
+    super.dispose();
   }
 
   void _listenToScanProgress() {
@@ -66,7 +75,7 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
       });
 
       // 显示进度对话框
-      final result = await showDialog<NetworkScanProgress>(
+      final result = await showDialog<dynamic>(
         context: context,
         barrierDismissible: false,
         builder: (context) => NetworkScanProgressDialog(
@@ -75,18 +84,129 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
         ),
       );
 
-      setState(() {
-        _currentScanTaskId = null;
-      });
+      // 处理对话框结果
+      if (result == 'background') {
+        // 用户选择隐藏对话框，任务在后台继续
+        // 显示提示信息
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.library.name} 正在后台扫描，完成后会自动更新书架'),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: '查看进度',
+                textColor: Colors.white,
+                onPressed: () {
+                  // 重新显示进度对话框
+                  _showScanProgress(taskId);
+                },
+              ),
+            ),
+          );
+        }
 
-      // 如果扫描成功，调用回调
-      if (result?.status == NetworkScanStatus.completed) {
-        widget.onScan();
+        // 监听后台扫描完成
+        _listenToBackgroundScan(taskId);
+      } else if (result is NetworkScanProgress) {
+        // 扫描完成或失败
+        setState(() {
+          _currentScanTaskId = null;
+        });
+
+        // 如果扫描成功，调用回调
+        if (result.status == NetworkScanStatus.completed) {
+          widget.onScan();
+        }
+      } else {
+        // 其他情况（如取消）
+        setState(() {
+          _currentScanTaskId = null;
+        });
       }
     } else {
       // 本地库直接调用扫描
       widget.onScan();
     }
+  }
+
+  /// 监听后台扫描进度
+  void _listenToBackgroundScan(String taskId) {
+    _backgroundScanSubscription?.cancel();
+    _backgroundScanSubscription = NetworkScanQueueManager
+        .instance.progressStream
+        .where((progress) => progress.taskId == taskId)
+        .listen((progress) {
+      if (mounted) {
+        if (progress.status == NetworkScanStatus.completed) {
+          // 后台扫描完成
+          setState(() {
+            _currentScanTaskId = null;
+          });
+
+          // 显示完成提示
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.library.name} 扫描完成！'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          // 刷新书架
+          widget.onScan();
+
+          // 取消监听
+          _backgroundScanSubscription?.cancel();
+          _backgroundScanSubscription = null;
+        } else if (progress.status == NetworkScanStatus.failed) {
+          // 后台扫描失败
+          setState(() {
+            _currentScanTaskId = null;
+          });
+
+          // 显示失败提示
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.library.name} 扫描失败：${progress.message}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+
+          // 取消监听
+          _backgroundScanSubscription?.cancel();
+          _backgroundScanSubscription = null;
+        }
+      }
+    });
+  }
+
+  /// 重新显示扫描进度对话框
+  void _showScanProgress(String taskId) {
+    showDialog<dynamic>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => NetworkScanProgressDialog(
+        library: widget.library,
+        taskId: taskId,
+      ),
+    ).then((result) {
+      if (result is NetworkScanProgress) {
+        // 如果从进度对话框返回，处理结果
+        setState(() {
+          _currentScanTaskId = null;
+        });
+
+        if (result.status == NetworkScanStatus.completed) {
+          widget.onScan();
+        }
+
+        // 取消后台监听
+        _backgroundScanSubscription?.cancel();
+        _backgroundScanSubscription = null;
+      }
+    });
   }
 
   @override
