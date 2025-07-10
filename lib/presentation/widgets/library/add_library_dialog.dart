@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../../../core/services/enhanced_file_picker_service.dart';
+import '../../../core/services/platform_file_picker_service.dart';
 import '../../../data/models/library.dart';
 import '../../../data/models/network_config.dart';
 import 'network_config_dialog.dart';
@@ -274,12 +275,30 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
 
   Future<void> _selectFolder() async {
     try {
-      final result =
-          await EnhancedFilePickerService.pickDirectoryWithPermission(
+      // 创建平台特定的文件选择器服务
+      final platformService = PlatformFilePickerService.create();
+      
+      // 检查现有路径的权限状态
+      final currentPath = _pathController.text.trim();
+      if (currentPath.isNotEmpty) {
+        final hasPermission = await platformService.checkPathPermission(currentPath);
+        if (hasPermission) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('当前路径权限有效'),
+                backgroundColor: Colors.blue,
+              ),
+            );
+          }
+        }
+      }
+      
+      // 使用平台特定的文件夹选择
+      final result = await platformService.pickDirectoryWithPermission(
         context: context,
         dialogTitle: '选择漫画库文件夹',
-        initialDirectory:
-            _pathController.text.isNotEmpty ? _pathController.text : null,
+        initialDirectory: currentPath.isNotEmpty ? currentPath : null,
       );
 
       if (result != null) {
@@ -288,10 +307,38 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
         });
 
         if (mounted) {
+          // 显示平台特定的成功消息
+          final platform = Theme.of(context).platform;
+          String message = '文件夹选择成功，权限已保存';
+          
+          switch (platform) {
+            case TargetPlatform.android:
+              message = '文件夹选择成功，Android权限已持久化保存';
+              break;
+            case TargetPlatform.iOS:
+              message = '文件夹选择成功，iOS安全书签已保存';
+              break;
+            case TargetPlatform.macOS:
+              message = '文件夹选择成功，macOS权限已保存';
+              break;
+            case TargetPlatform.windows:
+              message = '文件夹选择成功，Windows权限已保存';
+              break;
+            case TargetPlatform.linux:
+              message = '文件夹选择成功，Linux权限已保存';
+              break;
+            default:
+              break;
+          }
+          
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('文件夹选择成功，权限已保存'),
+            SnackBar(
+              content: Text(message),
               backgroundColor: Colors.green,
+              action: SnackBarAction(
+                label: '查看权限',
+                onPressed: () => _showPermissionInfo(platformService),
+              ),
             ),
           );
         }
@@ -302,6 +349,179 @@ class _AddLibraryDialogState extends State<AddLibraryDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('选择文件夹失败: $e'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: '重试',
+              onPressed: _selectFolder,
+            ),
+          ),
+        );
+      }
+    }
+  }
+  
+  /// 显示权限信息对话框
+  Future<void> _showPermissionInfo(PlatformFilePickerService service) async {
+    try {
+      final grantedPaths = await service.getGrantedPaths();
+      
+      if (!mounted) return;
+      
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('已授权的文件夹'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: grantedPaths.isEmpty
+                ? const Center(
+                    child: Text('暂无已授权的文件夹'),
+                  )
+                : ListView.builder(
+                    itemCount: grantedPaths.length,
+                    itemBuilder: (context, index) {
+                      final path = grantedPaths[index];
+                      return ListTile(
+                        leading: const Icon(Icons.folder_special),
+                        title: Text(path.split('/').last),
+                        subtitle: Text(path),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: () => _showPathDetails(path, service),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('关闭'),
+            ),
+            if (grantedPaths.isNotEmpty)
+              TextButton(
+                onPressed: () => _clearAllPermissions(service),
+                child: const Text('清除所有权限'),
+              ),
+          ],
+        ),
+      );
+    } catch (e) {
+      log('显示权限信息失败: $e');
+    }
+  }
+  
+  /// 显示路径详细信息
+  Future<void> _showPathDetails(String path, PlatformFilePickerService service) async {
+    try {
+      final hasPermission = await service.checkPathPermission(path);
+      final canAccess = await service.verifyDirectoryAccess(path);
+      
+      if (!mounted) return;
+      
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('路径详情'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('路径: $path'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text('权限状态: '),
+                  Icon(
+                    hasPermission ? Icons.check_circle : Icons.cancel,
+                    color: hasPermission ? Colors.green : Colors.red,
+                    size: 16,
+                  ),
+                  Text(
+                    hasPermission ? '已授权' : '未授权',
+                    style: TextStyle(
+                      color: hasPermission ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Text('访问状态: '),
+                  Icon(
+                    canAccess ? Icons.check_circle : Icons.cancel,
+                    color: canAccess ? Colors.green : Colors.red,
+                    size: 16,
+                  ),
+                  Text(
+                    canAccess ? '可访问' : '无法访问',
+                    style: TextStyle(
+                      color: canAccess ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('关闭'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      log('显示路径详情失败: $e');
+    }
+  }
+  
+  /// 清除所有权限
+  Future<void> _clearAllPermissions(PlatformFilePickerService service) async {
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('确认清除'),
+          content: const Text('确定要清除所有已保存的文件夹权限吗？\n\n此操作不可撤销，清除后需要重新授权。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('清除'),
+            ),
+          ],
+        ),
+      );
+      
+      if (confirmed == true) {
+        await service.clearAllPermissions();
+        
+        if (mounted) {
+          Navigator.of(context).pop(); // 关闭权限信息对话框
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('所有权限已清除'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      log('清除权限失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('清除权限失败: $e'),
             backgroundColor: Colors.red,
           ),
         );

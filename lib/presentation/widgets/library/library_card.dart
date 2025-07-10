@@ -268,27 +268,26 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
               const SizedBox(height: 12),
 
               // 信息行
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _buildInfoChip(
                     icon: Icons.category,
                     label: _getTypeLabel(widget.library.type),
                     color: _getTypeColor(widget.library.type),
                   ),
-                  const SizedBox(width: 8),
                   _buildInfoChip(
                     icon: Icons.book,
                     label: '${widget.library.mangaCount} 本',
                     color: Colors.blue,
                   ),
-                  const SizedBox(width: 8),
                   if (widget.library.isPrivate)
                     _buildInfoChip(
                       icon: Icons.lock,
                       label: '隐私保护中',
                       color: Colors.red,
                     ),
-                  const SizedBox(width: 8),
                   if (widget.library.lastScanAt != null)
                     _buildInfoChip(
                       icon: Icons.access_time,
@@ -300,7 +299,10 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
               const SizedBox(height: 12),
 
               // 操作按钮行
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
                 children: [
                   // 扫描按钮
                   ElevatedButton.icon(
@@ -320,116 +322,61 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                       foregroundColor: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
 
                   // 编辑按钮
                   OutlinedButton.icon(
                     onPressed: widget.onEdit,
-                    icon: const Icon(Icons.edit, size: 10),
+                    icon: const Icon(Icons.edit, size: 16),
                     label: const Text('编辑'),
                   ),
-                  const SizedBox(width: 4),
 
-                  // 同步、设置和删除按钮
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final screenWidth = MediaQuery.of(context).size.width;
-                      // 考虑边距和其他组件宽度，适当调整阈值
-                      const threshold = 500;
-                      if (screenWidth < threshold) {
-                        return Expanded(
-                          child: Row(
-                            children: [
-                              PopupMenuButton(
-                                icon: const Icon(Icons.more_vert), // 省略号图标
-                                itemBuilder: (context) => [
-                                  // 同步按钮（折叠到菜单中）
-                                  if (widget.onSync != null)
-                                    PopupMenuItem(
-                                      onTap: widget.onSync,
-                                      child: const Text('同步'),
-                                    ),
-                                  // 设置按钮
-                                  if (widget.onSettings != null)
-                                    PopupMenuItem(
-                                      onTap: widget.onSettings,
-                                      child: const Text('设置'),
-                                    ),
-                                  // 隐私保护按钮
-                                  if (widget.onPrivacySettings != null)
-                                    PopupMenuItem(
-                                      onTap: widget.onPrivacySettings,
-                                      child: Text(
-                                        widget.library.isPrivate ? '公开' : '锁定',
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              IconButton(
-                                onPressed: widget.onDelete,
-                                icon: const Icon(Icons.delete),
-                                color: Colors.red,
-                                tooltip: '删除漫画库',
-                              ), // 删除按钮
-                            ],
-                          ),
-                        );
-                      } else {
-                        return Row(
-                          children: [
-                            // 同步按钮
-                            if (widget.onSync != null)
-                              OutlinedButton.icon(
-                                onPressed: widget.library.isEnabled
-                                    ? widget.onSync
-                                    : null,
-                                icon: const Icon(Icons.sync, size: 16),
-                                label: const Text('同步'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.green,
-                                ),
-                              ),
-                            const SizedBox(width: 8),
+                  // 同步按钮
+                  if (widget.onSync != null)
+                    OutlinedButton.icon(
+                      onPressed: widget.library.isEnabled
+                          ? widget.onSync
+                          : null,
+                      icon: const Icon(Icons.sync, size: 16),
+                      label: const Text('同步'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green,
+                      ),
+                    ),
 
-                            // 设置按钮
-                            if (widget.onSettings != null)
-                              OutlinedButton.icon(
-                                onPressed: widget.onSettings,
-                                icon: const Icon(Icons.settings, size: 16),
-                                label: const Text('设置'),
-                              ),
-                            const SizedBox(width: 8),
+                  // 设置按钮
+                  if (widget.onSettings != null)
+                    OutlinedButton.icon(
+                      onPressed: widget.onSettings,
+                      icon: const Icon(Icons.settings, size: 16),
+                      label: const Text('设置'),
+                    ),
 
-                            // 隐私设置按钮
-                            if (widget.onPrivacySettings != null)
-                              OutlinedButton.icon(
-                                onPressed: widget.onPrivacySettings,
-                                icon: Icon(
-                                  widget.library.isPrivate
-                                      ? Icons.lock
-                                      : Icons.lock_open,
-                                  size: 16,
-                                ),
-                                label: widget.library.isPrivate
-                                    ? const Text('公开')
-                                    : const Text('锁定'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: widget.library.isPrivate
-                                      ? Colors.red
-                                      : null,
-                                ),
-                              ),
-                            const SizedBox(width: 80),
-                            IconButton(
-                              onPressed: widget.onDelete,
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              tooltip: '删除漫画库',
-                            ), // 删除按钮
-                          ],
-                        );
-                      }
-                    },
+                  // 隐私设置按钮
+                  if (widget.onPrivacySettings != null)
+                    OutlinedButton.icon(
+                      onPressed: widget.onPrivacySettings,
+                      icon: Icon(
+                        widget.library.isPrivate
+                            ? Icons.lock
+                            : Icons.lock_open,
+                        size: 16,
+                      ),
+                      label: widget.library.isPrivate
+                          ? const Text('公开')
+                          : const Text('锁定'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: widget.library.isPrivate
+                            ? Colors.red
+                            : null,
+                      ),
+                    ),
+
+                  // 删除按钮
+                  IconButton(
+                    onPressed: widget.onDelete,
+                    icon: const Icon(Icons.delete),
+                    color: Colors.red,
+                    tooltip: '删除漫画库',
                   ),
                 ],
               ),
