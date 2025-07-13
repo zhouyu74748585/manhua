@@ -309,7 +309,7 @@ class LocalLibraryRepository implements LibraryRepository {
     await CoverIsolateService.generateCoversInIsolate(
       mangasNeedingCovers,
       onComplete: (updatedManga) {
-        _mangaRepository.saveManga(updatedManga);
+        // _mangaRepository.updateManga(updatedManga);
         log('封面生成完成: ${updatedManga.title}');
       },
       onProgress: (current, total) {

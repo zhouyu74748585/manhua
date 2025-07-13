@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:manhua_reader_flutter/core/services/isolate_service.dart';
+import 'package:manhua_reader_flutter/core/services/task_tracker_service.dart';
 import 'package:manhua_reader_flutter/data/models/manga.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/services/file_scanner_service.dart';
@@ -21,61 +22,74 @@ class ThumbnailIsolateService {
     void Function()? onComplete,
     Function(List<MangaPage>)? onBatchProcessed,
   }) async {
+    // 检查是否已有缩略图生成任务在运行
+    if (TaskTrackerService.isTaskRunning(TaskType.thumbnailGeneration, manga.id)) {
+      log('缩略图生成任务已在运行，跳过: ${manga.title}');
+      return;
+    }
+
     log('开始启动缩略图生成Isolate，漫画: ${manga.title}');
 
-    try {
-      // 启动Isolate，允许并发
-      final isolateName = await IsolateService.startIsolate(
-        name: _isolateNamePrefix,
-        entryPoint: _thumbnailGeneratorIsolate,
-        allowConcurrent: true,
-        message: {
-          'manga': manga.toJson(),
-          'rootIsolateToken': RootIsolateToken.instance!,
-        },
-      );
+    // 使用任务包装器执行缩略图生成
+    await TaskWrapper.execute(
+      TaskType.thumbnailGeneration,
+      manga.id,
+      () async {
+        try {
+          // 启动Isolate，允许并发
+          final isolateName = await IsolateService.startIsolate(
+            name: _isolateNamePrefix,
+            entryPoint: _thumbnailGeneratorIsolate,
+            allowConcurrent: true,
+            message: {
+              'manga': manga.toJson(),
+              'rootIsolateToken': RootIsolateToken.instance!,
+            },
+          );
 
-      // 监听Isolate消息
-      final stream = IsolateService.listenToIsolate(isolateName);
+          // 监听Isolate消息
+          final stream = IsolateService.listenToIsolate(isolateName);
 
-      await for (final data in stream) {
-        if (data is Map<String, dynamic>) {
-          final message = IsolateMessage.fromJson(data);
+          await for (final data in stream) {
+            if (data is Map<String, dynamic>) {
+              final message = IsolateMessage.fromJson(data);
 
-          switch (message.type) {
-            case IsolateMessageType.batchProcessed:
-              if (onBatchProcessed != null && message.data is Map) {
-                final batchData = message.data['batch'] as List<dynamic>;
-                final batchPages = batchData
-                    .map((pageData) => MangaPage.fromJson(pageData))
-                    .toList();
-                onBatchProcessed(batchPages);
+              switch (message.type) {
+                case IsolateMessageType.batchProcessed:
+                  if (onBatchProcessed != null && message.data is Map) {
+                    final batchData = message.data['batch'] as List<dynamic>;
+                    final batchPages = batchData
+                        .map((pageData) => MangaPage.fromJson(pageData))
+                        .toList();
+                    onBatchProcessed(batchPages);
+                  }
+                  break;
+
+                case IsolateMessageType.complete:
+                  log('缩略图生成完成: ${manga.title}');
+                  onComplete?.call();
+                  await IsolateService.stopIsolate(isolateName);
+                  return;
+
+                case IsolateMessageType.error:
+                  log('缩略图生成错误: ${message.error}');
+                  await IsolateService.stopIsolate(isolateName);
+                  throw Exception(message.error);
+
+                case IsolateMessageType.start:
+                case IsolateMessageType.progress:
+                case IsolateMessageType.stop:
+                  // 这些消息类型在此上下文中不处理
+                  break;
               }
-              break;
-
-            case IsolateMessageType.complete:
-              log('缩略图生成完成: $isolateName');
-              onComplete?.call();
-              await IsolateService.stopIsolate(isolateName);
-              return;
-
-            case IsolateMessageType.error:
-              log('缩略图生成错误: ${message.error}');
-              await IsolateService.stopIsolate(isolateName);
-              throw Exception(message.error);
-
-            case IsolateMessageType.start:
-            case IsolateMessageType.progress:
-            case IsolateMessageType.stop:
-              // 这些消息类型在此上下文中不处理
-              break;
+            }
           }
+        } catch (e, stackTrace) {
+          log('缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
+          rethrow;
         }
-      }
-    } catch (e, stackTrace) {
-      log('缩略图生成Isolate执行失败: $e,堆栈:$stackTrace');
-      rethrow;
-    }
+      },
+    );
   }
 
   static Future<List<Map<String, String>>> generateThumbnailsBatch(

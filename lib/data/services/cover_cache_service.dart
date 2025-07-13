@@ -70,23 +70,39 @@ class CoverCacheService {
       _isolateCachePath = isolateCachePath;
     }
     try {
+      final fileSize = await zipFile.length();
       final inputStream = InputFileStream(zipFile.path);
       final archive = ZipDecoder().decodeStream(inputStream);
       ArchiveFile? coverFile;
       int pageCount = 0;
-      for (final file in archive) {
-        if (!file.isFile || file.name.startsWith('__MACOSX')) {
-          continue;
+      if (fileSize > 1024 * 1024 * 512) {
+        for (final file in archive) {
+          if (!file.isFile || file.name.startsWith('__MACOSX')) {
+            continue;
+          }
+          if (!supportedImageFormats
+              .contains(path.extension(file.name).toLowerCase())) {
+            continue;
+          }
+          coverFile ??= file;
+          break;
         }
-        if (!supportedImageFormats
-            .contains(path.extension(file.name).toLowerCase())) {
-          continue;
+        pageCount = archive.length;
+      } else {
+        for (final file in archive) {
+          if (!file.isFile || file.name.startsWith('__MACOSX')) {
+            continue;
+          }
+          if (!supportedImageFormats
+              .contains(path.extension(file.name).toLowerCase())) {
+            continue;
+          }
+          coverFile ??= file;
+          if (file.name.compareTo(coverFile.name) < 0) {
+            coverFile = file;
+          }
+          pageCount++;
         }
-        coverFile ??= file;
-        if (file.name.compareTo(coverFile.name) < 0) {
-          coverFile = file;
-        }
-        pageCount++;
       }
       if (coverFile == null) {
         return null;
@@ -94,8 +110,8 @@ class CoverCacheService {
 
       // 生成缓存文件路径
       final imageExtension = path.extension(coverFile.name.toLowerCase());
-      final cacheFileName =
-          _generateCacheFileName(coverFile.name, imageExtension);
+      final cacheFileName = _generateCacheFileName(
+          mangaId + '_' + coverFile.name, imageExtension);
       final cacheDir = await _getCacheDirectory();
       final cacheFile = File(path.join(cacheDir.path, cacheFileName));
 
