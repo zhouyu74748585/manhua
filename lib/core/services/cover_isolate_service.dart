@@ -214,7 +214,7 @@ Future<Manga?> _generateCoverForManga(Manga manga, String cachePath) async {
   }
 
   if (manga.coverPath != null && manga.coverPath!.isNotEmpty) {
-    //return null; // 已有封面，跳过
+    return null; // 已有封面，跳过
   }
 
   try {
