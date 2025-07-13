@@ -903,7 +903,7 @@ class _SearchMangaProviderElement
   String get query => (origin as SearchMangaProvider).query;
 }
 
-String _$mangaActionsHash() => r'c19d5babcf27c575920ec2119a8ea0399a114077';
+String _$mangaActionsHash() => r'0bf15cd1bac6efcee31bd5392b2ce975580ca29c';
 
 /// See also [MangaActions].
 @ProviderFor(MangaActions)

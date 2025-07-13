@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/routes/app_router.dart';
 import '../../providers/theme_provider.dart';
 import 'about_page.dart';
 import 'permission_diagnostic_page.dart';
@@ -47,6 +49,12 @@ class SettingsPage extends ConsumerWidget {
           // 存储设置
           _buildSectionHeader(context, '存储'),
           _buildStorageSettings(context, ref),
+
+          const Divider(),
+
+          // 调试功能
+          _buildSectionHeader(context, '调试'),
+          _buildDebugSettings(context, ref),
 
           const Divider(),
 
@@ -258,6 +266,22 @@ class SettingsPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDebugSettings(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.wifi_find),
+          title: const Text('设备发现测试'),
+          subtitle: const Text('测试局域网设备发现功能'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            context.go(AppRoutes.debugDeviceDiscovery);
+          },
+        ),
+      ],
     );
   }
 }

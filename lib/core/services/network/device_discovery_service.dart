@@ -8,8 +8,9 @@ import 'package:multicast_dns/multicast_dns.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 
 import '../../../data/models/sync/device_info.dart';
+import 'udp_discovery_service.dart';
 
-/// Service for discovering devices on the local network using mDNS
+/// Service for discovering devices on the local network using mDNS or UDP broadcast
 class DeviceDiscoveryService {
   static const String _serviceType = '_manhua_reader._tcp';
   static const String _serviceName = 'Manhua Reader';
@@ -18,6 +19,7 @@ class DeviceDiscoveryService {
   static const Duration _heartbeatInterval = Duration(seconds: 60); // 优化：减少心跳频率
 
   MDnsClient? _mdnsClient;
+  UdpDiscoveryService? _udpDiscoveryService;
   Timer? _heartbeatTimer;
   Timer? _discoveryTimer;
 
@@ -29,6 +31,7 @@ class DeviceDiscoveryService {
   bool _isDiscovering = false;
   bool _isAdvertising = false;
   bool _isDisposed = false;
+  bool _useUdpFallback = false;
 
   /// Stream of discovered devices
   Stream<List<DeviceInfo>> get devicesStream => _devicesController.stream;
@@ -129,21 +132,38 @@ class DeviceDiscoveryService {
     }
 
     try {
-      _mdnsClient ??= MDnsClient();
-      await _mdnsClient!.start();
-
       _isDiscovering = true;
       _discoveredDevices.clear();
       _notifyDevicesChanged();
 
-      // Start periodic discovery
-      _discoveryTimer =
-          Timer.periodic(_discoveryTimeout, (_) => _performDiscovery());
+      // 尝试使用mDNS，如果失败则使用UDP广播
+      bool mdnsSuccess = false;
 
-      // Perform initial discovery
-      await _performDiscovery();
+      if (!_useUdpFallback) {
+        try {
+          _mdnsClient ??= MDnsClient();
+          await _mdnsClient!.start();
 
-      log('Started device discovery');
+          // Start periodic discovery
+          _discoveryTimer =
+              Timer.periodic(_discoveryTimeout, (_) => _performDiscovery());
+
+          // Perform initial discovery
+          await _performDiscovery();
+
+          mdnsSuccess = true;
+          log('Started mDNS device discovery');
+        } catch (e) {
+          log('mDNS discovery failed, falling back to UDP broadcast: $e');
+          _useUdpFallback = true;
+          mdnsSuccess = false;
+        }
+      }
+
+      // 如果mDNS失败或者已经设置为使用UDP，则使用UDP广播
+      if (!mdnsSuccess || _useUdpFallback) {
+        await _startUdpDiscovery();
+      }
     } catch (e, stackTrace) {
       log('Failed to start discovery: $e', stackTrace: stackTrace);
       _isDiscovering = false;
@@ -158,11 +178,44 @@ class DeviceDiscoveryService {
     try {
       _discoveryTimer?.cancel();
       _discoveryTimer = null;
+
+      // 停止UDP发现服务
+      if (_udpDiscoveryService != null) {
+        await _udpDiscoveryService!.stopDiscovery();
+      }
+
       _isDiscovering = false;
 
       log('Stopped device discovery');
     } catch (e, stackTrace) {
       log('Failed to stop discovery: $e', stackTrace: stackTrace);
+    }
+  }
+
+  /// 启动UDP发现服务
+  Future<void> _startUdpDiscovery() async {
+    if (_currentDevice == null) {
+      throw Exception('Current device info not available for UDP discovery');
+    }
+
+    try {
+      _udpDiscoveryService ??= UdpDiscoveryService();
+      await _udpDiscoveryService!.initialize(_currentDevice!);
+
+      // 监听UDP发现的设备
+      _udpDiscoveryService!.devicesStream.listen((devices) {
+        _discoveredDevices.clear();
+        for (final device in devices) {
+          _discoveredDevices[device.id] = device;
+        }
+        _notifyDevicesChanged();
+      });
+
+      await _udpDiscoveryService!.startDiscovery();
+      log('Started UDP device discovery');
+    } catch (e) {
+      log('Failed to start UDP discovery: $e');
+      rethrow;
     }
   }
 
@@ -371,6 +424,16 @@ class DeviceDiscoveryService {
         log('停止mDNS客户端时发生错误: $e');
       }
       _mdnsClient = null;
+
+      // 停止UDP发现服务
+      try {
+        if (_udpDiscoveryService != null) {
+          await _udpDiscoveryService!.dispose();
+          _udpDiscoveryService = null;
+        }
+      } catch (e) {
+        log('停止UDP发现服务时发生错误: $e');
+      }
 
       // 关闭StreamController
       if (!_devicesController.isClosed) {

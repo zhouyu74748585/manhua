@@ -18,6 +18,7 @@ import '../../presentation/pages/sync/library_sync_page.dart';
 import '../../presentation/pages/sync/progress_sync_page.dart';
 import '../../presentation/pages/sync/sync_progress_page.dart';
 import '../../presentation/pages/sync/sync_settings_page.dart';
+import '../../presentation/pages/debug/device_discovery_test_page.dart';
 import '../../presentation/widgets/layout/main_layout.dart';
 
 part 'app_router.g.dart';
@@ -39,6 +40,9 @@ class AppRoutes {
   static const String syncProgressSync = '/sync/progress-sync';
   static const String syncProgress = '/sync/progress';
   static const String syncSettings = '/sync/settings';
+
+  // 调试路由
+  static const String debugDeviceDiscovery = '/debug/device-discovery';
 }
 
 @riverpod
@@ -205,6 +209,13 @@ GoRouter appRouter(AppRouterRef ref) {
         path: AppRoutes.syncSettings,
         name: 'syncSettings',
         builder: (context, state) => const SyncSettingsPage(),
+      ),
+
+      // 调试路由
+      GoRoute(
+        path: AppRoutes.debugDeviceDiscovery,
+        name: 'debugDeviceDiscovery',
+        builder: (context, state) => const DeviceDiscoveryTestPage(),
       ),
     ],
 
