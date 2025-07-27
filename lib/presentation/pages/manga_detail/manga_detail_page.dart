@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:manhua_reader_flutter/data/models/reading_progress.dart';
 
+import '../../../core/services/task_tracker_service.dart';
 import '../../../data/models/manga.dart';
 import '../../providers/manga_provider.dart';
 import '../../widgets/manga/lazy_thumbnail_grid.dart';
@@ -130,6 +131,20 @@ class MangaDetailPage extends ConsumerWidget {
                 .read(mangaActionsProvider.notifier)
                 .toggleFavorite(manga.id, !manga.isFavorite);
           },
+        ),
+        IconButton(
+          icon: const Icon(Icons.image, color: Colors.white),
+          onPressed: () {
+            _generateCover(context, manga, ref);
+          },
+          tooltip: '获取封面',
+        ),
+        IconButton(
+          icon: const Icon(Icons.photo_library, color: Colors.white),
+          onPressed: () {
+            _generateThumbnails(context, manga, ref);
+          },
+          tooltip: '生成缩略图',
         ),
         IconButton(
           icon: const Icon(Icons.sync, color: Colors.white),
@@ -433,6 +448,136 @@ class MangaDetailPage extends ConsumerWidget {
         return '已取消';
       case MangaStatus.unknown:
         return '未知';
+    }
+  }
+
+  /// 生成封面
+  void _generateCover(BuildContext context, Manga manga, WidgetRef ref) async {
+    // 检查是否已有任务在运行
+    if (ref
+        .read(mangaActionsProvider.notifier)
+        .isCoverGenerationRunning(manga.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('《${manga.title}》的封面生成任务已在运行中'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 显示加载提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在为《${manga.title}》生成封面...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // 调用封面生成方法
+      await ref
+          .read(mangaActionsProvider.notifier)
+          .generateCoverForManga(manga.id);
+
+      // 显示成功提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${manga.title}》封面生成完成'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } on TaskAlreadyRunningException catch (e) {
+      // 处理任务已运行异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${manga.title}》的封面生成任务已在运行中'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('封面生成失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  void _generateThumbnails(
+      BuildContext context, Manga manga, WidgetRef ref) async {
+    // 检查是否已有任务在运行
+    if (ref
+        .read(mangaActionsProvider.notifier)
+        .isThumbnailGenerationRunning(manga.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('《${manga.title}》的缩略图生成任务已在运行中'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 显示加载提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在为《${manga.title}》生成缩略图...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // 调用缩略图生成方法
+      await ref
+          .read(mangaActionsProvider.notifier)
+          .generateThumbnailsForManga(manga.id);
+
+      // 显示成功提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${manga.title}》缩略图生成完成'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } on TaskAlreadyRunningException catch (e) {
+      // 处理任务已运行异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${manga.title}》的缩略图生成任务已在运行中'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 处理其他异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('缩略图生成失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 }

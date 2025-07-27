@@ -4,15 +4,46 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:manhua_reader_flutter/core/services/isolate_service.dart';
+import 'package:manhua_reader_flutter/core/services/task_tracker_service.dart';
 import 'package:manhua_reader_flutter/data/models/manga.dart';
 import 'package:manhua_reader_flutter/data/services/cover_cache_service.dart';
+import 'package:manhua_reader_flutter/data/services/drift_isolate_database_service.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// 封面生成Isolate服务
 class CoverIsolateService {
   static const String _isolateNamePrefix = 'cover_generator';
 
-  /// 在Isolate中生成封面
+  /// 为单个漫画生成封面
+  static Future<void> generateCoverInIsolate(
+    Manga manga, {
+    Function(Manga)? onComplete,
+  }) async {
+    // 检查是否已有封面生成任务在运行
+    if (TaskTrackerService.isTaskRunning(TaskType.coverGeneration, manga.id)) {
+      log('封面生成任务已在运行，跳过: ${manga.title}');
+      return;
+    }
+
+    log('开始为单个漫画生成封面: ${manga.title}');
+
+    // 使用任务包装器执行封面生成
+    await TaskWrapper.execute(
+      TaskType.coverGeneration,
+      manga.id,
+      () async {
+        await generateCoversInIsolate(
+          [manga],
+          onComplete: onComplete,
+          onProgress: (current, total) {
+            log('单个封面生成进度: $current/$total');
+          },
+        );
+      },
+    );
+  }
+
+  /// 在Isolate中批量生成封面（单线程处理）
   static Future<void> generateCoversInIsolate(
     List<Manga> mangas, {
     Function(Manga)? onComplete,
@@ -20,7 +51,6 @@ class CoverIsolateService {
   }) async {
     if (mangas.isEmpty) return;
 
-    // 允许并发执行，不检查是否已有Isolate在运行
     log('开始启动封面生成Isolate，漫画数量: ${mangas.length}');
 
     String? isolateName;
@@ -29,11 +59,11 @@ class CoverIsolateService {
       final appDir = await getApplicationDocumentsDirectory();
       final cachePath = appDir.path;
 
-      // 启动Isolate，允许并发
+      // 启动单个Isolate处理所有漫画，不允许并发
       isolateName = await IsolateService.startIsolate(
         name: _isolateNamePrefix,
         entryPoint: _coverGeneratorIsolate,
-        allowConcurrent: true,
+        allowConcurrent: false, // 改为不允许并发，确保单线程处理
         message: {
           'mangas': mangas.map((m) => m.toJson()).toList(),
           'cachePath': cachePath,
@@ -111,6 +141,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
   // 发送SendPort给主线程
   mainSendPort.send(isolateReceivePort.sendPort);
 
+  DriftIsolateDatabaseService? databaseService;
   try {
     // 初始化BackgroundIsolateBinaryMessenger以支持Flutter插件
     BackgroundIsolateBinaryMessenger.ensureInitialized(
@@ -127,13 +158,12 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
     // 初始化CoverCacheService，使用传入的缓存路径
     await CoverCacheService.init(cachePath);
 
-    // 注意：在Isolate中需要重新初始化数据库连接
-    // 这里暂时注释掉，因为Isolate中无法直接使用主线程的数据库连接
-    // final mangaRepository = MangaRepositoryImpl();
+    // 在Isolate中初始化数据库连接
+    databaseService = await DriftIsolateDatabaseService.create();
 
     for (int i = 0; i < mangas.length; i++) {
       final manga = mangas[i];
-
+      log('开始生成封面: ${manga.title}');
       try {
         // 发送进度更新
         mainSendPort.send(IsolateMessage(
@@ -146,6 +176,7 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
 
         if (updatedManga != null) {
           // 发送单个漫画完成消息
+          databaseService?.updateManga(updatedManga);
           mainSendPort.send(IsolateMessage(
             type: IsolateMessageType.batchProcessed,
             data: updatedManga.toJson(),
@@ -168,6 +199,9 @@ void _coverGeneratorIsolate(Map<String, dynamic> params) async {
       type: IsolateMessageType.error,
       error: e.toString(),
     ).toJson());
+  } finally {
+    // 关闭数据库连接
+    await databaseService?.close();
   }
 
   isolateReceivePort.close();
@@ -197,7 +231,6 @@ Future<Manga?> _generateCoverForManga(Manga manga, String cachePath) async {
           coverPath: result['cover'],
           totalPages: result['pages'] ?? 0,
         );
-        // await mangaRepository.updateManga(updatedManga);
         return updatedManga;
       }
     } else if (manga.type == MangaType.pdf) {

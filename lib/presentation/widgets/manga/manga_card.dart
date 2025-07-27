@@ -1,11 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:manhua_reader_flutter/presentation/providers/manga_provider.dart';
 
+import '../../../core/services/task_tracker_service.dart';
 import '../../../data/models/library.dart';
 
-class MangaCard extends StatefulWidget {
+class MangaCard extends ConsumerStatefulWidget {
+  final String? mangaId; // 添加mangaId参数
   final String title;
   final String? coverPath;
   final String? subtitle;
@@ -20,6 +24,7 @@ class MangaCard extends StatefulWidget {
 
   const MangaCard({
     super.key,
+    this.mangaId, // 添加mangaId参数
     required this.title,
     required this.totalPages,
     this.currentPage,
@@ -34,10 +39,10 @@ class MangaCard extends StatefulWidget {
   });
 
   @override
-  State<MangaCard> createState() => _MangaCardState();
+  ConsumerState<MangaCard> createState() => _MangaCardState();
 }
 
-class _MangaCardState extends State<MangaCard> {
+class _MangaCardState extends ConsumerState<MangaCard> {
   bool _isHovered = false;
 
   @override
@@ -83,6 +88,24 @@ class _MangaCardState extends State<MangaCard> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
+                                    // 获取封面按钮
+                                    if (widget.mangaId != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.image,
+                                            color: Colors.white, size: 20),
+                                        onPressed: () =>
+                                            _generateCover(context),
+                                        tooltip: '获取封面',
+                                      ),
+                                    // 生成缩略图按钮
+                                    if (widget.mangaId != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.photo_library,
+                                            color: Colors.white, size: 20),
+                                        onPressed: () =>
+                                            _generateThumbnails(context),
+                                        tooltip: '生成缩略图',
+                                      ),
                                     IconButton(
                                       icon: const Icon(Icons.sync,
                                           color: Colors.white, size: 20),
@@ -279,5 +302,139 @@ class _MangaCardState extends State<MangaCard> {
         ),
       ),
     );
+  }
+
+  /// 生成封面
+  void _generateCover(BuildContext context) async {
+    if (widget.mangaId == null) return;
+
+    // 检查是否已有任务在运行
+    if (ref
+        .read(mangaActionsProvider.notifier)
+        .isCoverGenerationRunning(widget.mangaId!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('《${widget.title}》的封面生成任务已在运行中'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 显示加载提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在为《${widget.title}》生成封面...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // 调用封面生成方法
+      await ref
+          .read(mangaActionsProvider.notifier)
+          .generateCoverForManga(widget.mangaId!);
+
+      // 显示成功提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${widget.title}》封面生成完成'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } on TaskAlreadyRunningException catch (e) {
+      // 处理任务已运行异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${widget.title}》的封面生成任务已在运行中'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('封面生成失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// 生成缩略图
+  void _generateThumbnails(BuildContext context) async {
+    if (widget.mangaId == null) return;
+
+    // 检查是否已有任务在运行
+    if (ref
+        .read(mangaActionsProvider.notifier)
+        .isThumbnailGenerationRunning(widget.mangaId!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('《${widget.title}》的缩略图生成任务已在运行中'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 显示加载提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在为《${widget.title}》生成缩略图...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // 调用缩略图生成方法
+      await ref
+          .read(mangaActionsProvider.notifier)
+          .generateThumbnailsForManga(widget.mangaId!);
+
+      // 显示成功提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${widget.title}》缩略图生成完成'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } on TaskAlreadyRunningException catch (e) {
+      // 处理任务已运行异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('《${widget.title}》的缩略图生成任务已在运行中'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 处理其他异常
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('缩略图生成失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

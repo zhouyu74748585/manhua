@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/network/network_scan_queue_manager.dart';
 import '../../../data/models/library.dart';
+import '../../providers/manga_provider.dart';
 import 'network_scan_progress_dialog.dart';
 import 'privacy_access_handler.dart';
 
@@ -367,6 +368,18 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
                       ),
                     ),
 
+                  // 获取封面按钮
+                  OutlinedButton.icon(
+                    onPressed: widget.library.isEnabled && !widget.isScanning
+                        ? () => _generateCoversForLibrary(context)
+                        : null,
+                    icon: const Icon(Icons.image, size: 16),
+                    label: const Text('获取封面'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                    ),
+                  ),
+
                   // 删除按钮
                   ElevatedButton.icon(
                     onPressed: widget.onDelete,
@@ -452,6 +465,86 @@ class _LibraryCardState extends ConsumerState<LibraryCard> {
       return '${difference.inDays}天前';
     } else {
       return '${lastScan.month}/${lastScan.day}';
+    }
+  }
+
+  /// 为漫画库中的所有漫画生成封面
+  void _generateCoversForLibrary(BuildContext context) async {
+    try {
+      // 显示确认对话框
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('批量生成封面'),
+          content:
+              Text('确定要为漫画库《${widget.library.name}》中的所有漫画生成封面吗？\n\n这可能需要一些时间。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+
+      // 显示加载提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在为漫画库《${widget.library.name}》生成封面...'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // 获取漫画库中的所有漫画
+      final mangas =
+          await ref.read(mangaByLibraryProvider(widget.library.id).future);
+      final mangaIds = mangas.map((manga) => manga.id).toList();
+
+      if (mangaIds.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('漫画库中没有漫画'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 调用批量封面生成方法
+      await ref
+          .read(mangaActionsProvider.notifier)
+          .generateCoversForMangas(mangaIds);
+
+      // 显示成功提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                '漫画库《${widget.library.name}》封面生成完成，共处理 ${mangaIds.length} 本漫画'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // 显示错误提示
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('封面生成失败: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 }

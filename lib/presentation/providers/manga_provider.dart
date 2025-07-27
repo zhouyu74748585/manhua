@@ -4,6 +4,9 @@ import 'dart:developer';
 import 'package:manhua_reader_flutter/data/models/manga_page.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/services/cover_isolate_service.dart';
+import '../../core/services/task_tracker_service.dart';
+import '../../core/services/thumbnail_isolate_service.dart';
 import '../../data/models/manga.dart';
 import '../../data/models/reading_progress.dart';
 import '../../data/repositories/manga_repository.dart';
@@ -119,7 +122,8 @@ Future<List<MangaPage>> mangaPages(MangaPagesRef ref, String mangaId) async {
 
 // 根据库ID获取漫画列表提供者
 @riverpod
-Future<List<Manga>> mangaByLibrary(MangaByLibraryRef ref, String libraryId) async {
+Future<List<Manga>> mangaByLibrary(
+    MangaByLibraryRef ref, String libraryId) async {
   final repository = ref.watch(mangaRepositoryProvider);
   return repository.getMangaByLibraryId(libraryId);
 }
@@ -176,5 +180,141 @@ class MangaActions extends _$MangaActions {
     ref.invalidate(favoriteMangaProvider);
     ref.invalidate(recentlyReadMangaProvider);
     ref.invalidate(recentlyUpdatedMangaProvider);
+  }
+
+  /// 手动生成单个漫画的封面
+  Future<void> generateCoverForManga(String mangaId) async {
+    final repository = ref.read(mangaRepositoryProvider);
+    final manga = await repository.getMangaById(mangaId);
+
+    if (manga == null) {
+      throw Exception('漫画不存在: $mangaId');
+    }
+
+    log('开始为漫画生成封面: ${manga.title}');
+
+    // 使用单个漫画封面生成方法
+    await CoverIsolateService.generateCoverInIsolate(
+      manga,
+      onComplete: (updatedManga) {
+        log('封面生成完成: ${updatedManga.title}');
+        // 刷新相关提供者
+        ref.invalidate(mangaDetailProvider(mangaId));
+        ref.invalidate(allMangaProvider);
+      },
+    );
+  }
+
+  /// 批量生成多个漫画的封面
+  Future<void> generateCoversForMangas(List<String> mangaIds) async {
+    final repository = ref.read(mangaRepositoryProvider);
+    final List<Manga> mangas = [];
+
+    // 获取所有漫画对象，过滤掉已有任务的
+    for (final mangaId in mangaIds) {
+      // 检查是否已有任务在运行
+      if (TaskTrackerService.isTaskRunning(TaskType.coverGeneration, mangaId)) {
+        log('跳过已在运行的封面生成任务: $mangaId');
+        continue;
+      }
+
+      final manga = await repository.getMangaById(mangaId);
+      if (manga != null) {
+        mangas.add(manga);
+      }
+    }
+
+    if (mangas.isEmpty) {
+      throw Exception('没有找到有效的漫画或所有漫画都已有任务在运行');
+    }
+
+    log('开始批量生成封面，漫画数量: ${mangas.length}');
+
+    // 创建一个批量任务ID
+    final batchTaskId = 'batch_${DateTime.now().millisecondsSinceEpoch}';
+
+    // 使用任务包装器执行批量封面生成
+    await TaskWrapper.execute(
+      TaskType.coverGeneration,
+      batchTaskId,
+      () async {
+        await CoverIsolateService.generateCoversInIsolate(
+          mangas,
+          onComplete: (updatedManga) {
+            log('封面生成完成: ${updatedManga.title}');
+            // 刷新相关提供者
+            ref.invalidate(mangaDetailProvider(updatedManga.id));
+          },
+          onProgress: (current, total) {
+            log('批量封面生成进度: $current/$total');
+          },
+        );
+      },
+    );
+
+    // 最后刷新所有相关数据
+    ref.invalidate(allMangaProvider);
+    ref.invalidate(favoriteMangaProvider);
+    ref.invalidate(recentlyReadMangaProvider);
+    ref.invalidate(recentlyUpdatedMangaProvider);
+  }
+
+  /// 手动生成单个漫画的缩略图
+  Future<void> generateThumbnailsForManga(String mangaId) async {
+    final repository = ref.read(mangaRepositoryProvider);
+    final manga = await repository.getMangaById(mangaId);
+
+    if (manga == null) {
+      throw Exception('漫画不存在: $mangaId');
+    }
+
+    log('开始为漫画生成缩略图: ${manga.title}');
+
+    // 使用缩略图生成服务
+    await ThumbnailIsolateService.generateThumbnailsInIsolate(
+      manga,
+      onComplete: () {
+        log('缩略图生成完成: ${manga.title}');
+        // 刷新相关提供者
+        ref.invalidate(mangaDetailProvider(mangaId));
+        ref.invalidate(mangaPagesProvider(mangaId));
+      },
+      onBatchProcessed: (batchPages) {
+        log('缩略图批次处理完成: ${batchPages.length} 页');
+        // 刷新页面数据
+        ref.invalidate(mangaPagesProvider(mangaId));
+      },
+    );
+  }
+
+  /// 检查漫画是否有封面生成任务在运行
+  bool isCoverGenerationRunning(String mangaId) {
+    return TaskTrackerService.isTaskRunning(TaskType.coverGeneration, mangaId);
+  }
+
+  /// 检查漫画是否有缩略图生成任务在运行
+  bool isThumbnailGenerationRunning(String mangaId) {
+    return TaskTrackerService.isTaskRunning(
+        TaskType.thumbnailGeneration, mangaId);
+  }
+
+  /// 获取漫画的所有运行中任务类型
+  List<TaskType> getRunningTaskTypes(String mangaId) {
+    return TaskTrackerService.getRunningTaskTypesForObject(mangaId);
+  }
+
+  /// 取消漫画的封面生成任务
+  void cancelCoverGeneration(String mangaId) {
+    TaskTrackerService.cancelTask(TaskType.coverGeneration, mangaId);
+  }
+
+  /// 取消漫画的缩略图生成任务
+  void cancelThumbnailGeneration(String mangaId) {
+    TaskTrackerService.cancelTask(TaskType.thumbnailGeneration, mangaId);
+  }
+
+  /// 获取任务统计信息
+  Map<TaskType, int> getTaskStatistics() {
+    return TaskTrackerService.getTaskStatistics();
   }
 }
