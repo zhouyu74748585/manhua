@@ -112,10 +112,16 @@ class MangaListTile extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             widthFactor: 1,
-            child: Transform.scale(
+             child: Transform.scale(
               scale: coverScale,
               alignment: Alignment(-coverOffsetX, 0),
-              child: _buildImageWidget(isNetworkImage),
+              child: Image.file(
+                File(coverPath!),
+                fit: BoxFit.fitHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
+              ),
             ),
           ),
         );
@@ -124,55 +130,30 @@ class MangaListTile extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerRight,
             widthFactor: 1,
-            child: Transform.scale(
+             child: Transform.scale(
               scale: coverScale,
               alignment: Alignment(coverOffsetX, 0),
-              child: _buildImageWidget(isNetworkImage),
+              child: Image.file(
+                File(coverPath!),
+                fit: BoxFit.fitHeight,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(child: Icon(Icons.broken_image));
+                },
+              ),
             ),
           ),
         );
       case CoverDisplayMode.defaultMode:
-        return _buildImageWidget(isNetworkImage);
-    }
-  }
-
-  Widget _buildImageWidget(bool isNetworkImage) {
-    if (isNetworkImage) {
-      return CachedNetworkImage(
-        imageUrl: coverPath!,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        placeholder: (context, url) => Container(
-          color: Colors.grey[300],
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) => const Center(
-          child: Icon(Icons.image_not_supported, color: Colors.grey),
-        ),
-      );
-    } else {
-      // 本地文件
-      final file = File(coverPath!);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
+         return Image.file(
+          File(coverPath!),
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
           errorBuilder: (context, error, stackTrace) {
-            return const Center(
-              child: Icon(Icons.image_not_supported, color: Colors.grey),
-            );
+            return const Center(child: Icon(Icons.broken_image));
           },
         );
-      } else {
-        return const Center(
-          child: Icon(Icons.image_not_supported, color: Colors.grey),
-        );
-      }
     }
   }
+
 }
